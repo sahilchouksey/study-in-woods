@@ -2,6 +2,8 @@
 
 A comprehensive educational platform with AI-powered chat, document management, and analytics capabilities.
 
+Built with Turborepo for optimized builds and development workflow.
+
 ## 🏗️ Monorepo Structure
 
 ```
@@ -9,6 +11,9 @@ study-in-woods/
 ├── apps/
 │   ├── api/          # Backend API (Go + Fiber + PostgreSQL)
 │   └── web/          # Frontend Application (Next.js + React)
+├── package.json      # Root package.json with Turborepo
+├── turbo.json        # Turborepo configuration
+├── pnpm-workspace.yaml
 ├── .gitignore        # Root gitignore for entire monorepo
 └── README.md         # This file
 ```
@@ -55,6 +60,7 @@ Modern web application providing user interface for:
 ### Prerequisites
 - **Go** 1.21+ (for backend)
 - **Node.js** 18+ (for frontend)
+- **npm** 9+ (for package management)
 - **PostgreSQL** 13+
 - **Redis** 6+
 - **DigitalOcean Account** (for AI features and storage)
@@ -66,7 +72,17 @@ git clone https://github.com/sahilchouksey/study-in-woods.git
 cd study-in-woods
 ```
 
-### 2. Backend Setup (`apps/api`)
+### 2. Install Dependencies
+
+```bash
+# Install all workspace dependencies (this will install Turborepo)
+npm install
+
+# Install Go dependencies for backend
+cd apps/api && go mod download && cd ../..
+```
+
+### 3. Backend Setup (`apps/api`)
 
 ```bash
 cd apps/api
@@ -75,44 +91,50 @@ cd apps/api
 cp .env.example .env
 # Edit .env with your credentials
 
-# Install dependencies
-go mod download
-
 # Run database migrations
 make db-migrate
 
 # Seed database with initial data
 make db-seed
 
-# Start development server
-make dev
+# Return to root
+cd ../..
 ```
 
-Backend will run on `http://localhost:8080`
+### 4. Frontend Setup (`apps/web`)
+
+```bash
+cd apps/web
+
+# Copy environment file
+cp .env.example .env.local
+# Edit .env.local with backend API URL
+
+# Return to root
+cd ../..
+```
+
+### 5. Start Development (with Turborepo)
+
+```bash
+# From the root directory
+
+# Start both apps in parallel
+npm run dev
+
+# Or start individual apps:
+npm run api:dev    # Backend only
+npm run web:dev    # Frontend only
+```
+
+Backend will run on `http://localhost:8080`  
+Frontend will run on `http://localhost:3000`
 
 **Default Admin Credentials**:
 - Email: `admin@studyinwoods.com`
 - Password: `Admin123!`
 
 ⚠️ **Change password after first login!**
-
-### 3. Frontend Setup (`apps/web`)
-
-```bash
-cd apps/web
-
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env.local
-# Edit .env.local with backend API URL
-
-# Start development server
-npm run dev
-```
-
-Frontend will run on `http://localhost:3000`
 
 ---
 
@@ -162,9 +184,37 @@ NEXT_PUBLIC_APP_NAME=Study in Woods
 
 ## 🛠️ Development Commands
 
-### Backend (`apps/api`)
+### Turborepo Commands (Root)
 
 ```bash
+# Development
+npm run dev           # Start all apps in parallel
+npm run api:dev       # Start backend only
+npm run web:dev       # Start frontend only
+
+# Build
+npm run build         # Build all apps
+npm run api:build     # Build backend only
+npm run web:build     # Build frontend only
+
+# Start production
+npm run start         # Start all apps in production mode
+
+# Linting
+npm run lint          # Lint all apps
+
+# Clean
+npm run clean         # Clean all build artifacts
+
+# Testing
+npm run test          # Run tests for all apps
+```
+
+### Backend Commands (`apps/api`)
+
+```bash
+cd apps/api
+
 # Development
 make dev              # Start with hot reload
 make dev-docker       # Start with Docker Compose
@@ -187,14 +237,20 @@ make fmt              # Format code
 make lint             # Run linters
 ```
 
-### Frontend (`apps/web`)
+### Frontend Commands (`apps/web`)
 
 ```bash
+cd apps/web
+
+# Development
 npm run dev           # Start development server
+
+# Build & Production
 npm run build         # Build for production
 npm run start         # Start production server
+
+# Code Quality
 npm run lint          # Run ESLint
-npm run type-check    # TypeScript type checking
 ```
 
 ---

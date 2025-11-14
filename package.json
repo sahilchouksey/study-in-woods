@@ -1,0 +1,27 @@
+{
+  "name": "study-in-woods-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean",
+    "test": "turbo run test",
+    "web:dev": "turbo run dev --filter=web",
+    "api:dev": "turbo run dev --filter=api",
+    "web:build": "turbo run build --filter=web",
+    "api:build": "turbo run build --filter=api"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0"
+  },
+  "packageManager": "npm@10.0.0",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

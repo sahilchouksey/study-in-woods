@@ -1,0 +1,19 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "make dev",
+    "build": "make build",
+    "start": "make run",
+    "test": "make test",
+    "lint": "make lint",
+    "clean": "make clean",
+    "migrate": "make migrate",
+    "db-seed": "make db-seed",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "description": "Study in Woods API - Go backend with Fiber framework"
+}
