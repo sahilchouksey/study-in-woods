@@ -12,7 +12,7 @@ import (
 	utils "github.com/sahilchouksey/go-init-setup/utils"
 )
 
-func GetAllTodos(c fiber.Ctx, store database.Storage) error {
+func GetAllTodos(c *fiber.Ctx, store database.Storage) error {
 	// Get the database connection from the context
 	todos, err := store.GetTodos()
 	if err != nil {
@@ -23,13 +23,13 @@ func GetAllTodos(c fiber.Ctx, store database.Storage) error {
 	return nil
 }
 
-func AddTodoHandler(c fiber.Ctx, store database.Storage) error {
+func AddTodoHandler(c *fiber.Ctx, store database.Storage) error {
 	var todo model.Todo
 	var err error
 
-	todo.Name = c.Query("name")
-	todo.Description = c.Query("description")
-	todo.Due, err = time.Parse(time.RFC3339, c.Query("due"))
+	todo.Name = (*c).Query("name")
+	todo.Description = (*c).Query("description")
+	todo.Due, err = time.Parse(time.RFC3339, (*c).Query("due"))
 
 	if err != nil {
 		return err
@@ -48,22 +48,22 @@ func AddTodoHandler(c fiber.Ctx, store database.Storage) error {
 	return nil
 }
 
-func UpdateTodoHandler(c fiber.Ctx, store database.Storage) error {
+func UpdateTodoHandler(c *fiber.Ctx, store database.Storage) error {
 	var todo model.Todo
 	var err error
 
-	if todo.ID, err = strconv.ParseInt(c.Query("id"), 10, 64); todo.ID <= 0 || err != nil {
+	if todo.ID, err = strconv.ParseInt((*c).Query("id"), 10, 64); todo.ID <= 0 || err != nil {
 		err := errors.New(fmt.Sprintf("unable to find todo associated with %d", todo.ID))
 		return err
 	}
-	todo.Name = c.Query("name")
-	todo.Description = c.Query("description")
-	if c.Query("due") != "" {
-		if todo.Due, err = time.Parse(time.RFC3339, c.Query("due")); err != nil {
+	todo.Name = (*c).Query("name")
+	todo.Description = (*c).Query("description")
+	if (*c).Query("due") != "" {
+		if todo.Due, err = time.Parse(time.RFC3339, (*c).Query("due")); err != nil {
 			return err
 		}
 	}
-	todo.Status = c.Query("status")
+	todo.Status = (*c).Query("status")
 
 	if err := store.UpdateTodo(todo); err != nil {
 		return err
@@ -73,10 +73,10 @@ func UpdateTodoHandler(c fiber.Ctx, store database.Storage) error {
 	return nil
 }
 
-func DeleteTodoHandler(c fiber.Ctx, store database.Storage) error {
+func DeleteTodoHandler(c *fiber.Ctx, store database.Storage) error {
 	var todoId int64
 	var err error
-	if todoId, err = strconv.ParseInt(c.Query("id"), 10, 64); todoId <= 0 || err != nil {
+	if todoId, err = strconv.ParseInt((*c).Query("id"), 10, 64); todoId <= 0 || err != nil {
 		err := errors.New(fmt.Sprintf("unable to find todo associated with %d", todoId))
 		return err
 	}
