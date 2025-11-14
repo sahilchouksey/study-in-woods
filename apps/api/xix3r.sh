@@ -1,0 +1,6 @@
+PORT='3000'
+GO_ENV='development'
+DB_USER_NAME='postgres'
+DB_PASSWORD='lol'
+DB_NAME='postgres'
+DB_SSL_MODE='disable'

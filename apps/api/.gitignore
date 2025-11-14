@@ -1,0 +1,51 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+/tmp
+tmp/
+/bin
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+server
+main
+
+# Test
+*.test
+*.out
+coverage.html
+coverage.out
+
+# Logs
+*.log
+/logs
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+/vendor
+vendor/
+
+# Air
+tmp/
+
+# Project specific
+thoughts/
+worktrees/
+**worktree**

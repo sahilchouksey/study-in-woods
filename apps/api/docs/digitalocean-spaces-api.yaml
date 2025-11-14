@@ -1,0 +1,1331 @@
+openapi: 3.0.0
+info:
+  title: DigitalOcean Spaces Object Storage API
+  version: '2.0'
+  description: The DigitalOcean Spaces API lets you manage object storage buckets and files. You can upload documents, retrieve them, list bucket contents, manage access keys, and perform all essential object storage operations.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  contact:
+    name: DigitalOcean API Team
+    email: api-engineering@digitalocean.com
+  termsOfService: https://www.digitalocean.com/legal/terms-of-service-agreement/
+servers:
+- url: https://api.digitalocean.com
+  description: production
+tags:
+- name: Spaces Object Storage
+  description: The API lets you manage DigitalOcean Spaces buckets and objects, upload and download files, manage access keys, and configure bucket settings.
+paths:
+  /v2/spaces/keys:
+    get:
+      description: To list all Spaces access keys, send a GET request to `/v2/spaces/keys`.
+      operationId: spaces_list_access_keys
+      parameters:
+      - description: Page number.
+        example: 1
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: Items per page.
+        example: 20
+        in: query
+        name: per_page
+        schema:
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiListSpacesAccessKeysOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: List Spaces Access Keys
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/keys\""
+    post:
+      description: To create a new Spaces access key, send a POST request to `/v2/spaces/keys`. The response body contains a JSON object with the newly created access key.
+      operationId: spaces_create_access_key
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/apiCreateSpacesAccessKeyInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiCreateSpacesAccessKeyOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:create
+      summary: Create a Spaces Access Key
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X POST \\\n    -H \"Content-Type: application/json\"  \\\n\
+          \    -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n    \"https://api.digitalocean.com/v2/spaces/keys\"\
+          \ \\\n    -d '{\n      \"name\": \"my-spaces-key\"\n    }'"
+  /v2/spaces/keys/{access_key_id}:
+    get:
+      description: To retrieve details of a Spaces access key, send a GET request to `/v2/spaces/keys/{access_key_id}`.
+      operationId: spaces_get_access_key
+      parameters:
+      - description: Spaces access key ID
+        example: '"DO00ABC123DEF456GHI789"'
+        in: path
+        name: access_key_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiGetSpacesAccessKeyOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: Get a Spaces Access Key
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/keys/DO00ABC123DEF456GHI789\""
+    put:
+      description: To update a Spaces access key name, send a PUT request to `/v2/spaces/keys/{access_key_id}`.
+      operationId: spaces_update_access_key
+      parameters:
+      - description: Spaces access key ID
+        example: '"DO00ABC123DEF456GHI789"'
+        in: path
+        name: access_key_id
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/apiUpdateSpacesAccessKeyInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiUpdateSpacesAccessKeyOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:update
+      summary: Update Spaces Access Key
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X PUT \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/keys/DO00ABC123DEF456GHI789\"\
+          \ \\\n  -d '{\n    \"name\": \"updated-key-name\"\n  }'"
+    delete:
+      description: To delete a Spaces access key, send a DELETE request to `/v2/spaces/keys/{access_key_id}`.
+      operationId: spaces_delete_access_key
+      parameters:
+      - description: Spaces access key ID
+        example: '"DO00ABC123DEF456GHI789"'
+        in: path
+        name: access_key_id
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The action was successful and the response body is empty.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:delete
+      summary: Delete Spaces Access Key
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X DELETE \\\n  -H \"Content-Type: application/json\"  \\\n\
+          \  -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/keys/DO00ABC123DEF456GHI789\""
+  /v2/spaces/buckets:
+    get:
+      description: To list all Spaces buckets, send a GET request to `/v2/spaces/buckets`.
+      operationId: spaces_list_buckets
+      parameters:
+      - description: Region filter (e.g., nyc3, sfo3, fra1)
+        example: nyc3
+        in: query
+        name: region
+        schema:
+          type: string
+      - description: Page number.
+        example: 1
+        in: query
+        name: page
+        schema:
+          type: integer
+      - description: Items per page.
+        example: 20
+        in: query
+        name: per_page
+        schema:
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiListBucketsOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: List All Buckets
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/buckets\""
+    post:
+      description: To create a new Spaces bucket, send a POST request to `/v2/spaces/buckets`.
+      operationId: spaces_create_bucket
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/apiCreateBucketInput'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiCreateBucketOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:create
+      summary: Create a New Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X POST \\\n    -H \"Content-Type: application/json\"  \\\n\
+          \    -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n    \"https://api.digitalocean.com/v2/spaces/buckets\"\
+          \ \\\n    -d '{\n      \"name\": \"my-bucket\",\n      \"region\": \"nyc3\"\
+          ,\n      \"acl\": \"private\"\n    }'"
+  /v2/spaces/buckets/{bucket_name}:
+    get:
+      description: To retrieve details of a bucket, send a GET request to `/v2/spaces/buckets/{bucket_name}`.
+      operationId: spaces_get_bucket
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiGetBucketOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: Get Bucket Details
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket?region=nyc3\""
+    delete:
+      description: To delete a Spaces bucket, send a DELETE request to `/v2/spaces/buckets/{bucket_name}`.
+      operationId: spaces_delete_bucket
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The action was successful and the response body is empty.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:delete
+      summary: Delete a Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X DELETE \\\n  -H \"Content-Type: application/json\"  \\\n\
+          \  -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket?region=nyc3\""
+  /v2/spaces/buckets/{bucket_name}/objects:
+    get:
+      description: To list all objects in a bucket, send a GET request to `/v2/spaces/buckets/{bucket_name}/objects`.
+      operationId: spaces_list_objects
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      - description: Prefix to filter objects
+        example: documents/
+        in: query
+        name: prefix
+        schema:
+          type: string
+      - description: Delimiter for grouping
+        example: /
+        in: query
+        name: delimiter
+        schema:
+          type: string
+      - description: Maximum number of keys to return
+        example: 1000
+        in: query
+        name: max_keys
+        schema:
+          type: integer
+      - description: Continuation token for pagination
+        in: query
+        name: continuation_token
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiListObjectsOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: List Objects in Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/objects?region=nyc3\""
+  /v2/spaces/buckets/{bucket_name}/objects/upload:
+    post:
+      description: To upload a file to a Spaces bucket, send a POST request to `/v2/spaces/buckets/{bucket_name}/objects/upload`.
+      operationId: spaces_upload_object
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/apiUploadObjectInput'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiUploadObjectOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:create
+      summary: Upload Object to Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X POST \\\n  -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+          \ \\\n  -F \"key=documents/report.pdf\" \\\n  -F \"file=@/path/to/local/report.pdf\"\
+          \ \\\n  -F \"acl=private\" \\\n  -F \"content_type=application/pdf\" \\\n\
+          \  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/objects/upload?region=nyc3\""
+  /v2/spaces/buckets/{bucket_name}/objects/{object_key}:
+    get:
+      description: To retrieve an object from a bucket, send a GET request to `/v2/spaces/buckets/{bucket_name}/objects/{object_key}`.
+      operationId: spaces_get_object
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The key/path of the object
+        example: documents/report.pdf
+        in: path
+        name: object_key
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      - description: Return metadata only (no file download)
+        example: false
+        in: query
+        name: metadata_only
+        schema:
+          type: boolean
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiGetObjectOutput'
+          description: A successful response. Returns binary data if metadata_only=false, or JSON metadata if metadata_only=true.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+            Content-Type:
+              schema:
+                type: string
+              description: The content type of the object
+            Content-Length:
+              schema:
+                type: integer
+              description: The size of the object in bytes
+            ETag:
+              schema:
+                type: string
+              description: The ETag of the object
+            Last-Modified:
+              schema:
+                type: string
+              description: The last modified date of the object
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: Get Object from Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+          \ \\\n  -o downloaded-file.pdf \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/objects/documents%2Freport.pdf?region=nyc3\""
+    delete:
+      description: To delete an object from a bucket, send a DELETE request to `/v2/spaces/buckets/{bucket_name}/objects/{object_key}`.
+      operationId: spaces_delete_object
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The key/path of the object
+        example: documents/report.pdf
+        in: path
+        name: object_key
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: The action was successful and the response body is empty.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:delete
+      summary: Delete Object from Bucket
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X DELETE \\\n  -H \"Authorization: Bearer $DIGITALOCEAN_TOKEN\"\
+          \ \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/objects/documents%2Freport.pdf?region=nyc3\""
+  /v2/spaces/buckets/{bucket_name}/objects/{object_key}/copy:
+    post:
+      description: To copy an object within or between buckets, send a POST request to `/v2/spaces/buckets/{bucket_name}/objects/{object_key}/copy`.
+      operationId: spaces_copy_object
+      parameters:
+      - description: The name of the source bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The key/path of the source object
+        example: documents/report.pdf
+        in: path
+        name: object_key
+        required: true
+        schema:
+          type: string
+      - description: The region where the source bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/apiCopyObjectInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiCopyObjectOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:create
+      summary: Copy Object
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X POST \\\n  -H \"Content-Type: application/json\" \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  -d '{\n    \"destination_bucket\"\
+          : \"my-backup-bucket\",\n    \"destination_key\": \"backups/report-copy.pdf\"\
+          ,\n    \"destination_region\": \"sfo3\"\n  }' \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/objects/documents%2Freport.pdf/copy?region=nyc3\""
+  /v2/spaces/buckets/{bucket_name}/cors:
+    get:
+      description: To retrieve CORS configuration for a bucket, send a GET request to `/v2/spaces/buckets/{bucket_name}/cors`.
+      operationId: spaces_get_cors_configuration
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiGetCorsConfigurationOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:read
+      summary: Get CORS Configuration
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X GET \\\n  -H \"Content-Type: application/json\"  \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/cors?region=nyc3\""
+    put:
+      description: To set CORS configuration for a bucket, send a PUT request to `/v2/spaces/buckets/{bucket_name}/cors`.
+      operationId: spaces_set_cors_configuration
+      parameters:
+      - description: The name of the bucket
+        example: my-bucket
+        in: path
+        name: bucket_name
+        required: true
+        schema:
+          type: string
+      - description: The region where the bucket is located
+        example: nyc3
+        in: query
+        name: region
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/apiSetCorsConfigurationInput'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apiSetCorsConfigurationOutput'
+          description: A successful response.
+          headers:
+            ratelimit-limit:
+              $ref: '#/components/headers/ratelimit-limit'
+            ratelimit-remaining:
+              $ref: '#/components/headers/ratelimit-remaining'
+            ratelimit-reset:
+              $ref: '#/components/headers/ratelimit-reset'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/not_found'
+        '429':
+          $ref: '#/components/responses/too_many_requests'
+        '500':
+          $ref: '#/components/responses/server_error'
+        default:
+          $ref: '#/components/responses/unexpected_error'
+      security:
+      - bearer_auth:
+        - spaces:update
+      summary: Set CORS Configuration
+      tags:
+      - Spaces Object Storage
+      x-codeSamples:
+      - lang: cURL
+        source: "curl -X PUT \\\n  -H \"Content-Type: application/json\" \\\n  -H\
+          \ \"Authorization: Bearer $DIGITALOCEAN_TOKEN\" \\\n  -d '{\n    \"cors_rules\"\
+          : [\n      {\n        \"allowed_origins\": [\"*\"],\n        \"allowed_methods\"\
+          : [\"GET\", \"PUT\", \"POST\"],\n        \"allowed_headers\": [\"*\"],\n\
+          \        \"max_age_seconds\": 3600\n      }\n    ]\n  }' \\\n  \"https://api.digitalocean.com/v2/spaces/buckets/my-bucket/cors?region=nyc3\""
+components:
+  headers:
+    ratelimit-limit:
+      description: The number of requests that can be made per hour per OAuth token.
+      schema:
+        type: integer
+      example: 5000
+    ratelimit-remaining:
+      description: The number of requests that remain before you hit your request limit.
+      schema:
+        type: integer
+      example: 4999
+    ratelimit-reset:
+      description: This represents the time when the oldest request will expire. The value is given in Unix epoch time.
+      schema:
+        type: integer
+      example: 1415984218
+  responses:
+    unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    not_found:
+      description: The resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    too_many_requests:
+      description: API Rate limit exceeded
+      headers:
+        ratelimit-limit:
+          $ref: '#/components/headers/ratelimit-limit'
+        ratelimit-remaining:
+          $ref: '#/components/headers/ratelimit-remaining'
+        ratelimit-reset:
+          $ref: '#/components/headers/ratelimit-reset'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    server_error:
+      description: Server error.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    unexpected_error:
+      description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  schemas:
+    error:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A short identifier corresponding to the HTTP status code returned.
+        message:
+          type: string
+          description: A message providing additional information about the error.
+        request_id:
+          type: string
+          description: A unique request ID that should be provided when reporting bugs.
+    apiListSpacesAccessKeysOutput:
+      type: object
+      properties:
+        access_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/spacesAccessKey'
+        links:
+          $ref: '#/components/schemas/pageLinks'
+        meta:
+          $ref: '#/components/schemas/metaProperties'
+    apiCreateSpacesAccessKeyInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: A human-readable name for the access key
+          example: my-spaces-key
+    apiCreateSpacesAccessKeyOutput:
+      type: object
+      properties:
+        access_key:
+          $ref: '#/components/schemas/spacesAccessKeyWithSecret'
+    apiGetSpacesAccessKeyOutput:
+      type: object
+      properties:
+        access_key:
+          $ref: '#/components/schemas/spacesAccessKey'
+    apiUpdateSpacesAccessKeyInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Updated name for the access key
+          example: updated-key-name
+    apiUpdateSpacesAccessKeyOutput:
+      type: object
+      properties:
+        access_key:
+          $ref: '#/components/schemas/spacesAccessKey'
+    apiListBucketsOutput:
+      type: object
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/bucket'
+        links:
+          $ref: '#/components/schemas/pageLinks'
+        meta:
+          $ref: '#/components/schemas/metaProperties'
+    apiCreateBucketInput:
+      type: object
+      required:
+        - name
+        - region
+      properties:
+        name:
+          type: string
+          description: The name of the bucket (must be globally unique)
+          example: my-bucket
+        region:
+          type: string
+          description: The region to create the bucket in
+          example: nyc3
+        acl:
+          type: string
+          description: Access control list for the bucket
+          enum: [private, public-read]
+          default: private
+    apiCreateBucketOutput:
+      type: object
+      properties:
+        bucket:
+          $ref: '#/components/schemas/bucket'
+    apiGetBucketOutput:
+      type: object
+      properties:
+        bucket:
+          $ref: '#/components/schemas/bucket'
+    apiListObjectsOutput:
+      type: object
+      properties:
+        objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/object'
+        common_prefixes:
+          type: array
+          items:
+            type: string
+          description: Common prefixes when using delimiter
+        is_truncated:
+          type: boolean
+          description: Whether there are more objects to retrieve
+        continuation_token:
+          type: string
+          description: Token for retrieving next page of results
+    apiUploadObjectInput:
+      type: object
+      required:
+        - key
+        - file
+      properties:
+        key:
+          type: string
+          description: The key/path for the object
+          example: documents/report.pdf
+        file:
+          type: string
+          format: binary
+          description: The file to upload
+        acl:
+          type: string
+          description: Access control list for the object
+          enum: [private, public-read]
+          default: private
+        content_type:
+          type: string
+          description: Content type of the file
+          example: application/pdf
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom metadata for the object
+    apiUploadObjectOutput:
+      type: object
+      properties:
+        object:
+          $ref: '#/components/schemas/object'
+    apiGetObjectOutput:
+      type: object
+      properties:
+        key:
+          type: string
+          description: The key/path of the object
+        size:
+          type: integer
+          format: int64
+          description: Size in bytes
+        last_modified:
+          type: string
+          format: date-time
+          description: Last modification date
+        etag:
+          type: string
+          description: ETag of the object
+        content_type:
+          type: string
+          description: Content type
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Custom metadata
+    apiCopyObjectInput:
+      type: object
+      required:
+        - destination_bucket
+        - destination_key
+      properties:
+        destination_bucket:
+          type: string
+          description: The destination bucket name
+          example: my-backup-bucket
+        destination_key:
+          type: string
+          description: The destination object key
+          example: backups/report-copy.pdf
+        destination_region:
+          type: string
+          description: The destination region (if different from source)
+          example: sfo3
+        acl:
+          type: string
+          description: Access control list for the new object
+          enum: [private, public-read]
+          default: private
+    apiCopyObjectOutput:
+      type: object
+      properties:
+        object:
+          $ref: '#/components/schemas/object'
+    apiGetCorsConfigurationOutput:
+      type: object
+      properties:
+        cors_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/corsRule'
+    apiSetCorsConfigurationInput:
+      type: object
+      required:
+        - cors_rules
+      properties:
+        cors_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/corsRule'
+    apiSetCorsConfigurationOutput:
+      type: object
+      properties:
+        cors_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/corsRule'
+    spacesAccessKey:
+      type: object
+      properties:
+        access_key_id:
+          type: string
+          description: The access key ID
+          example: DO00ABC123DEF456GHI789
+        name:
+          type: string
+          description: A human-readable name for the key
+          example: my-spaces-key
+        created_at:
+          type: string
+          format: date-time
+          description: When the key was created
+    spacesAccessKeyWithSecret:
+      allOf:
+        - $ref: '#/components/schemas/spacesAccessKey'
+        - type: object
+          properties:
+            secret_access_key:
+              type: string
+              description: The secret access key (only shown once upon creation)
+              example: abcdef1234567890abcdef1234567890abcdef12
+    bucket:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the bucket
+          example: my-bucket
+        region:
+          type: string
+          description: The region where the bucket is located
+          example: nyc3
+        creation_date:
+          type: string
+          format: date-time
+          description: When the bucket was created
+        size_bytes:
+          type: integer
+          format: int64
+          description: Total size of all objects in bytes
+        object_count:
+          type: integer
+          description: Number of objects in the bucket
+        endpoint:
+          type: string
+          description: The endpoint URL for the bucket
+          example: https://my-bucket.nyc3.digitaloceanspaces.com
+    object:
+      type: object
+      properties:
+        key:
+          type: string
+          description: The key/path of the object
+          example: documents/report.pdf
+        size:
+          type: integer
+          format: int64
+          description: Size in bytes
+        last_modified:
+          type: string
+          format: date-time
+          description: Last modification date
+        etag:
+          type: string
+          description: ETag of the object
+        storage_class:
+          type: string
+          description: Storage class
+          example: STANDARD
+        owner:
+          type: object
+          properties:
+            id:
+              type: string
+            display_name:
+              type: string
+    corsRule:
+      type: object
+      required:
+        - allowed_origins
+        - allowed_methods
+      properties:
+        allowed_origins:
+          type: array
+          items:
+            type: string
+          description: List of allowed origins
+          example: ["https://example.com", "https://app.example.com"]
+        allowed_methods:
+          type: array
+          items:
+            type: string
+          description: List of allowed HTTP methods
+          example: ["GET", "PUT", "POST"]
+        allowed_headers:
+          type: array
+          items:
+            type: string
+          description: List of allowed headers
+          example: ["*"]
+        expose_headers:
+          type: array
+          items:
+            type: string
+          description: List of headers to expose to the browser
+          example: ["ETag", "Content-Length"]
+        max_age_seconds:
+          type: integer
+          description: How long the browser should cache the preflight response
+          example: 3600
+    pageLinks:
+      type: object
+      properties:
+        pages:
+          type: object
+          properties:
+            first:
+              type: string
+              format: uri
+            prev:
+              type: string
+              format: uri
+            next:
+              type: string
+              format: uri
+            last:
+              type: string
+              format: uri
+    metaProperties:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Number of objects returned
+  securitySchemes:
+    bearer_auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

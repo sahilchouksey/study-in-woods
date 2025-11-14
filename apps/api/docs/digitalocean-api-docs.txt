@@ -1,0 +1,7654 @@
+GradientAI Platform
+GET
+List Agents
+POST
+Create an Agent
+GET
+List Agent API Keys
+POST
+Create an Agent API Key
+PUT
+Update API Key for an Agent
+DEL
+Delete API Key for an Agent
+PUT
+Regenerate API Key for an Agent
+POST
+Add Function Route to an Agent
+PUT
+Update Function Route for an Agent
+DEL
+Delete Function Route for an Agent
+POST
+Attach Knowledge Bases to an Agent
+POST
+Attach Knowledge Base to an Agent
+DEL
+Detach Knowledge Base from an Agent
+POST
+Add Agent Route to an Agent
+PUT
+Update Agent Route for an Agent
+DEL
+Delete Agent Route for an Agent
+GET
+Retrieve an Existing Agent
+PUT
+Update an Agent
+DEL
+Delete an Agent
+GET
+View Agent Routes
+PUT
+Update Agent Status
+GET
+Get Agent Usage
+GET
+List Agent Versions
+PUT
+Rollback to Agent Version
+GET
+List Anthropic API Keys
+POST
+Create Anthropic API Key
+GET
+Get Anthropic API Key
+PUT
+Update Anthropic API Key
+DEL
+Delete Anthropic API Key
+GET
+List agents by Anthropic key
+POST
+Create Evaluation Dataset
+POST
+Create Presigned URLs for Evaluation Dataset File Upload
+GET
+List Evaluation Metrics
+POST
+Run an Evaluation Test Case
+GET
+Retrieve Information About an Existing Evaluation Run
+GET
+Retrieve Results of an Evaluation Run
+GET
+Retrieve Results of an Evaluation Run Prompt
+GET
+List Evaluation Test Cases
+POST
+Create Evaluation Test Case.
+GET
+List Evaluation Runs by Test Case
+GET
+Retrieve Information About an Existing Evaluation Test Case
+PUT
+Update an Evaluation Test Case.
+GET
+List Indexing Jobs for a Knowledge Base
+POST
+Start Indexing Job for a Knowledge Base
+GET
+List Data Sources for Indexing Job for a Knowledge Base
+GET
+Get Signed URL for Indexing Job Details
+GET
+Retrieve Status of Indexing Job for a Knowledge Base
+PUT
+Cancel Indexing Job for a Knowledge Base
+GET
+List Knowledge Bases
+POST
+Create a Knowledge Base
+POST
+Create Presigned URLs for Data Source File Upload
+GET
+List Data Sources for a Knowledge Base
+POST
+Add Data Source to a Knowledge Base
+DEL
+Delete a Data Source from a Knowledge Base
+GET
+List Indexing Jobs for a Knowledge Base
+GET
+Retrieve Information About an Existing Knowledge Base
+PUT
+Update a Knowledge Base
+DEL
+Delete a Knowledge Base
+GET
+List Available Models
+GET
+List Model API Keys
+POST
+Create a Model API Key
+PUT
+Update API Key for a Model
+DEL
+Delete API Key for a Model
+PUT
+Regenerate API Key for a Model
+POST
+Get Oauth2 Dropbox Tokens
+GET
+Get Oauth2 URL
+GET
+List OpenAI API Keys
+POST
+Create OpenAI API Key
+GET
+Get OpenAI API Key
+PUT
+Update OpenAI API Key
+DEL
+Delete OpenAI API Key
+GET
+List agents by OpenAI key
+GET
+List Datacenter Regions
+POST
+Create scheduled indexing for knowledge base
+GET
+Get Scheduled Indexing for Knowledge Base
+DEL
+Delete Scheduled Indexing
+GET
+List Workspaces
+POST
+Create a Workspace
+GET
+Retrieve an Existing Workspace
+PUT
+Update a Workspace
+DEL
+Delete a Workspace
+GET
+List agents by Workspace
+PUT
+Move Agents to a Workspace
+GET
+List Evaluation Test Cases by Workspace
+GradientAI Platform
+
+The API lets you build GPU-powered AI agents with pre-built or custom foundation models, function and agent routes, and RAG pipelines with knowledge bases.
+
+List Agents
+
+To list all agents, send a GET request to /v2/gen-ai/agents.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+only_deployed
+boolean
+Example: only_deployed=true
+
+Only list agents that are deployed.
+
+
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agents":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create an Agent
+
+To create a new agent, send a POST request to /v2/gen-ai/agents. The response body contains a JSON object with the newly created agent object.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+anthropic_key_uuid
+string
+
+Optional Anthropic API key ID to use with Anthropic models
+
+
+description
+string
+
+A text description of the agent, not used in inference
+
+
+instruction
+string
+
+Agent instruction. Instructions help your agent to perform its job effectively. See Write Effective Agent Instructions for best practices.
+
+
+knowledge_base_uuid
+Array of strings
+
+Ids of the knowledge base(s) to attach to the agent
+
+
+model_provider_key_uuid
+string
+
+model_uuid
+string
+
+Identifier for the foundation model.
+
+
+name
+string
+
+Agent name
+
+
+open_ai_key_uuid
+string
+
+Optional OpenAI API key ID to use with OpenAI models
+
+
+project_id
+string
+
+The id of the DigitalOcean project this agent will belong to
+
+
+region
+string
+
+The DigitalOcean region to deploy your agent in
+
+
+tags
+Array of strings
+
+Agent tag to organize related resources
+
+
+workspace_uuid
+string
+
+Identifier for the workspace
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"anthropic_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"description": "\"My Agent Description\"",
+"instruction": "\"You are an agent who thinks deeply about the world\"",
+"knowledge_base_uuid":
+[
+"example string"
+],
+"model_provider_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"model_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"My Agent\"",
+"open_ai_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"project_id": "\"12345678-1234-1234-1234-123456789012\"",
+"region": "\"tor1\"",
+"tags":
+[
+"example string"
+],
+"workspace_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+List Agent API Keys
+
+To list all agent API keys, send a GET request to /v2/gen-ai/agents/{agent_uuid}/api_keys.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents/{agent_uuid}/api_keys
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4/api_keys"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_infos":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create an Agent API Key
+
+To create an agent API key, send a POST request to /v2/gen-ai/agents/{agent_uuid}/api_keys.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+REQUEST BODY SCHEMA: application/json
+agent_uuid
+string
+
+Agent id
+
+
+name
+string
+
+A human friendly name to identify the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents/{agent_uuid}/api_keys
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "Production Key"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update API Key for an Agent
+
+To update an agent API key, send a PUT request to /v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+REQUEST BODY SCHEMA: application/json
+agent_uuid
+string
+
+Agent id
+
+
+api_key_uuid
+string
+
+API key ID
+
+
+name
+string
+
+Name
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"api_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete API Key for an Agent
+
+To delete an API key for an agent, send a DELETE request to /v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for your agent.
+
+
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key for an agent.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/1b418231-b7d6-11ef-bf8f-4e013e2ddde4/api_keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Regenerate API Key for an Agent
+
+To regenerate an agent API key, send a PUT request to /v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}/regenerate.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{agent_uuid}/api_keys/{api_key_uuid}/regenerate
+Request samples
+cURL
+Copy
+curl -X PUT \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/1b418231-b7d6-11ef-bf8f-4e013e2ddde4/api_keys/11efcf7e-824d-2808-bf8f-4e013e2ddde4/regenerate"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Add Function Route to an Agent
+
+To create a function route for an agent, send a POST request to /v2/gen-ai/agents/{agent_uuid}/functions.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+REQUEST BODY SCHEMA: application/json
+agent_uuid
+string
+
+Agent id
+
+
+description
+string
+
+Function description
+
+
+faas_name
+string
+
+The name of the function in the DigitalOcean functions platform
+
+
+faas_namespace
+string
+
+The namespace of the function in the DigitalOcean functions platform
+
+
+function_name
+string
+
+Function name
+
+
+input_schema
+object
+
+Describe the input schema for the function so the agent may call it
+
+
+output_schema
+object
+
+Describe the output schema for the function so the agent handle its response
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents/{agent_uuid}/functions
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"description": "\"My Function Description\"",
+"faas_name": "\"my-function\"",
+"faas_namespace": "\"default\"",
+"function_name": "\"My Function\"",
+"input_schema": { },
+"output_schema": { }
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Update Function Route for an Agent
+
+To update the function route, send a PUT request to /v2/gen-ai/agents/{agent_uuid}/functions/{function_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+
+function_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Function id
+
+REQUEST BODY SCHEMA: application/json
+agent_uuid
+string
+
+Agent id
+
+
+description
+string
+
+Funciton description
+
+
+faas_name
+string
+
+The name of the function in the DigitalOcean functions platform
+
+
+faas_namespace
+string
+
+The namespace of the function in the DigitalOcean functions platform
+
+
+function_name
+string
+
+Function name
+
+
+function_uuid
+string
+
+Function id
+
+
+input_schema
+object
+
+Describe the input schema for the function so the agent may call it
+
+
+output_schema
+object
+
+Describe the output schema for the function so the agent handle its response
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{agent_uuid}/functions/{function_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"description": "\"My Function Description\"",
+"faas_name": "\"my-function\"",
+"faas_namespace": "\"default\"",
+"function_name": "\"My Function\"",
+"function_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"input_schema": { },
+"output_schema": { }
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Delete Function Route for an Agent
+
+To delete a function route from an agent, send a DELETE request to /v2/gen-ai/agents/{agent_uuid}/functions/{function_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+The id of the agent the function route belongs to.
+
+
+function_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+The function route to be destroyed. This does not destroy the function itself.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/agents/{agent_uuid}/functions/{function_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/ff47f5b7-96e5-11ef-bf8f-4e013e2ddde4/functions/6cc5cda5-9ac3-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Attach Knowledge Bases to an Agent
+
+To attach knowledge bases to an agent, send a POST request to /v2/gen-ai/agents/{agent_uuid}/knowledge_bases
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for an agent.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents/{agent_uuid}/knowledge_bases
+Request samples
+cURL
+Copy
+curl -X POST \
+ -H "Content-Type: application/json" \
+ -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+ "https://api.digitalocean.com/v2/gen-ai/agents/1b418231-b7d6-11ef-bf8f-4e013e2ddde4/knowledge_bases" \
+ -d '{
+   "agent_uuid": "1b418231-b7d6-11ef-bf8f-4e013e2ddde4",
+   "knowledge_base_uuids": [
+     "9a6e3975-b0c6-11ef-bf8f-4e013e2ddde4",
+     "683c3100-7c18-4c94-aea4-5ac5875cc87c",
+     "4887a78b-74af-46b3-98f4-451a48f9cc5e"
+   ]
+ }'
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Attach Knowledge Base to an Agent
+
+To attach a knowledge base to an agent, send a POST request to /v2/gen-ai/agents/{agent_uuid}/knowledge_bases/{knowledge_base_uuid}
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for an agent.
+
+
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for a knowledge base.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents/{agent_uuid}/knowledge_bases/{knowledge_base_uuid}
+Request samples
+cURL
+Copy
+curl -X POST \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/1b418231-b7d6-11ef-bf8f-4e013e2ddde4/knowledge_bases/9a6e3975-b0c6-11ef-bf8f-4e013e2ddde4" \
+  -d '{
+    "agent_uuid": "1b418231-b7d6-11ef-bf8f-4e013e2ddde4",
+    "agent_uuid": "9a6e3975-b0c6-11ef-bf8f-4e013e2ddde4"
+  }'
+
+
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Detach Knowledge Base from an Agent
+
+To detach a knowledge base from an agent, send a DELETE request to /v2/gen-ai/agents/{agent_uuid}/knowledge_bases/{knowledge_base_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/agents/{agent_uuid}/knowledge_bases/{knowledge_base_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases/9a6e3975-b0c6-11ef-bf8f-4e013e2ddde4/data_sources/bd2a2db5-b8b0-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Add Agent Route to an Agent
+
+To add an agent route to an agent, send a POST request to /v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+parent_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for the parent agent.
+
+
+child_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Routed agent id
+
+REQUEST BODY SCHEMA: application/json
+child_agent_uuid
+string
+
+Routed agent id
+
+
+if_case
+string
+
+parent_agent_uuid
+string
+
+A unique identifier for the parent agent.
+
+
+route_name
+string
+
+Name of route
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"child_agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"if_case": "\"use this to get weather information\"",
+"parent_agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"route_name": "\"weather_route\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"child_agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"parent_agent_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Update Agent Route for an Agent
+
+To update an agent route for an agent, send a PUT request to /v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+parent_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for the parent agent.
+
+
+child_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Routed agent id
+
+REQUEST BODY SCHEMA: application/json
+child_agent_uuid
+string
+
+Routed agent id
+
+
+if_case
+string
+
+Describes the case in which the child agent should be used
+
+
+parent_agent_uuid
+string
+
+A unique identifier for the parent agent.
+
+
+route_name
+string
+
+Route name
+
+
+uuid
+string
+
+Unique id of linkage
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"child_agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"if_case": "\"use this to get weather information\"",
+"parent_agent_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"route_name": "\"weather_route\"",
+"uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"child_agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"parent_agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"rollback": true,
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Delete Agent Route for an Agent
+
+To delete an agent route from a parent agent, send a DELETE request to /v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+parent_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Pagent agent id
+
+
+child_agent_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Routed agent id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/agents/{parent_agent_uuid}/child_agents/{child_agent_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/ff47f5b7-96e5-11ef-bf8f-4e013e2ddde4/child_agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"child_agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"parent_agent_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Retrieve an Existing Agent
+
+To retrieve details of an agent, GET request to /v2/gen-ai/agents/{uuid}. The response body is a JSON object containing the agent.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique agent id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents/{uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4"
+
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Update an Agent
+
+To update an agent, send a PUT request to /v2/gen-ai/agents/{uuid}. The response body is a JSON object containing the agent.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique agent id
+
+REQUEST BODY SCHEMA: application/json
+agent_log_insights_enabled
+boolean
+
+allowed_domains
+Array of strings
+
+Optional list of allowed domains for the chatbot - Must use fully qualified domain name (FQDN) such as https://example.com
+
+
+anthropic_key_uuid
+string
+
+Optional anthropic key uuid for use with anthropic models
+
+
+conversation_logs_enabled
+boolean
+
+Optional update of conversation logs enabled
+
+
+description
+string
+
+Agent description
+
+
+instruction
+string
+
+Agent instruction. Instructions help your agent to perform its job effectively. See Write Effective Agent Instructions for best practices.
+
+
+k
+integer <int64>
+
+How many results should be considered from an attached knowledge base
+
+
+max_tokens
+integer <int64>
+
+Specifies the maximum number of tokens the model can process in a single input or output, set as a number between 1 and 512. This determines the length of each response.
+
+
+model_provider_key_uuid
+string
+
+Optional Model Provider uuid for use with provider models
+
+
+model_uuid
+string
+
+Identifier for the foundation model.
+
+
+name
+string
+
+Agent name
+
+
+open_ai_key_uuid
+string
+
+Optional OpenAI key uuid for use with OpenAI models
+
+
+project_id
+string
+
+The id of the DigitalOcean project this agent will belong to
+
+
+provide_citations
+boolean
+
+retrieval_method
+string (apiRetrievalMethod)
+Default: "RETRIEVAL_METHOD_UNKNOWN"
+Enum: "RETRIEVAL_METHOD_UNKNOWN" "RETRIEVAL_METHOD_REWRITE" "RETRIEVAL_METHOD_STEP_BACK" "RETRIEVAL_METHOD_SUB_QUERIES" "RETRIEVAL_METHOD_NONE"
+RETRIEVAL_METHOD_UNKNOWN: The retrieval method is unknown
+RETRIEVAL_METHOD_REWRITE: The retrieval method is rewrite
+RETRIEVAL_METHOD_STEP_BACK: The retrieval method is step back
+RETRIEVAL_METHOD_SUB_QUERIES: The retrieval method is sub queries
+RETRIEVAL_METHOD_NONE: The retrieval method is none
+
+tags
+Array of strings
+
+A set of abitrary tags to organize your agent
+
+
+temperature
+number <float>
+
+Controls the model’s creativity, specified as a number between 0 and 1. Lower values produce more predictable and conservative responses, while higher values encourage creativity and variation.
+
+
+top_p
+number <float>
+
+Defines the cumulative probability threshold for word selection, specified as a number between 0 and 1. Higher values allow for more diverse outputs, while lower values ensure focused and coherent responses.
+
+
+uuid
+string
+
+Unique agent id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_log_insights_enabled": true,
+"allowed_domains":
+[
+"example string"
+],
+"anthropic_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"conversation_logs_enabled": true,
+"description": "\"My Agent Description\"",
+"instruction": "\"You are an agent who thinks deeply about the world\"",
+"k": 5,
+"max_tokens": 100,
+"model_provider_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"model_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"My New Agent Name\"",
+"open_ai_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"project_id": "\"12345678-1234-1234-1234-123456789012\"",
+"provide_citations": true,
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"tags":
+[
+"example string"
+],
+"temperature": 0.7,
+"top_p": 0.9,
+"uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Delete an Agent
+
+To delete an agent, send a DELETE request to /v2/gen-ai/agents/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique agent id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/agents/{uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agent/5581a586-a745-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+View Agent Routes
+
+To view agent routes for an agent, send a GET requtest to /v2/gen-ai/agents/{uuid}/child_agents.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents/{uuid}/child_agents
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4/child_agents"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"children":
+[
+{}
+]
+}
+Update Agent Status
+
+Check whether an agent is public or private. To update the agent status, send a PUT request to /v2/gen-ai/agents/{uuid}/deployment_visibility.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique id
+
+REQUEST BODY SCHEMA: application/json
+uuid
+string
+
+Unique id
+
+
+visibility
+string (apiDeploymentVisibility)
+Default: "VISIBILITY_UNKNOWN"
+Enum: "VISIBILITY_UNKNOWN" "VISIBILITY_DISABLED" "VISIBILITY_PLAYGROUND" "VISIBILITY_PUBLIC" "VISIBILITY_PRIVATE"
+VISIBILITY_UNKNOWN: The status of the deployment is unknown
+VISIBILITY_DISABLED: The deployment is disabled and will no longer service requests
+VISIBILITY_PLAYGROUND: Deprecated: No longer a valid state
+VISIBILITY_PUBLIC: The deployment is public and will service requests from the public internet
+VISIBILITY_PRIVATE: The deployment is private and will only service requests from other agents, or through API keys
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{uuid}/deployment_visibility
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"visibility": "VISIBILITY_UNKNOWN"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent":
+{
+"anthropic_api_key":
+{},
+"api_key_infos":
+[],
+"api_keys":
+[],
+"chatbot":
+{},
+"chatbot_identifiers":
+[],
+"child_agents":
+[],
+"conversation_logs_enabled": true,
+"created_at": "2023-01-01T00:00:00Z",
+"deployment":
+{},
+"description": "example string",
+"functions":
+[],
+"guardrails":
+[],
+"if_case": "example string",
+"instruction": "example string",
+"k": 123,
+"knowledge_bases":
+[],
+"logging_config":
+{},
+"max_tokens": 123,
+"model":
+{},
+"model_provider_key":
+{},
+"name": "example name",
+"openai_api_key":
+{},
+"parent_agents":
+[],
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"provide_citations": true,
+"region": "example string",
+"retrieval_method": "RETRIEVAL_METHOD_UNKNOWN",
+"route_created_at": "2023-01-01T00:00:00Z",
+"route_created_by": "12345",
+"route_name": "example name",
+"route_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"tags":
+[],
+"temperature": 123,
+"template":
+{},
+"top_p": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"url": "example string",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version_hash": "example string",
+"vpc_egress_ips":
+[],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"workspace":
+{}
+}
+}
+Get Agent Usage
+
+To get agent usage, send a GET request to /v2/gen-ai/agents/{uuid}/usage. Returns usage metrics for the specified agent within the provided time range.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent id
+
+QUERY PARAMETERS
+start
+string
+Example: start="example string"
+
+Return all usage data from this date.
+
+
+stop
+string
+Example: stop="example string"
+
+Return all usage data up to this date, if omitted, will return up to the current date.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents/{uuid}/usage
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/genai/agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4/usage?start=2024-01-01T00:00:00Z&stop=2024-01-31T23:59:59Z"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"log_insights_usage":
+{
+"measurements":
+[],
+"resource_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"start": "2023-01-01T00:00:00Z",
+"stop": "2023-01-01T00:00:00Z"
+},
+"usage":
+{
+"measurements":
+[],
+"resource_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"start": "2023-01-01T00:00:00Z",
+"stop": "2023-01-01T00:00:00Z"
+}
+}
+List Agent Versions
+
+To list all agent versions, send a GET request to /v2/gen-ai/agents/{uuid}/versions.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent uuid
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/agents/{uuid}/versions
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/agents/c441bf77-81d6-11ef-bf8f-4e013e2ddde4/versions"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_versions":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Rollback to Agent Version
+
+To update to a specific agent version, send a PUT request to /v2/gen-ai/agents/{uuid}/versions.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Agent unique identifier
+
+REQUEST BODY SCHEMA: application/json
+uuid
+string
+
+Agent unique identifier
+
+
+version_hash
+string
+
+Unique identifier
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/agents/{uuid}/versions
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"version_hash": "c3658d8b5c05494cd03ce042926ef08157889ed54b1b74b5ee0b3d66dcee4b73"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"audit_header":
+{
+"actor_id": "12345",
+"actor_ip": "example string",
+"actor_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"context_urn": "example string",
+"origin_application": "example string",
+"user_id": "12345",
+"user_uuid": "123e4567-e89b-12d3-a456-426614174000"
+},
+"version_hash": "example string"
+}
+List Anthropic API Keys
+
+To list all Anthropic API keys, send a GET request to /v2/gen-ai/anthropic/keys.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/anthropic/keys
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/anthropic/keys"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_infos":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create Anthropic API Key
+
+To create an Anthropic API key, send a POST request to /v2/gen-ai/anthropic/keys.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+api_key
+string
+
+Anthropic API key
+
+
+name
+string
+
+Name of the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/anthropic/keys
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"api_key": "\"sk-ant-12345678901234567890123456789012\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Get Anthropic API Key
+
+To retrieve details of an Anthropic API key, send a GET request to /v2/gen-ai/anthropic/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/anthropic/keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/anthropic/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update Anthropic API Key
+
+To update an Anthropic API key, send a PUT request to /v2/gen-ai/anthropic/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+REQUEST BODY SCHEMA: application/json
+api_key
+string
+
+Anthropic API key
+
+
+api_key_uuid
+string
+
+API key ID
+
+
+name
+string
+
+Name of the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/anthropic/keys/{api_key_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"api_key": "\"sk-ant-12345678901234567890123456789012\"",
+"api_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete Anthropic API Key
+
+To delete an Anthropic API key, send a DELETE request to /v2/gen-ai/anthropic/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/anthropic/keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/anthropic/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List agents by Anthropic key
+
+List Agents by Anthropic Key.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique ID of Anthropic key
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/anthropic/keys/{uuid}/agents
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/anthropic/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4/agents"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agents":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create Evaluation Dataset
+
+To create an evaluation dataset, send a POST request to /v2/gen-ai/evaluation_datasets.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+file_upload_dataset
+object (apiFileUploadDataSource)
+
+File to upload as data source for knowledge base.
+
+
+name
+string
+
+The name of the agent evaluation dataset.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/evaluation_datasets
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"file_upload_dataset":
+{
+"original_file_name": "example name",
+"size_in_bytes": "12345",
+"stored_object_key": "example string"
+},
+"name": "example name"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"evaluation_dataset_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Create Presigned URLs for Evaluation Dataset File Upload
+
+To create presigned URLs for evaluation dataset file upload, send a POST request to /v2/gen-ai/evaluation_datasets/file_upload_presigned_urls.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+files
+Array of objects (apiPresignedUrlFile)
+
+A list of files to generate presigned URLs for.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/evaluation_datasets/file_upload_presigned_urls
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"files":
+[
+{}
+]
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"request_id": "123e4567-e89b-12d3-a456-426614174000",
+"uploads":
+[
+{}
+]
+}
+List Evaluation Metrics
+
+To list all evaluation metrics, send a GET request to /v2/gen-ai/evaluation_metrics.
+
+AUTHORIZATIONS:
+bearer_auth
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_metrics
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_metrics"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"metrics":
+[
+{}
+]
+}
+Run an Evaluation Test Case
+
+To run an evaluation test case, send a POST request to /v2/gen-ai/evaluation_runs.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+agent_uuids
+Array of strings
+
+Agent UUIDs to run the test case against.
+
+
+run_name
+string
+
+The name of the run.
+
+
+test_case_uuid
+string
+
+Test-case UUID to run
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/evaluation_runs
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_uuids":
+[
+"example string"
+],
+"run_name": "Evaluation Run Name",
+"test_case_uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_run_uuids":
+[
+"example string"
+]
+}
+Retrieve Information About an Existing Evaluation Run
+
+To retrive information about an existing evaluation run, send a GET request to /v2/gen-ai/evaluation_runs/{evaluation_run_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+evaluation_run_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Evaluation run UUID.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_runs/{evaluation_run_uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_runs/9758a232-b351-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_run":
+{
+"agent_deleted": true,
+"agent_name": "example name",
+"agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"agent_version_hash": "example string",
+"agent_workspace_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"created_by_user_email": "example@example.com",
+"created_by_user_id": "12345",
+"error_description": "example string",
+"evaluation_run_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"evaluation_test_case_workspace_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"finished_at": "2023-01-01T00:00:00Z",
+"pass_status": true,
+"queued_at": "2023-01-01T00:00:00Z",
+"run_level_metric_results":
+[],
+"run_name": "example name",
+"star_metric_result":
+{},
+"started_at": "2023-01-01T00:00:00Z",
+"status": "EVALUATION_RUN_STATUS_UNSPECIFIED",
+"test_case_description": "example string",
+"test_case_name": "example name",
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"test_case_version": 123
+}
+}
+Retrieve Results of an Evaluation Run
+
+To retrieve results of an evaluation run, send a GET request to /v2/gen-ai/evaluation_runs/{evaluation_run_uuid}/results.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+evaluation_run_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Evaluation run UUID.
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_runs/{evaluation_run_uuid}/results
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_runs/9758a232-b351-11ef-bf8f-4e013e2ddde4/results"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_run":
+{
+"agent_deleted": true,
+"agent_name": "example name",
+"agent_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"agent_version_hash": "example string",
+"agent_workspace_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"created_by_user_email": "example@example.com",
+"created_by_user_id": "12345",
+"error_description": "example string",
+"evaluation_run_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"evaluation_test_case_workspace_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"finished_at": "2023-01-01T00:00:00Z",
+"pass_status": true,
+"queued_at": "2023-01-01T00:00:00Z",
+"run_level_metric_results":
+[],
+"run_name": "example name",
+"star_metric_result":
+{},
+"started_at": "2023-01-01T00:00:00Z",
+"status": "EVALUATION_RUN_STATUS_UNSPECIFIED",
+"test_case_description": "example string",
+"test_case_name": "example name",
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"test_case_version": 123
+},
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+},
+"prompts":
+[
+{}
+]
+}
+Retrieve Results of an Evaluation Run Prompt
+
+To retrieve results of an evaluation run, send a GET request to /v2/gen-ai/evaluation_runs/{evaluation_run_uuid}/results/{prompt_id}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+evaluation_run_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Evaluation run UUID.
+
+
+prompt_id
+required
+
+integer
+Example: 1
+
+Prompt ID to get results for.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_runs/{evaluation_run_uuid}/results/{prompt_id}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_runs/9758a232-b351-11ef-bf8f-4e013e2ddde4/results/c441bf77-81d6-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"prompt":
+{
+"ground_truth": "example string",
+"input": "example string",
+"input_tokens": "12345",
+"output": "example string",
+"output_tokens": "12345",
+"prompt_chunks":
+[],
+"prompt_id": 123,
+"prompt_level_metric_results":
+[]
+}
+}
+List Evaluation Test Cases
+
+To list all evaluation test cases, send a GET request to /v2/gen-ai/evaluation_test_cases.
+
+AUTHORIZATIONS:
+bearer_auth
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_test_cases
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_test_cases"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_test_cases":
+[
+{}
+]
+}
+Create Evaluation Test Case.
+
+To create an evaluation test-case send a POST request to /v2/gen-ai/evaluation_test_cases.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+dataset_uuid
+string
+
+Dataset against which the test‑case is executed.
+
+
+description
+string
+
+Description of the test case.
+
+
+metrics
+Array of strings
+
+Full metric list to use for evaluation test case.
+
+
+name
+string
+
+Name of the test case.
+
+
+star_metric
+object (apiStarMetric)
+
+workspace_uuid
+string
+
+The workspace uuid.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/evaluation_test_cases
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"dataset_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"description": "example string",
+"metrics":
+[
+"example string"
+],
+"name": "example name",
+"star_metric":
+{
+"metric_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"name": "example name",
+"success_threshold": 123,
+"success_threshold_pct": 123
+},
+"workspace_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+List Evaluation Runs by Test Case
+
+To list all evaluation runs by test case, send a GET request to /v2/gen-ai/evaluation_test_cases/{evaluation_test_case_uuid}/evaluation_runs.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+evaluation_test_case_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Evaluation run UUID.
+
+QUERY PARAMETERS
+evaluation_test_case_version
+integer
+Example: evaluation_test_case_version=1
+
+Version of the test case.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_test_cases/{evaluation_test_case_uuid}/evaluation_runs
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_test_cases/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4/evaluation_runs"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_runs":
+[
+{}
+]
+}
+Retrieve Information About an Existing Evaluation Test Case
+
+To retrive information about an existing evaluation test case, send a GET request to /v2/gen-ai/evaluation_test_case/{test_case_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+test_case_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+The test case uuid to retrieve.
+
+QUERY PARAMETERS
+evaluation_test_case_version
+integer
+Example: evaluation_test_case_version=1
+
+Version of the test case.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/evaluation_test_cases/{test_case_uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/evaluation_test_cases/9758a232-b351-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_test_case":
+{
+"archived_at": "2023-01-01T00:00:00Z",
+"created_at": "2023-01-01T00:00:00Z",
+"created_by_user_email": "example@example.com",
+"created_by_user_id": "12345",
+"dataset":
+{},
+"dataset_name": "example name",
+"dataset_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"description": "example string",
+"latest_version_number_of_runs": 123,
+"metrics":
+[],
+"name": "example name",
+"star_metric":
+{},
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"total_runs": 123,
+"updated_at": "2023-01-01T00:00:00Z",
+"updated_by_user_email": "example@example.com",
+"updated_by_user_id": "12345",
+"version": 123
+}
+}
+Update an Evaluation Test Case.
+
+To update an evaluation test-case send a PUT request to /v2/gen-ai/evaluation_test_cases/{test_case_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+test_case_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Test-case UUID to update
+
+REQUEST BODY SCHEMA: application/json
+dataset_uuid
+string
+
+Dataset against which the test‑case is executed.
+
+
+description
+string
+
+Description of the test case.
+
+
+metrics
+object (apiEvaluationTestCaseMetricList)
+
+name
+string
+
+Name of the test case.
+
+
+star_metric
+object (apiStarMetric)
+
+test_case_uuid
+string
+
+Test-case UUID to update
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/evaluation_test_cases/{test_case_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"dataset_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"description": "example string",
+"metrics":
+{
+"metric_uuids":
+[]
+},
+"name": "example name",
+"star_metric":
+{
+"metric_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"name": "example name",
+"success_threshold": 123,
+"success_threshold_pct": 123
+},
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"test_case_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"version": 123
+}
+List Indexing Jobs for a Knowledge Base
+
+To list all indexing jobs for a knowledge base, send a GET request to /v2/gen-ai/indexing_jobs.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/indexing_jobs
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/indexing_jobs"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"jobs":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Start Indexing Job for a Knowledge Base
+
+To start an indexing job for a knowledge base, send a POST request to /v2/gen-ai/indexing_jobs.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+data_source_uuids
+Array of strings
+
+List of data source ids to index, if none are provided, all data sources will be indexed
+
+
+knowledge_base_uuid
+string
+
+Knowledge base id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/indexing_jobs
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"data_source_uuids":
+[
+"example string"
+],
+"knowledge_base_uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"job":
+{
+"completed_datasources": 123,
+"created_at": "2023-01-01T00:00:00Z",
+"data_source_jobs":
+[],
+"data_source_uuids":
+[],
+"finished_at": "2023-01-01T00:00:00Z",
+"is_report_available": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"phase": "BATCH_JOB_PHASE_UNKNOWN",
+"started_at": "2023-01-01T00:00:00Z",
+"status": "INDEX_JOB_STATUS_UNKNOWN",
+"tokens": 123,
+"total_datasources": 123,
+"total_items_failed": "12345",
+"total_items_indexed": "12345",
+"total_items_removed": "12345",
+"total_items_skipped": "12345",
+"total_tokens": "12345",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List Data Sources for Indexing Job for a Knowledge Base
+
+To list all datasources for an indexing job, send a GET request to /v2/gen-ai/indexing_jobs/{indexing_job_uuid}/data_sources.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+indexing_job_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Uuid of the indexing job
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/indexing_jobs/{indexing_job_uuid}/data_sources
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/indexing_jobs/9758a232-b351-11ef-bf8f-4e013e2ddde4"
+
+
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"indexed_data_sources":
+[
+{}
+]
+}
+Get Signed URL for Indexing Job Details
+
+To get a signed URL for indexing job details, send a GET request to /v2/gen-ai/indexing_jobs/{uuid}/details_signed_url.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+indexing_job_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+The uuid of the indexing job
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/indexing_jobs/{indexing_job_uuid}/details_signed_url
+Request samples
+cURL
+Copy
+curl --location --request GET 'https://api.digitalocean.com/v2/gen-ai/indexing_jobs/6b090372-a8c3-11f0-b542-ca68c578b04b/details_signed_url' \
+--header 'Authorization: Bearer $DIGITALOCEAN_TOKEN' \
+--header 'Content-Type: application/json'
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"signed_url": "example string"
+}
+Retrieve Status of Indexing Job for a Knowledge Base
+
+To get status of an indexing Job for a knowledge base, send a GET request to /v2/gen-ai/indexing_jobs/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Indexing job id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/indexing_jobs/{uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/indexing_jobs/9758a232-b351-11ef-bf8f-4e013e2ddde4"
+
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"job":
+{
+"completed_datasources": 123,
+"created_at": "2023-01-01T00:00:00Z",
+"data_source_jobs":
+[],
+"data_source_uuids":
+[],
+"finished_at": "2023-01-01T00:00:00Z",
+"is_report_available": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"phase": "BATCH_JOB_PHASE_UNKNOWN",
+"started_at": "2023-01-01T00:00:00Z",
+"status": "INDEX_JOB_STATUS_UNKNOWN",
+"tokens": 123,
+"total_datasources": 123,
+"total_items_failed": "12345",
+"total_items_indexed": "12345",
+"total_items_removed": "12345",
+"total_items_skipped": "12345",
+"total_tokens": "12345",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Cancel Indexing Job for a Knowledge Base
+
+To cancel an indexing job for a knowledge base, send a PUT request to /v2/gen-ai/indexing_jobs/{uuid}/cancel.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+A unique identifier for an indexing job.
+
+REQUEST BODY SCHEMA: application/json
+uuid
+string
+
+A unique identifier for an indexing job.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/indexing_jobs/{uuid}/cancel
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"job":
+{
+"completed_datasources": 123,
+"created_at": "2023-01-01T00:00:00Z",
+"data_source_jobs":
+[],
+"data_source_uuids":
+[],
+"finished_at": "2023-01-01T00:00:00Z",
+"is_report_available": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"phase": "BATCH_JOB_PHASE_UNKNOWN",
+"started_at": "2023-01-01T00:00:00Z",
+"status": "INDEX_JOB_STATUS_UNKNOWN",
+"tokens": 123,
+"total_datasources": 123,
+"total_items_failed": "12345",
+"total_items_indexed": "12345",
+"total_items_removed": "12345",
+"total_items_skipped": "12345",
+"total_tokens": "12345",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List Knowledge Bases
+
+To list all knowledge bases, send a GET request to /v2/gen-ai/knowledge_bases.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/knowledge_bases
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"knowledge_bases":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create a Knowledge Base
+
+To create a knowledge base, send a POST request to /v2/gen-ai/knowledge_bases.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+database_id
+string
+
+Identifier of the DigitalOcean OpenSearch database this knowledge base will use, optional. If not provided, we create a new database for the knowledge base in the same region as the knowledge base.
+
+
+datasources
+Array of objects (apiKBDataSource)
+
+The data sources to use for this knowledge base. See Organize Data Sources for more information on data sources best practices.
+
+
+embedding_model_uuid
+string
+
+Identifier for the embedding model.
+
+
+name
+string
+
+Name of the knowledge base.
+
+
+project_id
+string
+
+Identifier of the DigitalOcean project this knowledge base will belong to.
+
+
+region
+string
+
+The datacenter region to deploy the knowledge base in.
+
+
+tags
+Array of strings
+
+Tags to organize your knowledge base.
+
+
+vpc_uuid
+string
+
+The VPC to deploy the knowledge base database in
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/knowledge_bases
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"database_id": "\"12345678-1234-1234-1234-123456789012\"",
+"datasources":
+[
+{}
+],
+"embedding_model_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"My Knowledge Base\"",
+"project_id": "\"12345678-1234-1234-1234-123456789012\"",
+"region": "\"tor1\"",
+"tags":
+[
+"example string"
+],
+"vpc_uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"knowledge_base":
+{
+"added_to_agent_at": "2023-01-01T00:00:00Z",
+"created_at": "2023-01-01T00:00:00Z",
+"database_id": "123e4567-e89b-12d3-a456-426614174000",
+"embedding_model_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"is_public": true,
+"last_indexing_job":
+{},
+"name": "example name",
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"region": "example string",
+"tags":
+[],
+"updated_at": "2023-01-01T00:00:00Z",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Create Presigned URLs for Data Source File Upload
+
+To create presigned URLs for knowledge base data source file upload, send a POST request to /v2/gen-ai/knowledge_bases/data_sources/file_upload_presigned_urls.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+files
+Array of objects (apiPresignedUrlFile)
+
+A list of files to generate presigned URLs for.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/knowledge_bases/data_sources/file_upload_presigned_urls
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"files":
+[
+{}
+]
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"request_id": "123e4567-e89b-12d3-a456-426614174000",
+"uploads":
+[
+{}
+]
+}
+List Data Sources for a Knowledge Base
+
+To list all data sources for a knowledge base, send a GET request to /v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases/9758a232-b351-11ef-bf8f-4e013e2ddde4/data_sources"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"knowledge_base_data_sources":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Add Data Source to a Knowledge Base
+
+To add a data source to a knowledge base, send a POST request to /v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+REQUEST BODY SCHEMA: application/json
+aws_data_source
+object (apiAWSDataSource)
+
+AWS S3 Data Source
+
+
+knowledge_base_uuid
+string
+
+Knowledge base id
+
+
+spaces_data_source
+object (apiSpacesDataSource)
+
+Spaces Bucket Data Source
+
+
+web_crawler_data_source
+object (apiWebCrawlerDataSource)
+
+WebCrawlerDataSource
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"aws_data_source":
+{
+"bucket_name": "example name",
+"item_path": "example string",
+"key_id": "123e4567-e89b-12d3-a456-426614174000",
+"region": "example string",
+"secret_key": "example string"
+},
+"knowledge_base_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"spaces_data_source":
+{
+"bucket_name": "example name",
+"item_path": "example string",
+"region": "example string"
+},
+"web_crawler_data_source":
+{
+"base_url": "example string",
+"crawling_option": "UNKNOWN",
+"embed_media": true,
+"exclude_tags":
+[]
+}
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"knowledge_base_data_source":
+{
+"aws_data_source":
+{},
+"bucket_name": "example name",
+"created_at": "2023-01-01T00:00:00Z",
+"dropbox_data_source":
+{},
+"file_upload_data_source":
+{},
+"google_drive_data_source":
+{},
+"item_path": "example string",
+"last_datasource_indexing_job":
+{},
+"last_indexing_job":
+{},
+"region": "example string",
+"spaces_data_source":
+{},
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000",
+"web_crawler_data_source":
+{}
+}
+}
+Delete a Data Source from a Knowledge Base
+
+To delete a data source from a knowledge base, send a DELETE request to /v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources/{data_source_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+
+data_source_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Data source id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/data_sources/{data_source_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases/9a6e3975-b0c6-11ef-bf8f-4e013e2ddde4/data_sources/bd2a2db5-b8b0-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"data_source_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+List Indexing Jobs for a Knowledge Base
+
+To list latest 15 indexing jobs for a knowledge base, send a GET request to /v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/indexing_jobs.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base uuid in string
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/knowledge_bases/{knowledge_base_uuid}/indexing_jobs
+Request samples
+cURL
+Copy
+curl --location --request GET 'https://api.digitalocean.com/v2/gen-ai/knowledge_bases/1139121f-a860-11f0-b542-ca68c578b04b/indexing_jobs' \
+--header 'Authorization: Bearer $DIGITALOCEAN_TOKEN' \
+--header 'Content-Type: application/json'
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"jobs":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Retrieve Information About an Existing Knowledge Base
+
+To retrive information about an existing knowledge base, send a GET request to /v2/gen-ai/knowledge_bases/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/knowledge_bases/{uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases/9758a232-b351-11ef-bf8f-4e013e2ddde4"
+
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"database_status": "CREATING",
+"knowledge_base":
+{
+"added_to_agent_at": "2023-01-01T00:00:00Z",
+"created_at": "2023-01-01T00:00:00Z",
+"database_id": "123e4567-e89b-12d3-a456-426614174000",
+"embedding_model_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"is_public": true,
+"last_indexing_job":
+{},
+"name": "example name",
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"region": "example string",
+"tags":
+[],
+"updated_at": "2023-01-01T00:00:00Z",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update a Knowledge Base
+
+To update a knowledge base, send a PUT request to /v2/gen-ai/knowledge_bases/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+REQUEST BODY SCHEMA: application/json
+database_id
+string
+
+The id of the DigitalOcean database this knowledge base will use, optiona.
+
+
+embedding_model_uuid
+string
+
+Identifier for the foundation model.
+
+
+name
+string
+
+Knowledge base name
+
+
+project_id
+string
+
+The id of the DigitalOcean project this knowledge base will belong to
+
+
+tags
+Array of strings
+
+Tags to organize your knowledge base.
+
+
+uuid
+string
+
+Knowledge base id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/knowledge_bases/{uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"database_id": "\"12345678-1234-1234-1234-123456789012\"",
+"embedding_model_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"My Knowledge Base\"",
+"project_id": "\"12345678-1234-1234-1234-123456789012\"",
+"tags":
+[
+"example string"
+],
+"uuid": "\"12345678-1234-1234-1234-123456789012\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"knowledge_base":
+{
+"added_to_agent_at": "2023-01-01T00:00:00Z",
+"created_at": "2023-01-01T00:00:00Z",
+"database_id": "123e4567-e89b-12d3-a456-426614174000",
+"embedding_model_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"is_public": true,
+"last_indexing_job":
+{},
+"name": "example name",
+"project_id": "123e4567-e89b-12d3-a456-426614174000",
+"region": "example string",
+"tags":
+[],
+"updated_at": "2023-01-01T00:00:00Z",
+"user_id": "12345",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete a Knowledge Base
+
+To delete a knowledge base, send a DELETE request to /v2/gen-ai/knowledge_bases/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Knowledge base id
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/knowledge_bases/{uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/knowledge_bases/8241f44e-b0da-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+List Available Models
+
+To list all models, send a GET request to /v2/gen-ai/models.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+usecases
+Array of strings
+Items Enum: "MODEL_USECASE_UNKNOWN" "MODEL_USECASE_AGENT" "MODEL_USECASE_FINETUNED" "MODEL_USECASE_KNOWLEDGEBASE" "MODEL_USECASE_GUARDRAIL" "MODEL_USECASE_REASONING" "MODEL_USECASE_SERVERLESS"
+Example: usecases=MODEL_USECASE_UNKNOWN
+
+Include only models defined for the listed usecases.
+
+MODEL_USECASE_UNKNOWN: The use case of the model is unknown
+MODEL_USECASE_AGENT: The model maybe used in an agent
+MODEL_USECASE_FINETUNED: The model maybe used for fine tuning
+MODEL_USECASE_KNOWLEDGEBASE: The model maybe used for knowledge bases (embedding models)
+MODEL_USECASE_GUARDRAIL: The model maybe used for guardrails
+MODEL_USECASE_REASONING: The model usecase for reasoning
+MODEL_USECASE_SERVERLESS: The model usecase for serverless inference
+
+public_only
+boolean
+Example: public_only=true
+
+Only include models that are publicly available.
+
+
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/models
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/models"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+},
+"models":
+[
+{}
+]
+}
+List Model API Keys
+
+To list all model API keys, send a GET request to /v2/gen-ai/models/api_keys.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/models/api_keys
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/models/api_keys"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_infos":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create a Model API Key
+
+To create a model API key, send a POST request to /v2/gen-ai/models/api_keys.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+name
+string
+
+A human friendly name to identify the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/models/api_keys
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"name": "Production Key"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update API Key for a Model
+
+To update a model API key, send a PUT request to /v2/gen-ai/models/api_keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+REQUEST BODY SCHEMA: application/json
+api_key_uuid
+string
+
+API key ID
+
+
+name
+string
+
+Name
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/models/api_keys/{api_key_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"api_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete API Key for a Model
+
+To delete an API key for a model, send a DELETE request to /v2/gen-ai/models/api_keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key for an agent.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/models/api_keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/models/api_keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Regenerate API Key for a Model
+
+To regenerate a model API key, send a PUT request to /v2/gen-ai/models/api_keys/{api_key_uuid}/regenerate.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/models/api_keys/{api_key_uuid}/regenerate
+Request samples
+cURL
+Copy
+curl -X PUT \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/models/api_keys/11efcf7e-824d-2808-bf8f-4e013e2ddde4/regenerate"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"name": "example name",
+"secret_key": "example string",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Get Oauth2 Dropbox Tokens
+
+To obtain the refresh token, needed for creation of data sources, send a GET request to /v2/gen-ai/oauth2/dropbox/tokens. Pass the code you obtrained from the oauth flow in the field 'code'
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+code
+string
+
+The oauth2 code from google
+
+
+redirect_url
+string
+
+Redirect url
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/oauth2/dropbox/tokens
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"code": "example string",
+"redirect_url": "example string"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"refresh_token": "example string",
+"token": "example string"
+}
+Get Oauth2 URL
+
+To generate an Oauth2-URL for use with your localhost, send a GET request to /v2/gen-ai/oauth2/url. Pass 'http://localhost:3000 as redirect_url
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+type
+string
+Example: type="example string"
+
+Type "google" / "dropbox".
+
+
+redirect_url
+string
+Example: redirect_url="example string"
+
+The redirect url.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/oauth2/url
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/oauth2/url?type=google&redirect_uri=http://localhost:3000"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"url": "example string"
+}
+List OpenAI API Keys
+
+To list all OpenAI API keys, send a GET request to /v2/gen-ai/openai/keys.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/openai/keys
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/openai/keys"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_infos":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Create OpenAI API Key
+
+To create an OpenAI API key, send a POST request to /v2/gen-ai/openai/keys.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+api_key
+string
+
+OpenAI API key
+
+
+name
+string
+
+Name of the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/openai/keys
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"api_key": "\"sk-proj--123456789098765432123456789\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"models":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Get OpenAI API Key
+
+To retrieve details of an OpenAI API key, send a GET request to /v2/gen-ai/openai/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/openai/keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/openai/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"models":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update OpenAI API Key
+
+To update an OpenAI API key, send a PUT request to /v2/gen-ai/openai/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+REQUEST BODY SCHEMA: application/json
+api_key
+string
+
+OpenAI API key
+
+
+api_key_uuid
+string
+
+API key ID
+
+
+name
+string
+
+Name of the key
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/openai/keys/{api_key_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"api_key": "\"sk-ant-12345678901234567890123456789012\"",
+"api_key_uuid": "\"12345678-1234-1234-1234-123456789012\"",
+"name": "\"Production Key\""
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"models":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete OpenAI API Key
+
+To delete an OpenAI API key, send a DELETE request to /v2/gen-ai/openai/keys/{api_key_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+api_key_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+API key ID
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/openai/keys/{api_key_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/openai/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"api_key_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"deleted_at": "2023-01-01T00:00:00Z",
+"models":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List agents by OpenAI key
+
+List Agents by OpenAI Key.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Unique ID of OpenAI key
+
+QUERY PARAMETERS
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/openai/keys/{uuid}/agents
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/openai/keys/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4/agents"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agents":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+List Datacenter Regions
+
+To list all datacenter regions, send a GET request to /v2/gen-ai/regions.
+
+AUTHORIZATIONS:
+bearer_auth
+QUERY PARAMETERS
+serves_inference
+boolean
+Example: serves_inference=true
+
+Include datacenters that serve inference.
+
+
+serves_batch
+boolean
+Example: serves_batch=true
+
+Include datacenters that are capable of running batch jobs.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/regions
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/regions"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"regions":
+[
+{}
+]
+}
+Create scheduled indexing for knowledge base
+
+To create scheduled indexing for a knowledge base, send a POST request to /v2/gen-ai/scheduled-indexing.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+days
+Array of integers <int32> [ items <int32 > ]
+
+Days for execution (day is represented same as in a cron expression, e.g. Monday begins with 1 )
+
+
+knowledge_base_uuid
+string
+
+Knowledge base uuid for which the schedule is created
+
+
+time
+string
+
+Time of execution (HH:MM) UTC
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/scheduled-indexing
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"days":
+[
+123
+],
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"time": "example string"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"indexing_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"days":
+[],
+"deleted_at": "2023-01-01T00:00:00Z",
+"is_active": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"last_ran_at": "2023-01-01T00:00:00Z",
+"next_run_at": "2023-01-01T00:00:00Z",
+"time": "example string",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Get Scheduled Indexing for Knowledge Base
+
+Get Scheduled Indexing for knowledge base using knoweldge base uuid, send a GET request to /v2/gen-ai/scheduled-indexing/knowledge-base/{knowledge_base_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+knowledge_base_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+UUID of the scheduled indexing entry
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/scheduled-indexing/knowledge-base/{knowledge_base_uuid}
+Request samples
+cURL
+Copy
+curl --location --request GET 'https://api.digitalocean.com/v2/gen-ai/scheduled-indexing/knowledge-base/{knowledge_base_uuid}' \
+--header 'Authorization: Bearer $DIGITALOCEAN_TOKEN' \
+--header 'Content-Type: application/json'
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"indexing_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"days":
+[],
+"deleted_at": "2023-01-01T00:00:00Z",
+"is_active": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"last_ran_at": "2023-01-01T00:00:00Z",
+"next_run_at": "2023-01-01T00:00:00Z",
+"time": "example string",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete Scheduled Indexing
+
+Delete Scheduled Indexing for knowledge base, send a DELETE request to /v2/gen-ai/scheduled-indexing/{uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+UUID of the scheduled indexing
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/scheduled-indexing/{uuid}
+Request samples
+cURL
+Copy
+curl --location --request DELETE 'https://api.digitalocean.com/v2/gen-ai/scheduled-indexing/{scheduled_indexing_id}' \
+  --header 'Authorization: Bearer $DIGITALOCEAN_TOKEN'
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"indexing_info":
+{
+"created_at": "2023-01-01T00:00:00Z",
+"days":
+[],
+"deleted_at": "2023-01-01T00:00:00Z",
+"is_active": true,
+"knowledge_base_uuid": "123e4567-e89b-12d3-a456-426614174000",
+"last_ran_at": "2023-01-01T00:00:00Z",
+"next_run_at": "2023-01-01T00:00:00Z",
+"time": "example string",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List Workspaces
+
+To list all workspaces, send a GET request to /v2/gen-ai/workspaces.
+
+AUTHORIZATIONS:
+bearer_auth
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/workspaces
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/workspaces"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"workspaces":
+[
+{}
+]
+}
+Create a Workspace
+
+To create a new workspace, send a POST request to /v2/gen-ai/workspaces. The response body contains a JSON object with the newly created workspace object.
+
+AUTHORIZATIONS:
+bearer_auth
+REQUEST BODY SCHEMA: application/json
+agent_uuids
+Array of strings
+
+Ids of the agents(s) to attach to the workspace
+
+
+description
+string
+
+Description of the workspace
+
+
+name
+string
+
+Name of the workspace
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+POST
+/v2/gen-ai/workspaces
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_uuids":
+[
+"example string"
+],
+"description": "example string",
+"name": "example name"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"workspace":
+{
+"agents":
+[],
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"created_by_email": "example@example.com",
+"deleted_at": "2023-01-01T00:00:00Z",
+"description": "example string",
+"evaluation_test_cases":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Retrieve an Existing Workspace
+
+To retrieve details of a workspace, GET request to /v2/gen-ai/workspaces/{workspace_uuid}. The response body is a JSON object containing the workspace.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace UUID.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/workspaces/{workspace_uuid}
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/workspaces/c441bf77-81d6-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"workspace":
+{
+"agents":
+[],
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"created_by_email": "example@example.com",
+"deleted_at": "2023-01-01T00:00:00Z",
+"description": "example string",
+"evaluation_test_cases":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Update a Workspace
+
+To update a workspace, send a PUT request to /v2/gen-ai/workspaces/{workspace_uuid}. The response body is a JSON object containing the workspace.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace UUID.
+
+REQUEST BODY SCHEMA: application/json
+description
+string
+
+The new description of the workspace
+
+
+name
+string
+
+The new name of the workspace
+
+
+workspace_uuid
+string
+
+Workspace UUID.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/workspaces/{workspace_uuid}
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+{
+"description": "example string",
+"name": "example name",
+"workspace_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"workspace":
+{
+"agents":
+[],
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"created_by_email": "example@example.com",
+"deleted_at": "2023-01-01T00:00:00Z",
+"description": "example string",
+"evaluation_test_cases":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+Delete a Workspace
+
+To delete a workspace, send a DELETE request to /v2/gen-ai/workspace/{workspace_uuid}.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace UUID.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+DELETE
+/v2/gen-ai/workspaces/{workspace_uuid}
+Request samples
+cURL
+Copy
+curl -X DELETE \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/workspaces/5581a586-a745-11ef-bf8f-4e013e2ddde4"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+{
+"workspace_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+List agents by Workspace
+
+To list all agents by a Workspace, send a GET request to /v2/gen-ai/workspaces/{workspace_uuid}/agents.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace UUID.
+
+QUERY PARAMETERS
+only_deployed
+boolean
+Example: only_deployed=true
+
+Only list agents that are deployed.
+
+
+page
+integer
+Example: page=1
+
+Page number.
+
+
+per_page
+integer
+Example: per_page=1
+
+Items per page.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/workspaces/{workspace_uuid}/agents
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/workspaces/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4/agents"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agents":
+[
+{}
+],
+"links":
+{
+"pages":
+{}
+},
+"meta":
+{
+"page": 123,
+"pages": 123,
+"total": 123
+}
+}
+Move Agents to a Workspace
+
+To move all listed agents a given workspace, send a PUT request to /v2/gen-ai/workspaces/{workspace_uuid}/agents.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace uuid to move agents to
+
+REQUEST BODY SCHEMA: application/json
+agent_uuids
+Array of strings
+
+Agent uuids
+
+
+workspace_uuid
+string
+
+Workspace uuid to move agents to
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+PUT
+/v2/gen-ai/workspaces/{workspace_uuid}/agents
+Request samples
+PayloadcURL
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"agent_uuids":
+[
+"example string"
+],
+"workspace_uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"workspace":
+{
+"agents":
+[],
+"created_at": "2023-01-01T00:00:00Z",
+"created_by": "12345",
+"created_by_email": "example@example.com",
+"deleted_at": "2023-01-01T00:00:00Z",
+"description": "example string",
+"evaluation_test_cases":
+[],
+"name": "example name",
+"updated_at": "2023-01-01T00:00:00Z",
+"uuid": "123e4567-e89b-12d3-a456-426614174000"
+}
+}
+List Evaluation Test Cases by Workspace
+
+To list all evaluation test cases by a workspace, send a GET request to /v2/gen-ai/workspaces/{workspace_uuid}/evaluation_test_cases.
+
+AUTHORIZATIONS:
+bearer_auth
+PATH PARAMETERS
+workspace_uuid
+required
+
+string
+Example: "123e4567-e89b-12d3-a456-426614174000"
+
+Workspace UUID.
+
+Responses
+200
+
+A successful response.
+
+401
+
+Authentication failed due to invalid credentials.
+
+404
+
+The resource was not found.
+
+429
+
+The API rate limit has been exceeded.
+
+500
+
+There was a server error.
+
+default
+
+There was an unexpected error.
+
+GET
+/v2/gen-ai/workspaces/{workspace_uuid}/evaluation_test_cases
+Request samples
+cURL
+Copy
+curl -X GET \
+  -H "Content-Type: application/json"  \
+  -H "Authorization: Bearer $DIGITALOCEAN_TOKEN" \
+  "https://api.digitalocean.com/v2/gen-ai/workspaces/11efb7d6-cdb5-6388-bf8f-4e013e2ddde4/evaluation_test_cases"
+Response samples
+200401404429500default
+Content type
+application/json
+Copy
+Expand allCollapse all
+{
+"evaluation_test_cases":
+[
+{}
+]
+}
