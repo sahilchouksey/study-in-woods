@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/database"
 	"github.com/sahilchouksey/go-init-setup/model"
 	utils "github.com/sahilchouksey/go-init-setup/utils"
