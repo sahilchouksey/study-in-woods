@@ -15,7 +15,13 @@
     "web:dev": "turbo run dev --filter=web",
     "api:dev": "turbo run dev --filter=api",
     "web:build": "turbo run build --filter=web",
-    "api:build": "turbo run build --filter=api"
+    "api:build": "turbo run build --filter=api",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:ps": "docker-compose ps",
+    "docker:restart": "docker-compose restart",
+    "docker:clean": "docker-compose down -v"
   },
   "devDependencies": {
     "turbo": "^2.3.0"

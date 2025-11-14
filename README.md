@@ -58,38 +58,56 @@ Modern web application providing user interface for:
 ## 🚀 Quick Start
 
 ### Prerequisites
-- **Go** 1.21+ (for backend)
+- **Docker** & **Docker Compose** (recommended)
+- **Go** 1.21+ (for backend development)
 - **Node.js** 18+ (for frontend)
 - **npm** 9+ (for package management)
-- **PostgreSQL** 13+
-- **Redis** 6+
-- **DigitalOcean Account** (for AI features and storage)
+- **DigitalOcean Account** (optional, for AI features and storage)
 
-### 1. Clone the Repository
+### Option 1: Docker Setup (Recommended)
+
+#### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/sahilchouksey/study-in-woods.git
 cd study-in-woods
 ```
 
-### 2. Install Dependencies
+#### 2. Start Database Services with Docker
 
 ```bash
-# Install all workspace dependencies (this will install Turborepo)
+# Start PostgreSQL and Redis containers
+npm run docker:up
+
+# Check if containers are running
+npm run docker:ps
+
+# View logs
+npm run docker:logs
+```
+
+This will start:
+- PostgreSQL on `localhost:5432`
+- Redis on `localhost:6379`
+
+#### 3. Install Dependencies
+
+```bash
+# Install all workspace dependencies (includes Turborepo)
 npm install
 
 # Install Go dependencies for backend
 cd apps/api && go mod download && cd ../..
 ```
 
-### 3. Backend Setup (`apps/api`)
+#### 4. Setup Backend Environment
 
 ```bash
 cd apps/api
 
 # Copy environment file
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env if needed (Docker configs are already set correctly)
 
 # Run database migrations
 make db-migrate
@@ -97,24 +115,10 @@ make db-migrate
 # Seed database with initial data
 make db-seed
 
-# Return to root
 cd ../..
 ```
 
-### 4. Frontend Setup (`apps/web`)
-
-```bash
-cd apps/web
-
-# Copy environment file
-cp .env.example .env.local
-# Edit .env.local with backend API URL
-
-# Return to root
-cd ../..
-```
-
-### 5. Start Development (with Turborepo)
+#### 5. Start Development
 
 ```bash
 # From the root directory
@@ -135,6 +139,55 @@ Frontend will run on `http://localhost:3000`
 - Password: `Admin123!`
 
 ⚠️ **Change password after first login!**
+
+---
+
+### Option 2: Manual Setup (Without Docker)
+
+If you prefer not to use Docker, you need to install and configure PostgreSQL and Redis manually.
+
+#### Prerequisites
+- **PostgreSQL** 13+ installed and running
+- **Redis** 6+ installed and running
+
+#### Start Services
+
+```bash
+# Start PostgreSQL
+sudo systemctl start postgresql
+
+# Start Redis
+sudo systemctl start redis
+
+# Create database
+sudo -u postgres psql -c "CREATE DATABASE study_in_woods;"
+```
+
+Then follow steps 1, 3, 4, and 5 from the Docker setup above.
+
+---
+
+### Docker Commands
+
+```bash
+# Start containers
+npm run docker:up
+
+# Stop containers
+npm run docker:down
+
+# View logs
+npm run docker:logs
+
+# Check status
+npm run docker:ps
+
+# Restart containers
+npm run docker:restart
+
+# Stop and remove all data (⚠️ deletes database!)
+npm run docker:clean
+```
 
 ---
 
