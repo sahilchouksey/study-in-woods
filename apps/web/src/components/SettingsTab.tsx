@@ -75,7 +75,7 @@ export function SettingsTab() {
               <div className="space-y-2">
                 <Label htmlFor="provider">Select AI Provider</Label>
                 <Select value={selectedProvider} onValueChange={(value: AIProvider) => setSelectedProvider(value)}>
-                  <SelectTrigger className="border-black/20">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -93,9 +93,8 @@ export function SettingsTab() {
                   id="apiKey"
                   type="password"
                   placeholder="Enter your API key"
-                  className="border-black/20"
                 />
-                <p className="text-xs text-black/60">
+                <p className="text-xs text-muted-foreground">
                   Your API key is stored locally and never shared
                 </p>
               </div>
@@ -106,25 +105,24 @@ export function SettingsTab() {
                   <Input
                     id="endpoint"
                     placeholder="https://your-custom-endpoint.com/api"
-                    className="border-black/20"
                   />
                 </div>
               )}
             </div>
           </section>
 
-          <Separator className="bg-black/10" />
+          <Separator />
 
           <section className="space-y-4">
             <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 text-black/60" />
-              <h3 className="text-black">Notifications</h3>
+              <Bell className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-foreground">Notifications</h3>
             </div>
             <div className="space-y-4 pl-8">
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="study-reminders">Study Reminders</Label>
-                  <p className="text-sm text-black/60">Get reminded to study regularly</p>
+                  <p className="text-sm text-muted-foreground">Get reminded to study regularly</p>
                 </div>
                 <Switch id="study-reminders" />
               </div>
@@ -132,7 +130,7 @@ export function SettingsTab() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="new-questions">New PYQ Alerts</Label>
-                  <p className="text-sm text-black/60">Notify when new questions are available</p>
+                  <p className="text-sm text-muted-foreground">Notify when new questions are available</p>
                 </div>
                 <Switch id="new-questions" />
               </div>
@@ -140,22 +138,22 @@ export function SettingsTab() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="ai-updates">AI Model Updates</Label>
-                  <p className="text-sm text-black/60">Get notified about AI improvements</p>
+                  <p className="text-sm text-muted-foreground">Get notified about AI improvements</p>
                 </div>
                 <Switch id="ai-updates" />
               </div>
             </div>
           </section>
 
-          <Separator className="bg-black/10" />
+          <Separator />
 
           <section className="space-y-4">
-            <h3 className="text-black">Study Preferences</h3>
+            <h3 className="text-foreground">Study Preferences</h3>
             <div className="space-y-4 pl-8">
               <div className="space-y-2">
                 <Label htmlFor="difficulty">Default Difficulty Level</Label>
                 <Select>
-                  <SelectTrigger className="border-black/20">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select difficulty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -169,7 +167,7 @@ export function SettingsTab() {
               <div className="space-y-2">
                 <Label htmlFor="session-length">Study Session Length</Label>
                 <Select>
-                  <SelectTrigger className="border-black/20">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select duration" />
                   </SelectTrigger>
                   <SelectContent>
@@ -184,23 +182,23 @@ export function SettingsTab() {
               <div className="flex items-center justify-between">
                 <div>
                   <Label htmlFor="detailed-explanations">Detailed Explanations</Label>
-                  <p className="text-sm text-black/60">Show step-by-step solutions</p>
+                  <p className="text-sm text-muted-foreground">Show step-by-step solutions</p>
                 </div>
                 <Switch id="detailed-explanations" defaultChecked />
               </div>
             </div>
           </section>
 
-          <Separator className="bg-black/10" />
+          <Separator />
 
           <section className="space-y-4">
-            <h3 className="text-black">Data Management</h3>
+            <h3 className="text-foreground">Data Management</h3>
             <div className="space-y-4 pl-8">
               <div className="space-y-2">
                 <Button variant="outline" className="w-full">
                   Export Chat History
                 </Button>
-                <p className="text-xs text-black/60">
+                <p className="text-xs text-muted-foreground">
                   Download all your conversations as JSON
                 </p>
               </div>
@@ -209,7 +207,7 @@ export function SettingsTab() {
                 <Button variant="outline" className="w-full">
                   Clear All Data
                 </Button>
-                <p className="text-xs text-black/60">
+                <p className="text-xs text-muted-foreground">
                   Remove all conversations and preferences
                 </p>
               </div>

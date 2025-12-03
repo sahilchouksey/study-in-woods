@@ -1,139 +1,186 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-interface Message {
-  id: string;
-  type: 'user' | 'ai';
-  content: string;
-  unit?: string;
-  topics?: string[];
-}
+import {
+  useChatMessages,
+  useSendMessage,
+} from '@/lib/api/hooks/useChat';
+import { retrievePendingQuery, clearPendingQuery } from '@/lib/utils/sessionStorage';
+import { useAuth } from '@/providers/auth-provider';
+import ReactMarkdown from 'react-markdown';
 
 export function ChatTab() {
-  const [selectedCourse, setSelectedCourse] = useState('mca');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: "Hello! I'm your AI study assistant for MCA. Ask me anything about your syllabus or previous year questions. I can help you understand concepts, solve problems, and prepare for exams.",
-    },
-  ]);
+  const { user } = useAuth();
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [input, setInput] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
+  // Hooks
+  const { data: messages = [], isLoading: messagesLoading } = useChatMessages(currentSessionId);
+  const sendMessageMutation = useSendMessage();
+
+  // Check for pending question from landing page
+  useEffect(() => {
+    const pendingQuery = retrievePendingQuery();
+    if (pendingQuery) {
+      setInput(pendingQuery.question);
+      clearPendingQuery();
+    }
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+
+
+  const handleSend = async () => {
     if (!input.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: input,
-    };
-
-    // Mock AI response
-    const aiMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'ai',
-      content: `Based on your MCA syllabus and previous year questions, here's what I found:\n\n${getMockResponse(input)}`,
-      unit: 'Unit 2',
-      topics: ['Data Structures', 'Algorithms'],
-    };
-
-    setMessages([...messages, userMessage, aiMessage]);
+    const messageText = input.trim();
     setInput('');
+
+    try {
+      const response = await sendMessageMutation.mutateAsync({
+        session_id: currentSessionId || undefined,
+        message: messageText,
+        context: user
+          ? {
+              university_id: user.university_id,
+              course_id: user.course_id,
+              semester: user.semester,
+            }
+          : undefined,
+      });
+
+      // Set current session to the new or existing session
+      if (!currentSessionId) {
+        setCurrentSessionId(response.session_id);
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Error toast is handled by the hook
+    }
   };
 
-  const getMockResponse = (query: string) => {
-    if (query.toLowerCase().includes('algorithm')) {
-      return "Algorithms are step-by-step procedures for solving problems. In your MCA curriculum, this topic appears frequently in PYQs. Key concepts include:\n\n1. Time Complexity (O-notation)\n2. Sorting Algorithms (QuickSort, MergeSort)\n3. Searching Algorithms (Binary Search)\n4. Dynamic Programming\n\nWould you like me to explain any specific algorithm?";
+
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
     }
-    return "I understand you're asking about this topic. Let me help you with detailed explanations and examples from your syllabus and previous year questions.";
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-border p-6">
-        <div className="flex items-center justify-between">
+    <div className="flex h-full">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="border-b bg-card p-4">
           <div>
-            <h2 className="text-foreground">Chat with AI Assistant</h2>
-            <p className="text-muted-foreground mt-1">Ask questions about your syllabus and PYQs</p>
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              AI Study Assistant
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Ask anything about your courses and syllabus
+            </p>
           </div>
-          <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="mca">MCA</SelectItem>
-              <SelectItem value="bca">BCA</SelectItem>
-              <SelectItem value="btech">B.Tech</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
-      </div>
 
-      <ScrollArea className="flex-1 p-6">
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] rounded-lg p-4 ${
-                  message.type === 'user'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-foreground'
-                }`}
-              >
-                {message.type === 'ai' && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <Sparkles className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground">AI Assistant</span>
-                  </div>
-                )}
-                <div className="whitespace-pre-wrap">{message.content}</div>
-                {message.unit && message.topics && (
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <Badge variant="outline" className="text-xs">
-                      {message.unit}
-                    </Badge>
-                    {message.topics.map((topic) => (
-                      <Badge key={topic} variant="secondary" className="text-xs">
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+        {/* Messages */}
+        <ScrollArea className="flex-1 p-6" ref={scrollRef}>
+          {!currentSessionId ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center space-y-4 max-w-md">
+                <Sparkles className="h-16 w-16 text-primary mx-auto" />
+                <h3 className="text-2xl font-bold">Welcome to Study in Woods</h3>
+                <p className="text-muted-foreground">
+                  Ask a question below to begin learning with AI
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+          ) : messagesLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary" />
+            </div>
+          ) : (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[85%] rounded-2xl p-4 ${
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    {message.role === 'assistant' && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <span className="text-xs font-semibold text-primary">
+                          AI Assistant
+                        </span>
+                      </div>
+                    )}
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                    <p className="text-xs opacity-70 mt-2">
+                      {new Date(message.created_at).toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              
+              {sendMessageMutation.isPending && (
+                <div className="flex justify-start">
+                  <div className="bg-muted rounded-2xl p-4 max-w-[85%]">
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-primary" />
+                      <span className="text-sm text-muted-foreground">
+                        AI is thinking...
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </ScrollArea>
 
-      <div className="border-t border-border p-6">
-        <div className="flex gap-3">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about algorithms, data structures, or any topic..."
-            className="flex-1"
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-          />
-          <Button onClick={handleSend} disabled={!input.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
+        {/* Input */}
+        <div className="border-t bg-card p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex gap-2">
+              <Input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Ask a question about your course..."
+                disabled={sendMessageMutation.isPending}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || sendMessageMutation.isPending}
+                size="icon"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

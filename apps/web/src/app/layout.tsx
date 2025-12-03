@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
+import { ConditionalSidebar } from "@/components/ConditionalSidebar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ReactQueryProvider } from "@/providers/react-query-provider";
+import { AuthProvider } from "@/providers/auth-provider";
+import { Toaster } from "@/components/ui/sonner";
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,19 +33,23 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex h-screen bg-background">
-            <Sidebar />
-            <main className="flex-1 overflow-hidden">
-              {children}
-            </main>
-          </div>
-        </ThemeProvider>
+        <NuqsAdapter>
+          <ReactQueryProvider>
+            <AuthProvider>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <ConditionalSidebar>
+                  {children}
+                </ConditionalSidebar>
+                <Toaster />
+              </ThemeProvider>
+            </AuthProvider>
+          </ReactQueryProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

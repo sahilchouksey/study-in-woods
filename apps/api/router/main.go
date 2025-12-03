@@ -156,19 +156,19 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Courses routes
 	courses := api.Group("/courses")
-	courses.Get("/", courseHandler.ListCourses)                                   // Public: List all courses
-	courses.Get("/:id", courseHandler.GetCourse)                                  // Public: Get course by ID
-	courses.Post("/", authMiddleware.Required(), courseHandler.CreateCourse)      // Protected: Create course
-	courses.Put("/:id", authMiddleware.Required(), courseHandler.UpdateCourse)    // Protected: Update course (creator or admin)
-	courses.Delete("/:id", authMiddleware.Required(), courseHandler.DeleteCourse) // Protected: Delete course (creator or admin)
+	courses.Get("/", courseHandler.ListCourses)                                       // Public: List all courses
+	courses.Get("/:id", courseHandler.GetCourse)                                      // Public: Get course by ID
+	courses.Post("/", authMiddleware.RequireAdmin(), courseHandler.CreateCourse)      // Admin only: Create course
+	courses.Put("/:id", authMiddleware.RequireAdmin(), courseHandler.UpdateCourse)    // Admin only: Update course
+	courses.Delete("/:id", authMiddleware.RequireAdmin(), courseHandler.DeleteCourse) // Admin only: Delete course
 
 	// Semesters routes (nested under courses)
 	semesters := courses.Group("/:course_id/semesters")
-	semesters.Get("/", semesterHandler.ListSemesters)                                       // Public: List semesters for a course
-	semesters.Get("/:number", semesterHandler.GetSemester)                                  // Public: Get semester by number
-	semesters.Post("/", authMiddleware.Required(), semesterHandler.CreateSemester)          // Protected: Create semester
-	semesters.Put("/:number", authMiddleware.Required(), semesterHandler.UpdateSemester)    // Protected: Update semester
-	semesters.Delete("/:number", authMiddleware.Required(), semesterHandler.DeleteSemester) // Protected: Delete semester
+	semesters.Get("/", semesterHandler.ListSemesters)                                           // Public: List semesters for a course
+	semesters.Get("/:number", semesterHandler.GetSemester)                                      // Public: Get semester by number
+	semesters.Post("/", authMiddleware.RequireAdmin(), semesterHandler.CreateSemester)          // Admin only: Create semester
+	semesters.Put("/:number", authMiddleware.RequireAdmin(), semesterHandler.UpdateSemester)    // Admin only: Update semester
+	semesters.Delete("/:number", authMiddleware.RequireAdmin(), semesterHandler.DeleteSemester) // Admin only: Delete semester
 
 	// ==================== Phase 5: Subjects with AI Integration ====================
 

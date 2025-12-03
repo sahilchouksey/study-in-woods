@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/model"
 	authutil "github.com/sahilchouksey/go-init-setup/utils/auth"
+	"github.com/sahilchouksey/go-init-setup/utils/crypto"
 	"github.com/sahilchouksey/go-init-setup/utils/middleware"
 	"github.com/sahilchouksey/go-init-setup/utils/response"
 	"gorm.io/gorm"
@@ -96,10 +97,17 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to process password")
 	}
 
+	// Generate password salt
+	passwordSalt, err := crypto.GenerateSalt()
+	if err != nil {
+		return response.InternalServerError(c, "Failed to generate password salt")
+	}
+
 	// Create user
 	user := model.User{
 		Email:        req.Email,
 		PasswordHash: hashedPassword,
+		PasswordSalt: passwordSalt,
 		Name:         req.Name,
 		Role:         req.Role,
 		Semester:     req.Semester,

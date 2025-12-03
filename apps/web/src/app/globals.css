@@ -120,3 +120,77 @@
     @apply bg-background text-foreground;
   }
 }
+
+.pixelated-bg {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
+
+.woods-text-effect {
+  background-image: url(/woods-background.png);
+  background-size: cover;
+  background-position: center;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 3px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.3));
+  letter-spacing: -0.02em;
+  position: relative;
+}
+
+.dark .woods-text-effect {
+  -webkit-text-stroke: 3px rgba(255, 255, 255, 0.3);
+  filter: drop-shadow(3px 3px 6px rgba(255, 255, 255, 0.15));
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffd700;
+  border-radius: 50%;
+  animation: sparkle 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes grass-rustle {
+  0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+  10% { transform: translateX(-3px) translateY(-2px) scale(1.1); }
+  20% { transform: translateX(3px) translateY(-1px) scale(1.05); }
+  30% { transform: translateX(-2px) translateY(-3px) scale(1.15); }
+  40% { transform: translateX(2px) translateY(-2px) scale(1.1); }
+  50% { transform: translateX(-1px) translateY(-1px) scale(1.05); }
+  60% { transform: translateX(1px) translateY(-2px) scale(1.1); }
+  70% { transform: translateX(-2px) translateY(-1px) scale(1.05); }
+  80% { transform: translateX(2px) translateY(-3px) scale(1.15); }
+  90% { transform: translateX(-1px) translateY(-1px) scale(1.05); }
+}
+
+.grass-rustle-animation {
+  animation: grass-rustle 0.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.6));
+}
+
+@keyframes rayquaza-fly {
+  0% { transform: translateX(-100%) translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  50% { transform: translateX(50vw) translateY(-50px) rotate(5deg); }
+  90% { opacity: 1; }
+  100% { transform: translateX(calc(100% + 200px)) translateY(0) rotate(0deg); opacity: 0; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 3s linear infinite;
+}
