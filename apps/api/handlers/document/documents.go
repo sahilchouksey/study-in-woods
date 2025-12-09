@@ -17,6 +17,7 @@ type DocumentHandler struct {
 	db              *gorm.DB
 	validator       *validation.Validator
 	documentService *services.DocumentService
+	syllabusService *services.SyllabusService
 }
 
 // NewDocumentHandler creates a new document handler
@@ -25,6 +26,7 @@ func NewDocumentHandler(db *gorm.DB, documentService *services.DocumentService) 
 		db:              db,
 		validator:       validation.NewValidator(),
 		documentService: documentService,
+		syllabusService: services.NewSyllabusService(db),
 	}
 }
 

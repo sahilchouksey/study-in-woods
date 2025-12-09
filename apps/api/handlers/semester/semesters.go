@@ -240,6 +240,7 @@ func (h *SemesterHandler) UpdateSemester(c *fiber.Ctx) error {
 }
 
 // DeleteSemester handles DELETE /api/v1/courses/:course_id/semesters/:number
+// Cascade deletes all subjects and documents
 func (h *SemesterHandler) DeleteSemester(c *fiber.Ctx) error {
 	courseID := c.Params("course_id")
 	number := c.Params("number")
@@ -269,21 +270,30 @@ func (h *SemesterHandler) DeleteSemester(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to fetch semester")
 	}
 
-	// Check if semester has subjects
-	var subjectCount int64
-	if err := h.db.Model(&model.Subject{}).Where("semester_id = ?", semester.ID).
-		Count(&subjectCount).Error; err != nil {
-		return response.InternalServerError(c, "Failed to check semester dependencies")
+	// Use a transaction for cascade delete
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		// Delete all documents for subjects in this semester
+		if err := tx.Where("subject_id IN (SELECT id FROM subjects WHERE semester_id = ?)", semester.ID).
+			Delete(&model.Document{}).Error; err != nil {
+			return err
+		}
+
+		// Delete all subjects in this semester
+		if err := tx.Where("semester_id = ?", semester.ID).Delete(&model.Subject{}).Error; err != nil {
+			return err
+		}
+
+		// Delete semester (soft delete)
+		if err := tx.Delete(&semester).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.InternalServerError(c, "Failed to delete semester: "+err.Error())
 	}
 
-	if subjectCount > 0 {
-		return response.BadRequest(c, "Cannot delete semester with existing subjects")
-	}
-
-	// Delete semester (soft delete)
-	if err := h.db.Delete(&semester).Error; err != nil {
-		return response.InternalServerError(c, "Failed to delete semester")
-	}
-
-	return response.SuccessWithMessage(c, "Semester deleted successfully", nil)
+	return response.SuccessWithMessage(c, "Semester and all related data deleted successfully", nil)
 }

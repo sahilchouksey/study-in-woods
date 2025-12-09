@@ -79,7 +79,7 @@ export function SemesterFormDialog({
         });
       } else {
         await createMutation.mutateAsync({
-          course_id: parseInt(courseId),
+          course_id: courseId,
           number: data.number,
           name: data.name,
         });

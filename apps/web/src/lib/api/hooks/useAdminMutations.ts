@@ -142,12 +142,16 @@ export function useCreateSemester() {
 
   return useMutation({
     mutationFn: (data: {
-      course_id: number;
+      course_id: string;
       number: number;
       name: string;
-    }) => semesterService.createSemester(data),
+    }) => semesterService.createSemester({
+      ...data,
+      course_id: parseInt(data.course_id),
+    }),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['semesters', String(variables.course_id)] });
+      // Invalidate semesters query - courseId should be string to match useSemesters hook
+      queryClient.invalidateQueries({ queryKey: ['semesters', variables.course_id] });
     },
   });
 }

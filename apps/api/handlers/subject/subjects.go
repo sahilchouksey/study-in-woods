@@ -239,6 +239,7 @@ func (h *SubjectHandler) UpdateSubject(c *fiber.Ctx) error {
 }
 
 // DeleteSubject handles DELETE /api/v1/semesters/:semester_id/subjects/:id
+// Cascade deletes all documents before deleting the subject
 func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 	semesterID := c.Params("semester_id")
 	id := c.Params("id")
@@ -263,14 +264,9 @@ func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 	// For now, allow any authenticated user (can be restricted later based on requirements)
 	_ = user // Placeholder for authorization logic
 
-	// Check if subject has related data (documents, chat sessions)
-	var documentCount int64
-	if err := h.db.Model(&model.Document{}).Where("subject_id = ?", id).Count(&documentCount).Error; err != nil {
-		return response.InternalServerError(c, "Failed to check related data")
-	}
-
-	if documentCount > 0 {
-		return response.BadRequest(c, "Cannot delete subject with existing documents. Delete documents first.")
+	// Delete all documents for this subject first (cascade delete)
+	if err := h.db.Where("subject_id = ?", id).Delete(&model.Document{}).Error; err != nil {
+		return response.InternalServerError(c, "Failed to delete subject documents")
 	}
 
 	// Use SubjectService for cleanup (deletes AI resources)
@@ -284,6 +280,6 @@ func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 	}
 
 	return response.Success(c, fiber.Map{
-		"message": "Subject deleted successfully",
+		"message": "Subject and all related data deleted successfully",
 	})
 }

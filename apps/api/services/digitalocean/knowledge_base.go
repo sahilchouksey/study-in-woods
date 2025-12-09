@@ -20,9 +20,30 @@ type KnowledgeBase struct {
 
 // CreateKnowledgeBaseRequest represents a request to create a knowledge base
 type CreateKnowledgeBaseRequest struct {
-	Name           string `json:"name"`
-	Description    string `json:"description,omitempty"`
-	EmbeddingModel string `json:"embedding_model,omitempty"`
+	Name           string                  `json:"name"`
+	Description    string                  `json:"description,omitempty"`
+	EmbeddingModel string                  `json:"embedding_model_uuid,omitempty"`
+	ProjectID      string                  `json:"project_id,omitempty"`
+	Region         string                  `json:"region,omitempty"`
+	DataSources    []DataSourceCreateInput `json:"datasources,omitempty"`
+	// DatabaseID is the UUID of an existing DigitalOcean OpenSearch database.
+	// If not provided, a new database is created for each knowledge base.
+	// To reuse the same database across multiple knowledge bases, provide the same database_id.
+	DatabaseID string `json:"database_id,omitempty"`
+}
+
+// DataSourceCreateInput represents a data source input for creating a knowledge base
+type DataSourceCreateInput struct {
+	BucketName       string                 `json:"bucket_name,omitempty"`
+	BucketRegion     string                 `json:"bucket_region,omitempty"`
+	SpacesDataSource *SpacesDataSourceInput `json:"spaces_data_source,omitempty"`
+}
+
+// SpacesDataSourceInput represents a DigitalOcean Spaces data source
+type SpacesDataSourceInput struct {
+	BucketName string `json:"bucket_name"`
+	Region     string `json:"region"`
+	ItemPath   string `json:"item_path,omitempty"`
 }
 
 // UpdateKnowledgeBaseRequest represents a request to update a knowledge base
@@ -215,4 +236,76 @@ func (c *Client) DeleteDataSource(ctx context.Context, kbUUID, dsUUID string) er
 func (c *Client) TriggerIndexing(ctx context.Context, kbUUID string) error {
 	endpoint := fmt.Sprintf("/v2/gen-ai/knowledge_bases/%s/index", kbUUID)
 	return c.doRequest(ctx, "POST", endpoint, nil, nil)
+}
+
+// IndexingJob represents an indexing job
+type IndexingJob struct {
+	UUID              string    `json:"uuid"`
+	KnowledgeBaseUUID string    `json:"knowledge_base_uuid"`
+	Phase             string    `json:"phase"`  // BATCH_JOB_PHASE_PENDING, BATCH_JOB_PHASE_RUNNING, BATCH_JOB_PHASE_SUCCEEDED
+	Status            string    `json:"status"` // INDEX_JOB_STATUS_PENDING, INDEX_JOB_STATUS_IN_PROGRESS, INDEX_JOB_STATUS_COMPLETED
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// StartIndexingJobRequest represents a request to start an indexing job
+type StartIndexingJobRequest struct {
+	KnowledgeBaseUUID string   `json:"knowledge_base_uuid"`
+	DataSourceUUIDs   []string `json:"data_source_uuids,omitempty"`
+}
+
+// StartIndexingJob starts an indexing job for a knowledge base
+func (c *Client) StartIndexingJob(ctx context.Context, req StartIndexingJobRequest) (*IndexingJob, error) {
+	endpoint := "/v2/gen-ai/indexing_jobs"
+
+	var result struct {
+		Job IndexingJob `json:"job"`
+	}
+
+	if err := c.doRequest(ctx, "POST", endpoint, req, &result); err != nil {
+		return nil, err
+	}
+
+	return &result.Job, nil
+}
+
+// GetIndexingJob retrieves an indexing job by UUID
+func (c *Client) GetIndexingJob(ctx context.Context, jobUUID string) (*IndexingJob, error) {
+	endpoint := fmt.Sprintf("/v2/gen-ai/indexing_jobs/%s", jobUUID)
+
+	var result struct {
+		Job IndexingJob `json:"job"`
+	}
+
+	if err := c.doRequest(ctx, "GET", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return &result.Job, nil
+}
+
+// ListKnowledgeBaseDataSources retrieves data sources for a knowledge base (API-compatible version)
+type KnowledgeBaseDataSource struct {
+	UUID             string `json:"uuid"`
+	BucketName       string `json:"bucket_name"`
+	Region           string `json:"region"`
+	SpacesDataSource struct {
+		BucketName string `json:"bucket_name"`
+		ItemPath   string `json:"item_path"`
+		Region     string `json:"region"`
+	} `json:"spaces_data_source"`
+}
+
+func (c *Client) ListKnowledgeBaseDataSources(ctx context.Context, kbUUID string) ([]KnowledgeBaseDataSource, error) {
+	endpoint := fmt.Sprintf("/v2/gen-ai/knowledge_bases/%s/data_sources", kbUUID)
+
+	var result struct {
+		DataSources []KnowledgeBaseDataSource `json:"knowledge_base_data_sources"`
+	}
+
+	if err := c.doRequest(ctx, "GET", endpoint, nil, &result); err != nil {
+		return nil, err
+	}
+
+	return result.DataSources, nil
 }

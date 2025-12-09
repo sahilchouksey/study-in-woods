@@ -52,12 +52,18 @@ func NewClient(config Config) *Client {
 // doRequest performs an HTTP request to the DigitalOcean API
 func (c *Client) doRequest(ctx context.Context, method, endpoint string, body interface{}, result interface{}) error {
 	var reqBody io.Reader
+	var jsonData []byte
 	if body != nil {
-		jsonData, err := json.Marshal(body)
+		var err error
+		jsonData, err = json.Marshal(body)
 		if err != nil {
 			return fmt.Errorf("failed to marshal request body: %w", err)
 		}
 		reqBody = bytes.NewBuffer(jsonData)
+		// Debug: Log request body for POST requests
+		if method == "POST" {
+			fmt.Printf("[DO API Debug] %s %s\nRequest Body: %s\n", method, endpoint, string(jsonData))
+		}
 	}
 
 	url := c.baseURL + endpoint
@@ -86,6 +92,8 @@ func (c *Client) doRequest(ctx context.Context, method, endpoint string, body in
 
 	// Check for errors
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		// Debug: Log error response
+		fmt.Printf("[DO API Debug] Error Response (status %d): %s\n", resp.StatusCode, string(respBody))
 		var apiErr APIError
 		if err := json.Unmarshal(respBody, &apiErr); err != nil {
 			return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))

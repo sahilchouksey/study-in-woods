@@ -1,5 +1,256 @@
-#!/bin/sh
+#!/bin/bash
 
-sudo docker run -e POSTGRES_PASSWORD=lol --name=pg --rm -d -p 5432:5432 postgres:14
-sudo docker exec -u postgres -it pg psql
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
+# Container names
+PG_CONTAINER="study-woods-postgres"
+REDIS_CONTAINER="study-woods-redis"
+
+# Configuration
+PG_USER="postgres"
+PG_PASSWORD="postgres"
+PG_DB="study_in_woods"
+PG_PORT="5432"
+REDIS_PORT="6379"
+
+print_status() {
+    echo -e "${GREEN}[✓]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[!]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[✗]${NC} $1"
+}
+
+# Check if container is running
+is_running() {
+    docker ps --format '{{.Names}}' | grep -q "^$1$"
+}
+
+# Check if container exists (running or stopped)
+container_exists() {
+    docker ps -a --format '{{.Names}}' | grep -q "^$1$"
+}
+
+# Start PostgreSQL
+start_postgres() {
+    if is_running "$PG_CONTAINER"; then
+        print_warning "PostgreSQL is already running"
+    else
+        if container_exists "$PG_CONTAINER"; then
+            print_status "Starting existing PostgreSQL container..."
+            docker start "$PG_CONTAINER"
+        else
+            print_status "Creating and starting PostgreSQL container..."
+            docker run -d \
+                --name "$PG_CONTAINER" \
+                -e POSTGRES_DB="$PG_DB" \
+                -e POSTGRES_USER="$PG_USER" \
+                -e POSTGRES_PASSWORD="$PG_PASSWORD" \
+                -p "$PG_PORT:5432" \
+                -v study_woods_postgres_data:/var/lib/postgresql/data \
+                postgres:15-alpine
+        fi
+        
+        # Wait for PostgreSQL to be ready
+        echo -n "Waiting for PostgreSQL to be ready"
+        for i in {1..30}; do
+            if docker exec "$PG_CONTAINER" pg_isready -U "$PG_USER" &>/dev/null; then
+                echo ""
+                print_status "PostgreSQL is ready!"
+                return 0
+            fi
+            echo -n "."
+            sleep 1
+        done
+        echo ""
+        print_error "PostgreSQL failed to start in time"
+        return 1
+    fi
+}
+
+# Start Redis
+start_redis() {
+    if is_running "$REDIS_CONTAINER"; then
+        print_warning "Redis is already running"
+    else
+        if container_exists "$REDIS_CONTAINER"; then
+            print_status "Starting existing Redis container..."
+            docker start "$REDIS_CONTAINER"
+        else
+            print_status "Creating and starting Redis container..."
+            docker run -d \
+                --name "$REDIS_CONTAINER" \
+                -p "$REDIS_PORT:6379" \
+                -v study_woods_redis_data:/data \
+                redis:7-alpine \
+                redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+        fi
+        
+        # Wait for Redis to be ready
+        echo -n "Waiting for Redis to be ready"
+        for i in {1..30}; do
+            if docker exec "$REDIS_CONTAINER" redis-cli ping &>/dev/null; then
+                echo ""
+                print_status "Redis is ready!"
+                return 0
+            fi
+            echo -n "."
+            sleep 1
+        done
+        echo ""
+        print_error "Redis failed to start in time"
+        return 1
+    fi
+}
+
+# Stop containers
+stop_containers() {
+    print_status "Stopping containers..."
+    docker stop "$PG_CONTAINER" "$REDIS_CONTAINER" 2>/dev/null
+    print_status "Containers stopped"
+}
+
+# Remove containers
+remove_containers() {
+    print_status "Removing containers..."
+    docker rm -f "$PG_CONTAINER" "$REDIS_CONTAINER" 2>/dev/null
+    print_status "Containers removed"
+}
+
+# Show status
+show_status() {
+    echo ""
+    echo "Container Status:"
+    echo "-----------------"
+    if is_running "$PG_CONTAINER"; then
+        print_status "PostgreSQL: Running on port $PG_PORT"
+    else
+        print_error "PostgreSQL: Not running"
+    fi
+    
+    if is_running "$REDIS_CONTAINER"; then
+        print_status "Redis: Running on port $REDIS_PORT"
+    else
+        print_error "Redis: Not running"
+    fi
+    echo ""
+}
+
+# Connect to PostgreSQL
+connect_postgres() {
+    if is_running "$PG_CONTAINER"; then
+        print_status "Connecting to PostgreSQL..."
+        docker exec -it "$PG_CONTAINER" psql -U "$PG_USER" -d "$PG_DB"
+    else
+        print_error "PostgreSQL is not running. Start it first with: $0 start"
+    fi
+}
+
+# Connect to Redis
+connect_redis() {
+    if is_running "$REDIS_CONTAINER"; then
+        print_status "Connecting to Redis..."
+        docker exec -it "$REDIS_CONTAINER" redis-cli
+    else
+        print_error "Redis is not running. Start it first with: $0 start"
+    fi
+}
+
+# Show logs
+show_logs() {
+    case "$1" in
+        postgres|pg)
+            docker logs -f "$PG_CONTAINER"
+            ;;
+        redis)
+            docker logs -f "$REDIS_CONTAINER"
+            ;;
+        *)
+            echo "Usage: $0 logs [postgres|redis]"
+            ;;
+    esac
+}
+
+# Print usage
+usage() {
+    echo ""
+    echo "Usage: $0 [command]"
+    echo ""
+    echo "Commands:"
+    echo "  start       Start PostgreSQL and Redis containers"
+    echo "  stop        Stop all containers"
+    echo "  restart     Restart all containers"
+    echo "  status      Show container status"
+    echo "  remove      Remove all containers (data persists in volumes)"
+    echo "  clean       Remove containers AND volumes (deletes all data)"
+    echo "  psql        Connect to PostgreSQL CLI"
+    echo "  redis-cli   Connect to Redis CLI"
+    echo "  logs        Show logs (usage: $0 logs [postgres|redis])"
+    echo ""
+    echo "Environment for your .env file:"
+    echo "  DB_HOST=localhost"
+    echo "  DB_PORT=$PG_PORT"
+    echo "  DB_USER_NAME=$PG_USER"
+    echo "  DB_PASSWORD=$PG_PASSWORD"
+    echo "  DB_NAME=$PG_DB"
+    echo "  REDIS_URL=redis://localhost:$REDIS_PORT"
+    echo ""
+}
+
+# Main
+case "$1" in
+    start)
+        echo ""
+        echo "Starting development databases..."
+        echo "================================="
+        start_postgres
+        start_redis
+        show_status
+        ;;
+    stop)
+        stop_containers
+        ;;
+    restart)
+        stop_containers
+        sleep 2
+        start_postgres
+        start_redis
+        show_status
+        ;;
+    status)
+        show_status
+        ;;
+    remove)
+        remove_containers
+        ;;
+    clean)
+        print_warning "This will delete all data in PostgreSQL and Redis!"
+        read -p "Are you sure? (y/N) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            remove_containers
+            docker volume rm study_woods_postgres_data study_woods_redis_data 2>/dev/null
+            print_status "Containers and volumes removed"
+        fi
+        ;;
+    psql)
+        connect_postgres
+        ;;
+    redis-cli)
+        connect_redis
+        ;;
+    logs)
+        show_logs "$2"
+        ;;
+    *)
+        usage
+        ;;
+esac

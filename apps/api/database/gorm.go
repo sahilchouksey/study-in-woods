@@ -102,6 +102,17 @@ func (s *GORMStore) Init() error {
 		// Audit & logging models
 		&model.CronJobLog{},
 		&model.AdminAuditLog{},
+
+		// Syllabus extraction models
+		&model.Syllabus{},
+		&model.SyllabusUnit{},
+		&model.SyllabusTopic{},
+		&model.BookReference{},
+
+		// PYQ extraction models
+		&model.PYQPaper{},
+		&model.PYQQuestion{},
+		&model.PYQQuestionChoice{},
 	)
 
 	if err != nil {

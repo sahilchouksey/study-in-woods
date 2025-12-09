@@ -238,6 +238,7 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 }
 
 // DeleteCourse handles DELETE /api/v1/courses/:id
+// Cascade deletes all semesters, subjects, and documents
 func (h *CourseHandler) DeleteCourse(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -256,20 +257,43 @@ func (h *CourseHandler) DeleteCourse(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to fetch course")
 	}
 
-	// Check if course has semesters
-	var semesterCount int64
-	if err := h.db.Model(&model.Semester{}).Where("course_id = ?", id).Count(&semesterCount).Error; err != nil {
-		return response.InternalServerError(c, "Failed to check course dependencies")
+	// Use a transaction for cascade delete
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		// Get all semesters for this course
+		var semesters []model.Semester
+		if err := tx.Where("course_id = ?", id).Find(&semesters).Error; err != nil {
+			return err
+		}
+
+		for _, semester := range semesters {
+			// Delete all documents for subjects in this semester
+			if err := tx.Where("subject_id IN (SELECT id FROM subjects WHERE semester_id = ?)", semester.ID).
+				Delete(&model.Document{}).Error; err != nil {
+				return err
+			}
+
+			// Delete all subjects in this semester
+			if err := tx.Where("semester_id = ?", semester.ID).Delete(&model.Subject{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Delete all semesters for this course
+		if err := tx.Where("course_id = ?", id).Delete(&model.Semester{}).Error; err != nil {
+			return err
+		}
+
+		// Delete course (soft delete)
+		if err := tx.Delete(&course).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.InternalServerError(c, "Failed to delete course: "+err.Error())
 	}
 
-	if semesterCount > 0 {
-		return response.BadRequest(c, "Cannot delete course with existing semesters")
-	}
-
-	// Delete course (soft delete)
-	if err := h.db.Delete(&course).Error; err != nil {
-		return response.InternalServerError(c, "Failed to delete course")
-	}
-
-	return response.SuccessWithMessage(c, "Course deleted successfully", nil)
+	return response.SuccessWithMessage(c, "Course and all related data deleted successfully", nil)
 }

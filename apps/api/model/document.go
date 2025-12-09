@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -28,7 +30,10 @@ const (
 
 // Document represents an uploaded file associated with a subject
 type Document struct {
-	gorm.Model
+	ID               uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt        time.Time      `json:"created_at"`
+	UpdatedAt        time.Time      `json:"updated_at"`
+	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 	SubjectID        uint           `gorm:"not null;index" json:"subject_id"`
 	Type             DocumentType   `gorm:"type:varchar(20);not null" json:"type"`
 	Filename         string         `gorm:"not null" json:"filename"`

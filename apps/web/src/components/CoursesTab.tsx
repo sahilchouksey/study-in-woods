@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked } from 'lucide-react';
+import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -15,10 +15,13 @@ import { UniversityFormDialog } from '@/components/admin/UniversityFormDialog';
 import { CourseFormDialog } from '@/components/admin/CourseFormDialog';
 import { SemesterFormDialog } from '@/components/admin/SemesterFormDialog';
 import { SubjectFormDialog } from '@/components/admin/SubjectFormDialog';
+import { DeleteConfirmationDialog } from '@/components/admin/DeleteConfirmationDialog';
+import { SubjectDocumentsDialog } from '@/components/documents/SubjectDocumentsDialog';
+import { toast } from 'sonner';
 import type { University, Course, Semester, Subject } from '@/lib/api/courses';
 
 export function CoursesTab() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isAuthenticated } = useAuth();
   const { data: universities = [], isLoading: universitiesLoading } = useUniversities();
   const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(
     user?.university_id || null
@@ -62,6 +65,28 @@ export function CoursesTab() {
     subject: null,
   });
 
+  // Subject documents dialog state
+  const [documentsDialog, setDocumentsDialog] = useState<{ open: boolean; subject: Subject | null }>({
+    open: false,
+    subject: null,
+  });
+
+  // Delete confirmation dialog states
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    type: 'university' | 'course' | 'semester' | 'subject' | null;
+    id: string | null;
+    name: string;
+    courseId?: string;
+    semesterNumber?: number;
+    semesterId?: string;
+  }>({
+    open: false,
+    type: null,
+    id: null,
+    name: '',
+  });
+
   const selectedUniversity = universities.find((u) => u.id === selectedUniversityId);
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
   const selectedSemester = semesters.find((s) => s.id === selectedSemesterId);
@@ -90,58 +115,130 @@ export function CoursesTab() {
     selectedUniversityId !== user?.university_id ||
     selectedCourseId !== user?.course_id;
 
-  const handleDeleteUniversity = async (id: string) => {
-    if (confirm('Are you sure you want to delete this university? This will delete all associated courses, semesters, and subjects.')) {
-      try {
-        await deleteUniversityMutation.mutateAsync(id);
-        if (selectedUniversityId === id) {
-          setSelectedUniversityId(null);
-          setSelectedCourseId(null);
-          setSelectedSemesterId(null);
-        }
-      } catch (error) {
-        console.error('Failed to delete university:', error);
+  // Open delete confirmation dialog
+  const openDeleteDialog = (
+    type: 'university' | 'course' | 'semester' | 'subject',
+    id: string,
+    name: string,
+    extra?: { courseId?: string; semesterNumber?: number; semesterId?: string }
+  ) => {
+    setDeleteDialog({
+      open: true,
+      type,
+      id,
+      name,
+      ...extra,
+    });
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteDialog({
+      open: false,
+      type: null,
+      id: null,
+      name: '',
+    });
+  };
+
+  // Execute delete based on dialog type
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog.type || !deleteDialog.id) return;
+
+    try {
+      switch (deleteDialog.type) {
+        case 'university':
+          await deleteUniversityMutation.mutateAsync(deleteDialog.id);
+          toast.success('University and all associated data deleted successfully');
+          if (selectedUniversityId === deleteDialog.id) {
+            setSelectedUniversityId(null);
+            setSelectedCourseId(null);
+            setSelectedSemesterId(null);
+          }
+          break;
+
+        case 'course':
+          await deleteCourseMutation.mutateAsync(deleteDialog.id);
+          toast.success('Course and all associated data deleted successfully');
+          if (selectedCourseId === deleteDialog.id) {
+            setSelectedCourseId(null);
+            setSelectedSemesterId(null);
+          }
+          break;
+
+        case 'semester':
+          if (deleteDialog.courseId && deleteDialog.semesterNumber) {
+            await deleteSemesterMutation.mutateAsync({
+              courseId: deleteDialog.courseId,
+              number: deleteDialog.semesterNumber,
+            });
+            toast.success('Semester and all associated subjects deleted successfully');
+            setSelectedSemesterId(null);
+          }
+          break;
+
+        case 'subject':
+          if (deleteDialog.semesterId) {
+            await deleteSubjectMutation.mutateAsync({
+              semesterId: deleteDialog.semesterId,
+              subjectId: deleteDialog.id,
+            });
+            toast.success('Subject deleted successfully');
+          }
+          break;
       }
+      closeDeleteDialog();
+    } catch (error: unknown) {
+      const err = error as { message?: string; data?: { error?: { message?: string } } };
+      const errorMessage = err.data?.error?.message || err.message || `Failed to delete ${deleteDialog.type}`;
+      toast.error(errorMessage);
+      console.error(`Failed to delete ${deleteDialog.type}:`, error);
     }
   };
 
-  const handleDeleteCourse = async (id: string) => {
-    if (confirm('Are you sure you want to delete this course? This will delete all associated semesters and subjects.')) {
-      try {
-        await deleteCourseMutation.mutateAsync(id);
-        if (selectedCourseId === id) {
-          setSelectedCourseId(null);
-          setSelectedSemesterId(null);
-        }
-      } catch (error) {
-        console.error('Failed to delete course:', error);
-      }
+  // Get delete dialog content based on type
+  const getDeleteDialogContent = () => {
+    switch (deleteDialog.type) {
+      case 'university':
+        return {
+          title: 'Delete University',
+          description: `Are you sure you want to delete "${deleteDialog.name}"?`,
+          cascadeWarning: 'This will permanently delete all courses, semesters, subjects, and documents associated with this university.',
+        };
+      case 'course':
+        return {
+          title: 'Delete Course',
+          description: `Are you sure you want to delete "${deleteDialog.name}"?`,
+          cascadeWarning: 'This will permanently delete all semesters, subjects, and documents associated with this course.',
+        };
+      case 'semester':
+        return {
+          title: 'Delete Semester',
+          description: `Are you sure you want to delete "${deleteDialog.name}"?`,
+          cascadeWarning: 'This will permanently delete all subjects and documents associated with this semester.',
+        };
+      case 'subject':
+        return {
+          title: 'Delete Subject',
+          description: `Are you sure you want to delete "${deleteDialog.name}"?`,
+          cascadeWarning: 'This will permanently delete all documents associated with this subject.',
+        };
+      default:
+        return {
+          title: 'Delete',
+          description: 'Are you sure you want to delete this item?',
+        };
     }
   };
 
-  const handleDeleteSemester = async (courseId: string, number: number) => {
-    if (confirm('Are you sure you want to delete this semester? This will delete all associated subjects.')) {
-      try {
-        await deleteSemesterMutation.mutateAsync({ courseId, number });
-        setSelectedSemesterId(null);
-      } catch (error) {
-        console.error('Failed to delete semester:', error);
-      }
-    }
-  };
-
-  const handleDeleteSubject = async (semesterId: string, subjectId: string) => {
-    if (confirm('Are you sure you want to delete this subject?')) {
-      try {
-        await deleteSubjectMutation.mutateAsync({ semesterId, subjectId });
-      } catch (error) {
-        console.error('Failed to delete subject:', error);
-      }
-    }
-  };
+  const deleteDialogContent = getDeleteDialogContent();
+  const isDeleting =
+    deleteUniversityMutation.isPending ||
+    deleteCourseMutation.isPending ||
+    deleteSemesterMutation.isPending ||
+    deleteSubjectMutation.isPending;
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="border-b border-neutral-200 dark:border-neutral-800 p-6">
         <div className="flex items-center justify-between">
@@ -168,7 +265,7 @@ export function CoursesTab() {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 p-6">
+      <ScrollArea className="flex-1 min-h-0 p-6">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* University Selection */}
           <div className="space-y-4">
@@ -198,9 +295,11 @@ export function CoursesTab() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {universities.map((university) => (
-                  <button
+                  <div
                     key={university.id}
-                    className={`text-left p-4 rounded-lg border transition-all relative ${
+                    role="button"
+                    tabIndex={0}
+                    className={`text-left p-4 rounded-lg border transition-all relative cursor-pointer ${
                       selectedUniversityId === university.id
                         ? 'border-black dark:border-white bg-black/5 dark:bg-white/5'
                         : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600'
@@ -209,6 +308,14 @@ export function CoursesTab() {
                       setSelectedUniversityId(university.id);
                       setSelectedCourseId(null);
                       setSelectedSemesterId(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedUniversityId(university.id);
+                        setSelectedCourseId(null);
+                        setSelectedSemesterId(null);
+                      }
                     }}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -231,14 +338,14 @@ export function CoursesTab() {
                             <AdminActionButtons
                               showCreate={false}
                               onEdit={() => setUniversityDialog({ open: true, university })}
-                              onDelete={() => handleDeleteUniversity(university.id)}
+                              onDelete={() => openDeleteDialog('university', university.id, university.name)}
                               isDeleting={deleteUniversityMutation.isPending}
                             />
                           </div>
                         )}
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -279,9 +386,11 @@ export function CoursesTab() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {courses.map((course) => (
-                    <button
+                    <div
                       key={course.id}
-                      className={`text-left p-4 rounded-lg border transition-all ${
+                      role="button"
+                      tabIndex={0}
+                      className={`text-left p-4 rounded-lg border transition-all cursor-pointer ${
                         selectedCourseId === course.id
                           ? 'border-black dark:border-white bg-black/5 dark:bg-white/5'
                           : 'border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600'
@@ -289,6 +398,13 @@ export function CoursesTab() {
                       onClick={() => {
                         setSelectedCourseId(course.id);
                         setSelectedSemesterId(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelectedCourseId(course.id);
+                          setSelectedSemesterId(null);
+                        }
                       }}
                     >
                       <div className="flex items-start justify-between gap-4">
@@ -315,14 +431,14 @@ export function CoursesTab() {
                               <AdminActionButtons
                                 showCreate={false}
                                 onEdit={() => setCourseDialog({ open: true, course })}
-                                onDelete={() => handleDeleteCourse(course.id)}
+                                onDelete={() => openDeleteDialog('course', course.id, course.name)}
                                 isDeleting={deleteCourseMutation.isPending}
                               />
                             </div>
                           )}
                         </div>
                       </div>
-                    </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -378,7 +494,10 @@ export function CoursesTab() {
                           <AdminActionButtons
                             showCreate={false}
                             onEdit={() => setSemesterDialog({ open: true, semester })}
-                            onDelete={() => handleDeleteSemester(selectedCourseId, semester.number)}
+                            onDelete={() => openDeleteDialog('semester', semester.id, semester.name, {
+                              courseId: selectedCourseId!,
+                              semesterNumber: semester.number,
+                            })}
                             isDeleting={deleteSemesterMutation.isPending}
                           />
                         </div>
@@ -423,7 +542,11 @@ export function CoursesTab() {
               ) : (
                 <div className="grid grid-cols-1 gap-4">
                   {subjects.map((subject) => (
-                    <Card key={subject.id} className="hover:shadow-md transition-shadow">
+                    <Card 
+                      key={subject.id} 
+                      className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50"
+                      onClick={() => setDocumentsDialog({ open: true, subject })}
+                    >
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -439,14 +562,32 @@ export function CoursesTab() {
                               )}
                             </CardDescription>
                           </div>
-                          {isAdmin && (
-                            <AdminActionButtons
-                              showCreate={false}
-                              onEdit={() => setSubjectDialog({ open: true, subject })}
-                              onDelete={() => handleDeleteSubject(selectedSemesterId, subject.id)}
-                              isDeleting={deleteSubjectMutation.isPending}
-                            />
-                          )}
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDocumentsDialog({ open: true, subject });
+                              }}
+                            >
+                              <FileText className="h-4 w-4" />
+                              <span className="text-xs">Documents</span>
+                            </Button>
+                            {isAdmin && (
+                              <div onClick={(e) => e.stopPropagation()}>
+                                <AdminActionButtons
+                                  showCreate={false}
+                                  onEdit={() => setSubjectDialog({ open: true, subject })}
+                                  onDelete={() => openDeleteDialog('subject', subject.id, subject.name, {
+                                    semesterId: selectedSemesterId!,
+                                  })}
+                                  isDeleting={deleteSubjectMutation.isPending}
+                                />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </CardHeader>
                       {subject.description && (
@@ -521,8 +662,27 @@ export function CoursesTab() {
             subject={subjectDialog.subject}
             semesterId={selectedSemesterId || ''}
           />
+          <DeleteConfirmationDialog
+            open={deleteDialog.open}
+            onOpenChange={(open) => !open && closeDeleteDialog()}
+            onConfirm={handleConfirmDelete}
+            title={deleteDialogContent.title}
+            description={deleteDialogContent.description}
+            cascadeWarning={deleteDialogContent.cascadeWarning}
+            isDeleting={isDeleting}
+          />
         </>
       )}
+
+      {/* Subject Documents Dialog - Available to all users */}
+      <SubjectDocumentsDialog
+        open={documentsDialog.open}
+        onOpenChange={(open) => setDocumentsDialog({ open, subject: open ? documentsDialog.subject : null })}
+        subject={documentsDialog.subject}
+        userId={user?.id}
+        isAdmin={isAdmin}
+        isAuthenticated={isAuthenticated}
+      />
     </div>
   );
 }

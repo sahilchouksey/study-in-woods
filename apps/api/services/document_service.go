@@ -46,30 +46,13 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 		log.Println("Warning: DIGITALOCEAN_TOKEN not set. AI indexing will be disabled.")
 	}
 
-	// Initialize Spaces client for file storage
-	spacesKey := os.Getenv("SPACES_ACCESS_KEY")
-	spacesSecret := os.Getenv("SPACES_SECRET_KEY")
-	spacesBucket := os.Getenv("SPACES_BUCKET")
-	spacesRegion := os.Getenv("SPACES_REGION")
-	spacesEndpoint := os.Getenv("SPACES_ENDPOINT")
-
-	if spacesKey != "" && spacesSecret != "" && spacesBucket != "" && spacesRegion != "" && spacesEndpoint != "" {
-		spacesClient, err := digitalocean.NewSpacesClient(digitalocean.SpacesConfig{
-			AccessKey: spacesKey,
-			SecretKey: spacesSecret,
-			Bucket:    spacesBucket,
-			Region:    spacesRegion,
-			Endpoint:  spacesEndpoint,
-			CDNURL:    os.Getenv("SPACES_CDN_URL"), // Optional
-		})
-		if err != nil {
-			log.Printf("Warning: Failed to initialize Spaces client: %v. File storage will be disabled.", err)
-		} else {
-			service.spacesClient = spacesClient
-			service.enableSpaces = true
-		}
+	// Initialize Spaces client using global config (supports auto-generation of keys)
+	spacesClient, err := digitalocean.NewSpacesClientFromGlobalConfig()
+	if err != nil {
+		log.Printf("Warning: Failed to initialize Spaces client: %v. File storage will be disabled.", err)
 	} else {
-		log.Println("Warning: Spaces credentials not configured. File storage will be disabled.")
+		service.spacesClient = spacesClient
+		service.enableSpaces = true
 	}
 
 	return service

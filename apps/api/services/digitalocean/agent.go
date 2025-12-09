@@ -25,11 +25,13 @@ type Agent struct {
 type CreateAgentRequest struct {
 	Name           string   `json:"name"`
 	Description    string   `json:"description,omitempty"`
-	ModelID        string   `json:"model_id"`
-	Instructions   string   `json:"instructions,omitempty"`
+	ModelUUID      string   `json:"model_uuid"`
+	ProjectID      string   `json:"project_id,omitempty"`
+	Region         string   `json:"region,omitempty"`
+	Instructions   string   `json:"instruction,omitempty"`
 	Temperature    float64  `json:"temperature,omitempty"`
 	TopP           float64  `json:"top_p,omitempty"`
-	KnowledgeBases []string `json:"knowledge_bases,omitempty"`
+	KnowledgeBases []string `json:"knowledge_base_uuid,omitempty"`
 }
 
 // UpdateAgentRequest represents a request to update an agent
@@ -158,13 +160,11 @@ func (c *Client) GetAgentUsage(ctx context.Context, uuid string, startDate, endD
 
 // AttachKnowledgeBase attaches a knowledge base to an agent
 func (c *Client) AttachKnowledgeBase(ctx context.Context, agentUUID, kbUUID string) error {
-	endpoint := fmt.Sprintf("/v2/gen-ai/agents/%s/knowledge_bases", agentUUID)
+	// Use the path-based endpoint for single KB attachment
+	endpoint := fmt.Sprintf("/v2/gen-ai/agents/%s/knowledge_bases/%s", agentUUID, kbUUID)
 
-	body := map[string]string{
-		"knowledge_base_uuid": kbUUID,
-	}
-
-	return c.doRequest(ctx, "POST", endpoint, body, nil)
+	// This endpoint doesn't require a body - just POST to the path
+	return c.doRequest(ctx, "POST", endpoint, nil, nil)
 }
 
 // DetachKnowledgeBase detaches a knowledge base from an agent

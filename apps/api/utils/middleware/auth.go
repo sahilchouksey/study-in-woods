@@ -163,8 +163,75 @@ func (m *AuthMiddleware) RequireRole(roles ...string) fiber.Handler {
 }
 
 // RequireAdmin is middleware that requires admin role
+// It validates the JWT token inline and checks for admin role
 func (m *AuthMiddleware) RequireAdmin() fiber.Handler {
-	return m.RequireRole("admin", "super_admin")
+	return func(c *fiber.Ctx) error {
+		// Get token from Authorization header
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return response.Unauthorized(c, "Missing authorization token")
+		}
+
+		// Extract token from "Bearer <token>"
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			return response.Unauthorized(c, "Invalid authorization format")
+		}
+
+		tokenString := parts[1]
+
+		// Validate token
+		claims, err := m.jwtManager.ValidateToken(tokenString)
+		if err != nil {
+			if err == auth.ErrExpiredToken {
+				return response.Unauthorized(c, "Token has expired")
+			}
+			return response.Unauthorized(c, "Invalid token")
+		}
+
+		// Check if it's an access token
+		if claims.TokenType != "access" {
+			return response.Unauthorized(c, "Invalid token type")
+		}
+
+		// Check if token is revoked (blacklisted)
+		isRevoked, err := m.blacklistService.IsTokenRevoked(c.Context(), claims.ID)
+		if err != nil {
+			return response.InternalServerError(c, "Failed to check token status")
+		}
+		if isRevoked {
+			return response.Unauthorized(c, "Token has been revoked")
+		}
+
+		// Load user from database and verify token version
+		var user model.User
+		if err := m.db.First(&user, claims.UserID).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return response.Unauthorized(c, "User not found")
+			}
+			return response.InternalServerError(c, "Failed to load user")
+		}
+
+		// Check if token version matches
+		if user.TokenVersion != claims.TokenVersion {
+			return response.Unauthorized(c, "Token has been invalidated")
+		}
+
+		// Check for admin role
+		if claims.Role != "admin" && claims.Role != "super_admin" {
+			return response.Forbidden(c, "Admin access required")
+		}
+
+		// Store user info in context
+		c.Locals("user_id", claims.UserID)
+		c.Locals("user_email", claims.Email)
+		c.Locals("user_role", claims.Role)
+		c.Locals("claims", claims)
+		c.Locals("user", &user)
+		c.Locals("token_jti", claims.ID)
+
+		return c.Next()
+	}
 }
 
 // GetUserID extracts user ID from context

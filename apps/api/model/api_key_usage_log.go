@@ -16,12 +16,15 @@ import (
 // - Backend decrypts keys temporarily in memory, uses them, then discards
 // - This model tracks when/how often keys are used for audit and analytics
 type APIKeyUsageLog struct {
-	gorm.Model
-	UserID        uint        `gorm:"not null;index:idx_user_id" json:"user_id"`
-	Service       ServiceType `gorm:"not null;type:varchar(50);index:idx_user_service,unique" json:"service"`
-	LastUsedAt    time.Time   `gorm:"not null" json:"last_used_at"`
-	UsageCount    int         `gorm:"default:0" json:"usage_count"`
-	LastRequestIP string      `gorm:"type:varchar(45)" json:"last_request_ip"` // IPv4/IPv6
+	ID            uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+	DeletedAt     gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID        uint           `gorm:"not null;index:idx_user_id" json:"user_id"`
+	Service       ServiceType    `gorm:"not null;type:varchar(50);index:idx_user_service,unique" json:"service"`
+	LastUsedAt    time.Time      `gorm:"not null" json:"last_used_at"`
+	UsageCount    int            `gorm:"default:0" json:"usage_count"`
+	LastRequestIP string         `gorm:"type:varchar(45)" json:"last_request_ip"` // IPv4/IPv6
 
 	// Relationships
 	User User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`

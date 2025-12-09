@@ -19,10 +19,13 @@ help:
 	@echo "  make test-coverage    - Run tests with coverage"
 	@echo ""
 	@echo "Database:"
+	@echo "  make db-up            - Start PostgreSQL and Redis containers"
+	@echo "  make db-down          - Stop PostgreSQL and Redis containers"
 	@echo "  make db-migrate       - Run database migrations"
 	@echo "  make db-rollback      - Rollback last migration"
 	@echo "  make db-reset         - Reset database (drop and recreate)"
 	@echo "  make db-seed          - Seed database with test data"
+	@echo "  make db-users         - Create admin and test users"
 	@echo ""
 	@echo "Docker:"
 	@echo "  make docker-logs      - View Docker logs"
@@ -92,6 +95,18 @@ db-reset:
 db-seed:
 	@echo "Seeding database with initial data..."
 	go run cmd/seed/main.go
+
+db-users:
+	@echo "Creating admin and test users..."
+	go run scripts/create_users.go
+
+db-up:
+	@echo "Starting PostgreSQL and Redis containers..."
+	./docker_essentials start
+
+db-down:
+	@echo "Stopping PostgreSQL and Redis containers..."
+	./docker_essentials stop
 
 # Docker
 docker-logs:

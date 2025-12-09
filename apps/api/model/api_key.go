@@ -30,6 +30,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/sahilchouksey/go-init-setup/utils/crypto"
 	"gorm.io/gorm"
@@ -60,13 +61,16 @@ const (
 // UserAPIKey stores encrypted API keys for external services
 // The encryption is done using AES-256-GCM with a key derived from the user's password
 type UserAPIKey struct {
-	gorm.Model
-	UserID          uint        `gorm:"not null;index" json:"user_id"`
-	Service         ServiceType `gorm:"not null;type:varchar(50);index" json:"service"`
-	EncryptedAPIKey []byte      `gorm:"not null;type:bytea" json:"-"`          // Never expose encrypted data
-	Nonce           []byte      `gorm:"not null;type:bytea" json:"-"`          // GCM nonce
-	KeyVersion      int         `gorm:"not null;default:1" json:"key_version"` // For key rotation
-	IsActive        bool        `gorm:"default:true" json:"is_active"`
+	ID              uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID          uint           `gorm:"not null;index" json:"user_id"`
+	Service         ServiceType    `gorm:"not null;type:varchar(50);index" json:"service"`
+	EncryptedAPIKey []byte         `gorm:"not null;type:bytea" json:"-"`          // Never expose encrypted data
+	Nonce           []byte         `gorm:"not null;type:bytea" json:"-"`          // GCM nonce
+	KeyVersion      int            `gorm:"not null;default:1" json:"key_version"` // For key rotation
+	IsActive        bool           `gorm:"default:true" json:"is_active"`
 
 	// Relationships
 	User User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`

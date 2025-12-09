@@ -25,12 +25,13 @@ type SpacesClient struct {
 
 // SpacesConfig holds configuration for Spaces client
 type SpacesConfig struct {
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	Region    string
-	Endpoint  string
-	CDNURL    string
+	AccessKey   string
+	SecretKey   string
+	Bucket      string
+	Region      string
+	Endpoint    string
+	CDNURL      string
+	Initialized bool // Indicates if the config was properly set up
 }
 
 // NewSpacesClient creates a new Spaces client

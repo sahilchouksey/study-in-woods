@@ -13,20 +13,23 @@ import (
 // ExternalAPIKey represents an API key for third-party developers to access our API
 // This is different from UserAPIKey which is deprecated and was for storing external service keys
 type ExternalAPIKey struct {
-	gorm.Model
-	UserID         uint       `gorm:"not null;index" json:"user_id"`
-	Name           string     `gorm:"not null;type:varchar(100)" json:"name"`                  // Friendly name for the key
-	KeyPrefix      string     `gorm:"not null;uniqueIndex;type:varchar(20)" json:"key_prefix"` // First 8 chars (sk_live_xxx)
-	KeyHash        string     `gorm:"not null;uniqueIndex;type:varchar(64)" json:"-"`          // SHA-256 hash of full key
-	Scopes         string     `gorm:"type:text" json:"scopes"`                                 // JSON array of allowed scopes
-	IsActive       bool       `gorm:"default:true;index" json:"is_active"`
-	ExpiresAt      *time.Time `gorm:"index" json:"expires_at"`
-	LastUsedAt     *time.Time `json:"last_used_at"`
-	UsageCount     int64      `gorm:"default:0" json:"usage_count"`
-	RateLimit      int        `gorm:"default:100" json:"rate_limit"`      // Requests per minute
-	MonthlyQuota   int        `gorm:"default:10000" json:"monthly_quota"` // Requests per month
-	UsageThisMonth int64      `gorm:"default:0" json:"usage_this_month"`
-	LastResetAt    time.Time  `gorm:"default:CURRENT_TIMESTAMP" json:"last_reset_at"` // For monthly quota reset
+	ID             uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	UserID         uint           `gorm:"not null;index" json:"user_id"`
+	Name           string         `gorm:"not null;type:varchar(100)" json:"name"`                  // Friendly name for the key
+	KeyPrefix      string         `gorm:"not null;uniqueIndex;type:varchar(20)" json:"key_prefix"` // First 8 chars (sk_live_xxx)
+	KeyHash        string         `gorm:"not null;uniqueIndex;type:varchar(64)" json:"-"`          // SHA-256 hash of full key
+	Scopes         string         `gorm:"type:text" json:"scopes"`                                 // JSON array of allowed scopes
+	IsActive       bool           `gorm:"default:true;index" json:"is_active"`
+	ExpiresAt      *time.Time     `gorm:"index" json:"expires_at"`
+	LastUsedAt     *time.Time     `json:"last_used_at"`
+	UsageCount     int64          `gorm:"default:0" json:"usage_count"`
+	RateLimit      int            `gorm:"default:100" json:"rate_limit"`      // Requests per minute
+	MonthlyQuota   int            `gorm:"default:10000" json:"monthly_quota"` // Requests per month
+	UsageThisMonth int64          `gorm:"default:0" json:"usage_this_month"`
+	LastResetAt    time.Time      `gorm:"default:CURRENT_TIMESTAMP" json:"last_reset_at"` // For monthly quota reset
 
 	// Relationships
 	User User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`

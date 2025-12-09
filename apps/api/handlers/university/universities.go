@@ -199,6 +199,7 @@ func (h *UniversityHandler) UpdateUniversity(c *fiber.Ctx) error {
 }
 
 // DeleteUniversity handles DELETE /api/v1/universities/:id
+// Cascade deletes all courses, semesters, subjects, and documents
 func (h *UniversityHandler) DeleteUniversity(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -211,20 +212,56 @@ func (h *UniversityHandler) DeleteUniversity(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to fetch university")
 	}
 
-	// Check if university has courses
-	var courseCount int64
-	if err := h.db.Model(&model.Course{}).Where("university_id = ?", id).Count(&courseCount).Error; err != nil {
-		return response.InternalServerError(c, "Failed to check university dependencies")
+	// Use a transaction for cascade delete
+	err := h.db.Transaction(func(tx *gorm.DB) error {
+		// Get all courses for this university
+		var courses []model.Course
+		if err := tx.Where("university_id = ?", id).Find(&courses).Error; err != nil {
+			return err
+		}
+
+		for _, course := range courses {
+			// Get all semesters for this course
+			var semesters []model.Semester
+			if err := tx.Where("course_id = ?", course.ID).Find(&semesters).Error; err != nil {
+				return err
+			}
+
+			for _, semester := range semesters {
+				// Delete all documents for subjects in this semester
+				if err := tx.Where("subject_id IN (SELECT id FROM subjects WHERE semester_id = ?)", semester.ID).
+					Delete(&model.Document{}).Error; err != nil {
+					return err
+				}
+
+				// Delete all subjects in this semester
+				if err := tx.Where("semester_id = ?", semester.ID).Delete(&model.Subject{}).Error; err != nil {
+					return err
+				}
+			}
+
+			// Delete all semesters for this course
+			if err := tx.Where("course_id = ?", course.ID).Delete(&model.Semester{}).Error; err != nil {
+				return err
+			}
+		}
+
+		// Delete all courses for this university
+		if err := tx.Where("university_id = ?", id).Delete(&model.Course{}).Error; err != nil {
+			return err
+		}
+
+		// Delete university (soft delete)
+		if err := tx.Delete(&university).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return response.InternalServerError(c, "Failed to delete university: "+err.Error())
 	}
 
-	if courseCount > 0 {
-		return response.BadRequest(c, "Cannot delete university with existing courses")
-	}
-
-	// Delete university (soft delete)
-	if err := h.db.Delete(&university).Error; err != nil {
-		return response.InternalServerError(c, "Failed to delete university")
-	}
-
-	return response.SuccessWithMessage(c, "University deleted successfully", nil)
+	return response.SuccessWithMessage(c, "University and all related data deleted successfully", nil)
 }

@@ -1,19 +1,24 @@
 package model
 
 import (
+	"time"
+
 	"gorm.io/gorm"
 )
 
 // User represents a registered user in the system
 type User struct {
-	gorm.Model
-	Email        string `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash string `gorm:"not null" json:"-"`            // Never expose password in JSON
-	PasswordSalt []byte `gorm:"not null;type:bytea" json:"-"` // Salt for key derivation
-	Name         string `gorm:"not null" json:"name"`
-	Role         string `gorm:"type:varchar(20);default:'student'" json:"role"` // student, admin
-	Semester     int    `gorm:"default:1" json:"semester"`
-	TokenVersion int    `gorm:"default:0" json:"-"` // Increment to invalidate all user tokens
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	Email        string         `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string         `gorm:"not null" json:"-"`            // Never expose password in JSON
+	PasswordSalt []byte         `gorm:"not null;type:bytea" json:"-"` // Salt for key derivation
+	Name         string         `gorm:"not null" json:"name"`
+	Role         string         `gorm:"type:varchar(20);default:'student'" json:"role"` // student, admin
+	Semester     int            `gorm:"default:1" json:"semester"`
+	TokenVersion int            `gorm:"default:0" json:"-"` // Increment to invalidate all user tokens
 
 	// Relationships
 	APIUsageLogs   []APIKeyUsageLog    `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`

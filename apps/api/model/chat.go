@@ -4,6 +4,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
+
 	"gorm.io/gorm"
 )
 
@@ -54,18 +56,21 @@ func (c Citations) Value() (driver.Value, error) {
 
 // ChatMessage represents a single message in a chat conversation
 type ChatMessage struct {
-	gorm.Model
-	SessionID    uint        `gorm:"not null;index" json:"session_id"`
-	SubjectID    uint        `gorm:"not null;index" json:"subject_id"`
-	UserID       uint        `gorm:"not null;index" json:"user_id"`
-	Role         MessageRole `gorm:"type:varchar(20);not null" json:"role"`
-	Content      string      `gorm:"type:text;not null" json:"content"`
-	Citations    Citations   `gorm:"type:jsonb" json:"citations,omitempty"`
-	TokensUsed   int         `gorm:"default:0" json:"tokens_used"`
-	ModelUsed    string      `gorm:"type:varchar(100)" json:"model_used"`
-	ResponseTime int         `gorm:"default:0" json:"response_time_ms"` // Response time in milliseconds
-	IsStreamed   bool        `gorm:"default:false" json:"is_streamed"`
-	Metadata     string      `gorm:"type:jsonb" json:"metadata,omitempty"`
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	SessionID    uint           `gorm:"not null;index" json:"session_id"`
+	SubjectID    uint           `gorm:"not null;index" json:"subject_id"`
+	UserID       uint           `gorm:"not null;index" json:"user_id"`
+	Role         MessageRole    `gorm:"type:varchar(20);not null" json:"role"`
+	Content      string         `gorm:"type:text;not null" json:"content"`
+	Citations    Citations      `gorm:"type:jsonb" json:"citations,omitempty"`
+	TokensUsed   int            `gorm:"default:0" json:"tokens_used"`
+	ModelUsed    string         `gorm:"type:varchar(100)" json:"model_used"`
+	ResponseTime int            `gorm:"default:0" json:"response_time_ms"` // Response time in milliseconds
+	IsStreamed   bool           `gorm:"default:false" json:"is_streamed"`
+	Metadata     string         `gorm:"type:jsonb" json:"metadata,omitempty"`
 
 	// Relationships
 	Session ChatSession `gorm:"foreignKey:SessionID;constraint:OnDelete:CASCADE" json:"session,omitempty"`

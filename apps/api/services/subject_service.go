@@ -123,13 +123,43 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	kbName := s.generateKnowledgeBaseName(&semester.Course, &semester, &subject)
 	kbDescription := fmt.Sprintf("Knowledge base for %s - %s (%s)", semester.Course.Name, subject.Name, subject.Code)
 
-	// Get embedding model UUID from environment or use default
+	// Get configuration from environment
 	embeddingModel := os.Getenv("DO_EMBEDDING_MODEL_UUID")
+	projectID := os.Getenv("DO_PROJECT_ID")
+	spacesName := os.Getenv("DO_SPACES_NAME")
+	spacesRegion := os.Getenv("DO_SPACES_REGION")
+	// DatabaseID allows reusing a single OpenSearch database across multiple knowledge bases
+	// instead of creating a new database for each one (which is expensive and wasteful)
+	databaseID := os.Getenv("DO_GENAI_DATABASE_ID")
+
+	// GenAI is only available in tor1 region - use tor1 for both KB and Agent
+	// to ensure compatibility
+	genAIRegion := "tor1"
+
+	// Spaces region defaults to blr1 if not set
+	if spacesRegion == "" {
+		spacesRegion = "blr1"
+	}
 
 	createKBReq := digitalocean.CreateKnowledgeBaseRequest{
 		Name:           kbName,
 		Description:    kbDescription,
 		EmbeddingModel: embeddingModel,
+		ProjectID:      projectID,
+		Region:         genAIRegion, // Use tor1 for KB to match agent region
+		DatabaseID:     databaseID,  // Reuse existing database if provided
+	}
+
+	// Add datasource - Spaces bucket is required
+	if spacesName != "" {
+		createKBReq.DataSources = []digitalocean.DataSourceCreateInput{
+			{
+				SpacesDataSource: &digitalocean.SpacesDataSourceInput{
+					BucketName: spacesName,
+					Region:     spacesRegion,
+				},
+			},
+		}
 	}
 
 	kb, err := s.doClient.CreateKnowledgeBase(ctx, createKBReq)
@@ -141,7 +171,31 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	result.KnowledgeBaseCreated = true
 	subject.KnowledgeBaseUUID = kb.UUID
 
-	// 4. Create AI Agent connected to Knowledge Base
+	// 4. Start indexing job for the knowledge base
+	// This is required before the KB can be attached to an agent
+	dataSources, err := s.doClient.ListKnowledgeBaseDataSources(ctx, kb.UUID)
+	if err != nil {
+		log.Printf("Warning: Failed to list data sources for KB %s: %v", kb.UUID, err)
+	} else if len(dataSources) > 0 {
+		// Collect data source UUIDs
+		dsUUIDs := make([]string, len(dataSources))
+		for i, ds := range dataSources {
+			dsUUIDs[i] = ds.UUID
+		}
+
+		// Start indexing job
+		indexReq := digitalocean.StartIndexingJobRequest{
+			KnowledgeBaseUUID: kb.UUID,
+			DataSourceUUIDs:   dsUUIDs,
+		}
+		if _, err := s.doClient.StartIndexingJob(ctx, indexReq); err != nil {
+			log.Printf("Warning: Failed to start indexing job for KB %s: %v. KB attachment may fail.", kb.UUID, err)
+		} else {
+			log.Printf("Started indexing job for KB %s with %d data sources", kb.UUID, len(dsUUIDs))
+		}
+	}
+
+	// 5. Create AI Agent connected to Knowledge Base
 	agentName := fmt.Sprintf("%s Agent", subject.Name)
 	agentDescription := fmt.Sprintf("AI assistant for %s course", subject.Name)
 	agentInstructions := fmt.Sprintf(
@@ -152,20 +206,25 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		subject.Name,
 	)
 
-	// Default to Claude 3 Sonnet or use environment variable
-	modelID := os.Getenv("DO_AGENT_MODEL_ID")
-	if modelID == "" {
-		modelID = "anthropic/claude-3-sonnet" // Default model
+	// Get model UUID from environment or use default (OpenAI GPT-oss-120b - works without extra API keys)
+	modelUUID := os.Getenv("DO_AGENT_MODEL_UUID")
+	if modelUUID == "" {
+		modelUUID = "18bc9b8f-73c5-11f0-b074-4e013e2ddde4" // OpenAI GPT-oss-120b
 	}
 
+	// Agent region - only tor1 supports GenAI agents (same as KB region)
+
+	// Create agent WITHOUT knowledge base first (KB may not be ready immediately)
 	createAgentReq := digitalocean.CreateAgentRequest{
-		Name:           agentName,
-		Description:    agentDescription,
-		ModelID:        modelID,
-		Instructions:   agentInstructions,
-		Temperature:    0.7,
-		TopP:           0.9,
-		KnowledgeBases: []string{kb.UUID},
+		Name:         agentName,
+		Description:  agentDescription,
+		ModelUUID:    modelUUID,
+		ProjectID:    projectID,
+		Region:       genAIRegion,
+		Instructions: agentInstructions,
+		Temperature:  0.7,
+		TopP:         0.9,
+		// Note: Don't attach KB during creation - it may not be ready yet
 	}
 
 	agent, err := s.doClient.CreateAgent(ctx, createAgentReq)
@@ -176,10 +235,18 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		return nil, fmt.Errorf("failed to create agent: %w", err)
 	}
 
+	// 6. Attach Knowledge Base to Agent (separate API call)
+	// This works around the KB not being ready at agent creation time
+	if err := s.doClient.AttachKnowledgeBase(ctx, agent.UUID, kb.UUID); err != nil {
+		log.Printf("Warning: Failed to attach KB %s to agent %s: %v. Will retry later.", kb.UUID, agent.UUID, err)
+		// Don't fail the whole operation - agent and KB are created, just not linked yet
+		// They can be linked manually or in a background job
+	}
+
 	result.AgentCreated = true
 	subject.AgentUUID = agent.UUID
 
-	// 5. Update subject with UUIDs
+	// 7. Update subject with UUIDs
 	if err := tx.Save(&subject).Error; err != nil {
 		// Clean up DigitalOcean resources
 		s.doClient.DeleteAgent(ctx, agent.UUID)
@@ -188,7 +255,7 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		return nil, fmt.Errorf("failed to update subject with UUIDs: %w", err)
 	}
 
-	// 6. Commit transaction
+	// 8. Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		// Clean up DigitalOcean resources if commit fails
 		s.doClient.DeleteAgent(ctx, agent.UUID)

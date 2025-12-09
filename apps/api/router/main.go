@@ -15,8 +15,10 @@ import (
 	chat_handlers "github.com/sahilchouksey/go-init-setup/handlers/chat"
 	course_handlers "github.com/sahilchouksey/go-init-setup/handlers/course"
 	document_handlers "github.com/sahilchouksey/go-init-setup/handlers/document"
+	pyq_handlers "github.com/sahilchouksey/go-init-setup/handlers/pyq"
 	semester_handlers "github.com/sahilchouksey/go-init-setup/handlers/semester"
 	subject_handlers "github.com/sahilchouksey/go-init-setup/handlers/subject"
+	syllabus_handlers "github.com/sahilchouksey/go-init-setup/handlers/syllabus"
 	todo_handlers "github.com/sahilchouksey/go-init-setup/handlers/todo"
 	university_handlers "github.com/sahilchouksey/go-init-setup/handlers/university"
 	"github.com/sahilchouksey/go-init-setup/services"
@@ -101,6 +103,14 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// Initialize Phase 9 handlers with APIKeyService
 	apiKeyService := services.NewAPIKeyService(db)
 	apiKeyHandler := apikey_handlers.NewAPIKeyHandler(db, apiKeyService)
+
+	// Initialize Syllabus handlers with SyllabusService
+	syllabusService := services.NewSyllabusService(db)
+	syllabusHandler := syllabus_handlers.NewSyllabusHandler(db, syllabusService)
+
+	// Initialize PYQ handlers with PYQService
+	pyqService := services.NewPYQService(db)
+	pyqHandler := pyq_handlers.NewPYQHandler(db, pyqService)
 
 	// Apply security middleware
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
@@ -193,6 +203,44 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	documents.Delete("/:id", authMiddleware.Required(), documentHandler.DeleteDocument)                     // Protected: Delete document
 	documents.Get("/:id/download", documentHandler.GetDownloadURL)                                          // Public: Get download URL
 	documents.Post("/:id/refresh-status", authMiddleware.Required(), documentHandler.RefreshIndexingStatus) // Protected: Refresh indexing status
+
+	// ==================== Syllabus Extraction ====================
+
+	// Syllabus routes (nested under subjects)
+	subjectSyllabus := api.Group("/subjects/:subject_id/syllabus")
+	subjectSyllabus.Get("/", syllabusHandler.GetSyllabusBySubject) // Public: Get syllabus for a subject
+	subjectSyllabus.Get("/search", syllabusHandler.SearchTopics)   // Public: Search topics in syllabus
+
+	// Document syllabus extraction
+	api.Post("/documents/:document_id/extract-syllabus", authMiddleware.Required(), syllabusHandler.ExtractSyllabus) // Protected: Extract syllabus from document
+
+	// Syllabus management routes
+	syllabus := api.Group("/syllabus")
+	syllabus.Get("/:id", syllabusHandler.GetSyllabusById)                                   // Public: Get syllabus by ID
+	syllabus.Get("/:id/status", syllabusHandler.GetExtractionStatus)                        // Public: Get extraction status
+	syllabus.Post("/:id/retry", authMiddleware.Required(), syllabusHandler.RetryExtraction) // Protected: Retry failed extraction
+	syllabus.Delete("/:id", authMiddleware.RequireAdmin(), syllabusHandler.DeleteSyllabus)  // Admin: Delete syllabus
+	syllabus.Get("/:id/units", syllabusHandler.ListUnits)                                   // Public: List units
+	syllabus.Get("/:id/units/:unit_number", syllabusHandler.GetUnit)                        // Public: Get unit by number
+	syllabus.Get("/:id/books", syllabusHandler.ListBooks)                                   // Public: List book references
+
+	// ==================== PYQ Extraction ====================
+
+	// PYQ routes (nested under subjects)
+	subjectPYQs := api.Group("/subjects/:subject_id/pyqs")
+	subjectPYQs.Get("/", pyqHandler.GetPYQsBySubject)      // Public: Get PYQ papers for a subject
+	subjectPYQs.Get("/search", pyqHandler.SearchQuestions) // Public: Search questions in PYQs
+
+	// Document PYQ extraction
+	api.Post("/documents/:document_id/extract-pyq", authMiddleware.Required(), pyqHandler.ExtractPYQ) // Protected: Extract PYQ from document
+
+	// PYQ management routes
+	pyqs := api.Group("/pyqs")
+	pyqs.Get("/:id", pyqHandler.GetPYQById)                                        // Public: Get PYQ paper by ID
+	pyqs.Get("/:id/status", pyqHandler.GetExtractionStatus)                        // Public: Get extraction status
+	pyqs.Get("/:id/questions", pyqHandler.ListQuestions)                           // Public: List questions
+	pyqs.Post("/:id/retry", authMiddleware.Required(), pyqHandler.RetryExtraction) // Protected: Retry failed extraction
+	pyqs.Delete("/:id", authMiddleware.RequireAdmin(), pyqHandler.DeletePYQ)       // Admin: Delete PYQ paper
 
 	// ======================================================================
 
