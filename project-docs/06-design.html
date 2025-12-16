@@ -27,13 +27,12 @@
     
     <h2>6.1 System Architecture</h2>
     
-    <p>The Study in Woods platform implements a three-tier architecture consisting of Presentation Layer (Next.js frontend), Application Layer (Go Fiber backend API), and Data Layer (PostgreSQL database, Redis cache, DigitalOcean Spaces). This separation enables independent scaling, technology replacement, and clear responsibility boundaries. Communication between tiers occurs through well-defined RESTful APIs with JSON payloads, Server-Sent Events for real-time streaming, and S3-compatible protocols for file storage.</p>
+    <p class="no-indent">Three-tier architecture: Presentation (Next.js), Application (Go Fiber API), Data (PostgreSQL, Redis, DigitalOcean Spaces). Communication via RESTful APIs, SSE for streaming, S3 for storage.</p>
     
     <div class="diagram-box">
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        PRESENTATION LAYER                              │
 │                   (Next.js 15 + React 19 + TypeScript)                 │
-│                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
 │  │    Pages     │  │  Components  │  │    Hooks     │  │   State    │ │
 │  │  (Routing)   │  │   (shadcn)   │  │ (React Hook) │  │  (TanStack)│ │
@@ -44,453 +43,172 @@
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        APPLICATION LAYER                               │
 │                         (Go 1.24 + Fiber 2.52)                         │
-│                                                                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
 │  │   Handlers   │  │   Services   │  │  Middleware  │  │   Utils    │ │
-│  │  (API Routes)│  │ (Business    │  │  (Auth, CORS)│  │ (Crypto,   │ │
-│  │              │  │   Logic)     │  │              │  │  Logger)   │ │
+│  │  (API Routes)│  │ (Business)   │  │  (Auth,CORS) │  │ (Crypto)   │ │
 │  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
 └────────────────┬──────────────┬─────────────┬──────────────┬──────────┘
-                 │              │             │              │
                  ▼              ▼             ▼              ▼
 ┌───────────────────┐ ┌─────────────┐ ┌──────────────┐ ┌──────────────┐
 │   PostgreSQL 15   │ │  Redis 7    │ │ DO Spaces    │ │ DO GradientAI│
-│  (Primary Data)   │ │  (Cache)    │ │ (S3 Storage) │ │ (LLM/RAG)    │
-│                   │ │             │ │              │ │              │
-│ • 14 Tables       │ │ • Sessions  │ │ • PDF Files  │ │ • Llama 3.3  │
-│ • GORM ORM        │ │ • Rate Limit│ │ • CDN        │ │ • Knowledge  │
-│ • Migrations      │ │ • Pub/Sub   │ │ • Pre-signed │ │   Bases      │
+│  (30+ Tables)     │ │ (Cache/TTL) │ │ (S3 Storage) │ │ (Llama 3.3)  │
 └───────────────────┘ └─────────────┘ └──────────────┘ └──────────────┘
     </div>
     
-    <h2>6.2 Data Flow Diagrams</h2>
+    <h2>6.2 Design Patterns Used</h2>
     
-    <h3>6.2.1 Level 0 - Context Diagram</h3>
+    <ul>
+        <li><strong>Repository Pattern:</strong> GORM-based data access layer abstracts database operations</li>
+        <li><strong>Service Layer Pattern:</strong> Business logic separated from handlers and data access</li>
+        <li><strong>Middleware Chain:</strong> JWT auth, CORS, rate limiting, logging as composable middleware</li>
+        <li><strong>Provider Pattern:</strong> React context providers for auth, theme, and query state</li>
+        <li><strong>Observer Pattern:</strong> SSE for real-time streaming of AI responses and job status</li>
+        <li><strong>Factory Pattern:</strong> Service initialization with dependency injection</li>
+    </ul>
+    
+    <h2>6.3 Data Flow Summary</h2>
+    
+    <h3>6.3.1 Context Diagram (Level 0)</h3>
     
     <div class="diagram-box">
-┌──────────┐                                              ┌──────────────┐
-│          │   Login, Upload PDFs, Ask Questions,        │              │
-│  Student │───────────────────────────────────────────>│   Study in   │
-│   User   │                                              │    Woods     │
-│          │<───────────────────────────────────────────│   Platform   │
-└──────────┘   Authentication Tokens, PDF Parsing,       │              │
-               AI Responses, Analytics                    └──────┬───────┘
-                                                                 │
-┌──────────┐                                                     │
-│          │   Manage Users, Configure System,                  │
-│  Admin   │───────────────────────────────────────────────────┘
-│   User   │   View Audit Logs
-│          │<───────────────────────────────────────────────────┐
-└──────────┘   Reports, System Statistics                       │
-                                                                 │
-                                                                 ▼
-                  ┌─────────────┐  ┌──────────┐  ┌─────────────────────┐
-                  │ DigitalOcean│  │ Database │  │   Email Service     │
-                  │     AI      │  │  Server  │  │ (Password Recovery) │
-                  └─────────────┘  └──────────┘  └─────────────────────┘
+┌──────────┐     Login, Upload, Questions     ┌──────────────┐
+│ Student  │─────────────────────────────────>│  Study in    │
+│   User   │<─────────────────────────────────│   Woods      │
+└──────────┘   Auth Tokens, AI Responses      └──────┬───────┘
+                                                     │
+┌──────────┐     Manage Users, Config                │
+│  Admin   │─────────────────────────────────────────┘
+└──────────┘     Audit Logs, Reports
+                           │
+         ┌─────────────────┼─────────────────┐
+         ▼                 ▼                 ▼
+  ┌─────────────┐   ┌──────────┐   ┌─────────────────┐
+  │ DO AI API   │   │ Database │   │  Email Service  │
+  └─────────────┘   └──────────┘   └─────────────────┘
     </div>
     
-    <h3>6.2.2 Level 1 - System Decomposition</h3>
+    <h3>6.3.2 System Decomposition (Level 1)</h3>
     
     <div class="diagram-box">
 Student ──> [1.0 Authentication] ──> User Database
               │
               ├──> [2.0 Academic Management] ──> University/Course/Subject DB
-              │     │
-              │     ├──> Upload PDFs
-              │     └──> Browse Hierarchy
-              │
-              ├──> [3.0 Document Processing] ──> Documents DB + DO Spaces
-              │     │                             │
-              │     ├──> Upload PDF              │
-              │     ├──> Extract Syllabus ───────┼──> AI Service
-              │     └──> Index to Knowledge Base─┘
-              │
-              ├──> [4.0 AI Chat System] ──> ChatSessions + ChatMessages DB
-              │     │                       │
-              │     ├──> Create Session     │
-              │     ├──> Send Message ──────┼──> AI Service + Knowledge Base
-              │     └──> View History       │
-              │
-              └──> [5.0 Analytics] ──> Activity Logs + Usage Stats DB
+              ├──> [3.0 Document Processing] ──> DO Spaces + AI Extraction
+              ├──> [4.0 AI Chat System] ──> Knowledge Base + AI Service
+              └──> [5.0 Analytics] ──> Activity Logs
 
 Admin ──> [6.0 Administration] ──> All Databases + Audit Logs
-           │
-           ├──> User Management
-           ├──> System Configuration
-           └──> View Audit Logs
-    </div>
-    
-    <h3>6.2.3 Level 2 - Process Detail: Document Upload & Processing</h3>
-    
-    <div class="diagram-box">
-[3.0 Document Processing]
-    │
-    ├──> [3.1 Validate Upload]
-    │     │ Input: File (from User)
-    │     │ Process: Check file type (PDF), size (<10MB), duplicate
-    │     │ Output: Validation Result
-    │     ▼
-    ├──> [3.2 Upload to Storage]
-    │     │ Input: Validated File
-    │     │ Process: Generate UUID, Upload to DO Spaces (multipart if >5MB)
-    │     │ Output: Storage URL, Storage Key
-    │     ▼
-    ├──> [3.3 Save Metadata]
-    │     │ Input: File metadata, Storage info
-    │     │ Process: Insert Document record with status='pending'
-    │     │ Output: Document ID
-    │     │ Database: Documents table
-    │     ▼
-    ├──> [3.4 Extract Content]
-    │     │ Input: PDF URL
-    │     │ Process: Use AI to extract syllabus structure (units, topics)
-    │     │ AI Call: Llama 3.3 70B with structured prompt
-    │     │ Output: JSON { units: [ { title, topics: [...] } ] }
-    │     ▼
-    ├──> [3.5 Store Syllabus]
-    │     │ Input: Extracted JSON
-    │     │ Process: Parse and insert into Syllabus, SyllabusUnit, SyllabusTopic
-    │     │ Database: Syllabus tables (3 tables)
-    │     ▼
-    └──> [3.6 Index to Knowledge Base]
-          │ Input: Document ID, PDF URL
-          │ Process: Upload to subject's Knowledge Base, Poll indexing status
-          │ Update: Document.indexing_status = 'completed'
-          │ External: DigitalOcean Knowledge Base API
     </div>
     
     <div class="page-break"></div>
     
-    <h2>6.3 Entity Relationship Diagram</h2>
+    <h2>6.4 Entity Relationship Diagram</h2>
     
-    <p class="no-indent">The database schema consists of 14 primary tables organized in a hierarchical structure. The core academic hierarchy flows from University → Course → Semester → Subject, with documents and chat sessions associated with subjects. User authentication and activity tracking tables support system security and analytics.</p>
+    <p class="no-indent">Database: 30+ tables. Core hierarchy: University → Course → Semester → Subject → Documents/ChatSessions.</p>
     
     <div class="diagram-box">
 ┌──────────────┐         ┌──────────────┐
 │   User       │         │ University   │
-├──────────────┤         ├──────────────┤
 │ PK id        │         │ PK id        │
 │    email     │         │    name      │
-│    password  │         │    code      │
-│    name      │         │    location  │
-│    role      │         │    website   │
+│    role      │         │    code      │
 └──────┬───────┘         └──────┬───────┘
-       │                        │
        │ 1:N                    │ 1:N
        │                        ▼
-       │                 ┌──────────────┐
-       │                 │   Course     │
-       │                 ├──────────────┤
-       │                 │ PK id        │
-       │                 │ FK university_id
-       │                 │    name      │
-       │                 │    code      │
-       │                 │    duration  │
-       │                 └──────┬───────┘
-       │                        │ 1:N
-       │                        ▼
-       │                 ┌──────────────┐
-       │                 │  Semester    │
-       │                 ├──────────────┤
-       │                 │ PK id        │
-       │                 │ FK course_id │
-       │                 │    number    │
-       │                 └──────┬───────┘
-       │                        │ 1:N
-       │                        ▼
-       │                 ┌──────────────┐
-       │                 │   Subject    │
-       │                 ├──────────────┤
-       │                 │ PK id        │
-       │                 │ FK semester_id
-       │                 │    name      │
-       │                 │    code      │
-       │                 │    kb_uuid   │
-       │                 └───┬──────────┘
-       │ 1:N                 │ 1:N
-       ▼                     ▼
-┌──────────────┐     ┌──────────────┐
-│ ChatSession  │     │  Document    │
-├──────────────┤     ├──────────────┤
-│ PK id        │     │ PK id        │
-│ FK user_id   │     │ FK subject_id│
-│ FK subject_id│     │    filename  │
-│    title     │     │    spaces_url│
-└──────┬───────┘     │    status    │
-       │ 1:N         └──────┬───────┘
-       ▼                    │ 1:N
-┌──────────────┐            ▼
-│ ChatMessage  │     ┌──────────────┐
-├──────────────┤     │  Syllabus    │
-│ PK id        │     ├──────────────┤
-│ FK session_id│     │ PK id        │
-│ FK user_id   │     │ FK subject_id│
-│    role      │     │ FK document_id
-│    content   │     │    status    │
-│    citations │     └──────┬───────┘
-└──────────────┘            │ 1:N
-                            ▼
-Other Tables:        ┌──────────────┐
-• ExternalAPIKey     │ SyllabusUnit │
-• APIKeyUsageLog     ├──────────────┤
-• UserActivity       │ PK id        │
-• AdminAuditLog      │ FK syllabus_id
-• AppSetting         │    number    │
-• JWTTokenBlacklist  │    title     │
-• PYQ (Questions)    │    hours     │
-                     └──────┬───────┘
-                            │ 1:N
-                            ▼
-                     ┌──────────────┐
-                     │SyllabusTopic │
-                     ├──────────────┤
-                     │ PK id        │
-                     │ FK unit_id   │
-                     │    title     │
-                     │    keywords  │
-                     └──────────────┘
+       │                 ┌──────────────┐       ┌──────────────┐
+       │                 │   Course     │──1:N─>│  Semester    │
+       │                 │ FK univ_id   │       │ FK course_id │
+       │                 └──────────────┘       └──────┬───────┘
+       │                                               │ 1:N
+       │                                               ▼
+       │                                        ┌──────────────┐
+       │                                        │   Subject    │
+       │                                        │ FK semester  │
+       │                                        │    kb_uuid   │
+       │                                        └───┬──────────┘
+       │ 1:N                                        │ 1:N
+       ▼                                            ▼
+┌──────────────┐                            ┌──────────────┐
+│ ChatSession  │                            │  Document    │──1:N─> Syllabus
+│ FK user_id   │                            │ FK subject   │         │
+│ FK subject   │                            │    status    │    SyllabusUnit
+└──────┬───────┘                            └──────────────┘         │
+       │ 1:N                                                   SyllabusTopic
+       ▼
+┌──────────────┐   Other: APIKey, UserActivity, AdminAuditLog,
+│ ChatMessage  │         AppSetting, PYQ, ChatMemory, IndexingJob
+│ FK session   │
+│    citations │
+└──────────────┘
     </div>
     
-    <h2>6.4 Sequence Diagrams</h2>
+    <h2>6.5 Key Sequence Flows</h2>
     
-    <h3>6.4.1 User Login Flow</h3>
-    
+    <h3>6.5.1 Authentication Flow</h3>
     <div class="diagram-box">
-User        Frontend       API Handler    Auth Service    Database     Redis
- │              │              │              │              │            │
- ├─Login────────>│              │              │              │            │
- │  (email,pwd)  │              │              │              │            │
- │              ├─POST /login──>│              │              │            │
- │              │              ├─Validate─────>│              │            │
- │              │              │  Credentials  │              │            │
- │              │              │              ├─Find User────>│            │
- │              │              │              │ (email)       │            │
- │              │              │              │<─User Record─┤            │
- │              │              │              │              │            │
- │              │              │<─Check Pass──┤              │            │
- │              │              │  bcrypt.Compare            │            │
- │              │              │              │              │            │
- │              │              │              ├─Check Rate──────────────>│
- │              │              │              │  Limit      │            │
- │              │              │              │<─OK/Block──────────────┤
- │              │              │              │              │            │
- │              │              │              ├─Generate JWT─┤            │
- │              │              │              │  (24h exp)   │            │
- │              │              │              │              │            │
- │              │              │              ├─Store Session───────────>│
- │              │              │              │              │  (24h TTL) │
- │              │              │<─JWT Token───┤              │            │
- │              │<─200 OK──────┤              │              │            │
- │              │  {token}     │              │              │            │
- │<─Redirect────┤              │              │              │            │
- │  Dashboard   │              │              │              │            │
+User ─> Frontend ─> POST /login ─> Validate ─> DB Lookup ─> bcrypt Check
+                                                    │
+                    <── JWT Token ── Generate JWT <─┘
+                           │
+                    Store Session in Redis (24h TTL)
     </div>
     
-    <h3>6.4.2 Document Upload & Syllabus Extraction Flow</h3>
-    
+    <h3>6.5.2 Document Upload & AI Extraction</h3>
     <div class="diagram-box">
-User    Frontend   API    Syllabus   DO Spaces   Database   AI Service   KB API
- │         │        │     Service       │           │           │          │
- ├─Upload─>│        │        │          │           │           │          │
- │  PDF    │        │        │          │           │           │          │
- │         ├─POST───>│        │          │           │           │          │
- │         │ /docs  │        │          │           │           │          │
- │         │ multipart       │          │           │           │          │
- │         │        ├─Validate          │           │           │          │
- │         │        │ (PDF, <10MB)      │           │           │          │
- │         │        │        │          │           │           │          │
- │         │        ├────────┼─Upload───>│           │           │          │
- │         │        │        │  (S3 API) │           │           │          │
- │         │        │<───────┼─URL───────┤           │           │          │
- │         │        │        │          │           │           │          │
- │         │        ├────────┼──────────────Save─────>│           │          │
- │         │        │        │          │  Metadata  │           │          │
- │         │        │        │          │  (pending) │           │          │
- │         │<─202───┤        │          │           │           │          │
- │         │ Accepted        │          │           │           │          │
- │         │        │        │          │           │           │          │
- │         │        │ [Background Job]  │           │           │          │
- │         │        ├─Extract────────────────────────────────────>│          │
- │         │        │        │          │           │  (Llama 3.3)          │
- │         │        │        │          │           │  Prompt: Extract      │
- │         │        │        │          │           │  syllabus as JSON     │
- │         │        │<───────┼──────────────────────────JSON──────┤          │
- │         │        │        │          │  {units:[...]}           │          │
- │         │        │        │          │           │           │          │
- │         │        ├─Parse & Save──────────────────>│           │          │
- │         │        │        │ (Syllabus tables)    │           │          │
- │         │        │        │          │           │           │          │
- │         │        ├────────┼──────────────────────────────────────Index──>│
- │         │        │        │          │           │           │  PDF URL  │
- │         │        │<───────┼──────────────────────────────────────Job ID─┤
- │         │        │        │          │           │           │          │
- │         │        ├─[Poll Status]────────────────────────────────────────>│
- │         │        │        │          │   (every 10s)         │          │
- │         │        │<───────┼──────────────────────────────────Completed───┤
- │         │        │        │          │           │           │          │
- │         │        ├────────┼─Update Status─────────>│           │          │
- │         │        │        │  (completed)          │           │          │
- │         │<─SSE───┤        │          │           │           │          │
- │         │ Progress        │          │           │           │          │
- │         │ Updates │        │          │           │           │          │
+User ─> Upload PDF ─> Validate ─> Upload to DO Spaces ─> Save Metadata (pending)
+                                        │
+              [Background]              ▼
+         AI Extract Syllabus ─> Parse JSON ─> Store Units/Topics
+                    │
+         Index to Knowledge Base ─> Poll Status ─> Update (completed)
     </div>
     
-    <h3>6.4.3 AI Chat Interaction Flow</h3>
-    
+    <h3>6.5.3 AI Chat with RAG</h3>
     <div class="diagram-box">
-User   Frontend   API    Chat Service   Database   Knowledge Base   AI Service
- │        │        │          │            │             │              │
- ├─Ask────>│        │          │            │             │              │
- │Question │        │          │            │             │              │
- │        ├─POST───>│          │            │             │              │
- │        │/chat/msg│          │            │             │              │
- │        │        ├─Get──────────────────>│             │              │
- │        │        │  Session History     │             │              │
- │        │        │<─Last 10 Messages────┤             │              │
- │        │        │          │            │             │              │
- │        │        ├─Assemble Context─────>│             │              │
- │        │        │          │   (System prompt +       │              │
- │        │        │          │    conversation history) │              │
- │        │        │          │            │             │              │
- │        │        ├──────────┼────────────┼─Query KB────>│              │
- │        │        │          │            │  (user msg)  │              │
- │        │        │<─────────┼────────────┼─Citations────┤              │
- │        │        │          │            │  Top 5 docs  │              │
- │        │        │          │            │             │              │
- │        │        ├──────────┼────────────┼──────────────┼─Chat Request─>│
- │        │        │          │            │             │  (streaming)  │
- │        │        │          │            │             │  KB context   │
- │        │<─SSE───┤<─────────┼────────────┼──────────────┼─Tokens───────┤
- │        │Stream  │          │   (word by word)         │  (SSE)        │
- │        │        │          │            │             │              │
- │        │        ├─Save─────────────────>│             │              │
- │        │        │   Messages (user +    │             │              │
- │        │        │   assistant, citations)            │              │
- │        │<─Done──┤          │            │             │              │
+User Question ─> Get Session History ─> Query Knowledge Base ─> Get Citations
+                                               │
+              <── SSE Stream ── AI Response <──┘
+                     │
+              Save Messages + Citations to DB
     </div>
     
     <div class="page-break"></div>
     
-    <h2>6.5 Component Diagrams</h2>
+    <h2>6.6 Component Architecture</h2>
     
-    <h3>6.5.1 Backend Component Architecture</h3>
+    <h3>6.6.1 Backend Layers</h3>
     
     <div class="diagram-box">
 ┌─────────────────────────────────────────────────────────────────┐
-│                         API Layer                               │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │   Auth     │  │  Course    │  │  Document  │  │   Chat   │  │
-│  │  Handler   │  │  Handler   │  │  Handler   │  │ Handler  │  │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────┬─────┘  │
-└────────┼───────────────┼───────────────┼──────────────┼────────┘
-         │               │               │              │
-         ├───────────────┴───────────────┴──────────────┤
-         │                                               │
-┌────────▼───────────────────────────────────────────────▼────────┐
-│                      Middleware Layer                           │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │    JWT     │  │    CORS    │  │Rate Limit  │  │  Logger  │  │
-│  │   Verify   │  │   Policy   │  │ (Redis)    │  │          │  │
-│  └────────────┘  └────────────┘  └────────────┘  └──────────┘  │
-└──────────────────────────────────────────────────────────────────┘
-         │
-┌────────▼───────────────────────────────────────────────────────┐
-│                     Service Layer                              │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │   Auth     │  │  Syllabus  │  │  Document  │  │   Chat   │  │
-│  │  Service   │  │ Extractor  │  │  Service   │  │ Service  │  │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────┬─────┘  │
-└────────┼───────────────┼───────────────┼──────────────┼────────┘
-         │               │               │              │
-┌────────▼───────────────▼───────────────▼──────────────▼────────┐
-│                     Repository Layer                           │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌──────────┐  │
-│  │    User    │  │  Subject   │  │  Document  │  │   Chat   │  │
-│  │   Repo     │  │   Repo     │  │   Repo     │  │  Repo    │  │
-│  │   (GORM)   │  │   (GORM)   │  │   (GORM)   │  │  (GORM)  │  │
-│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └────┬─────┘  │
-└────────┼───────────────┼───────────────┼──────────────┼────────┘
-         │               │               │              │
-         └───────────────┴───────────────┴──────────────┘
-                              │
-┌─────────────────────────────▼───────────────────────────────────┐
-│                        Data Layer                               │
-│  ┌──────────────────┐        ┌──────────────┐                   │
-│  │   PostgreSQL     │        │    Redis     │                   │
-│  │  14 Tables       │        │  Cache/TTL   │                   │
-│  └──────────────────┘        └──────────────┘                   │
-└──────────────────────────────────────────────────────────────────┘
-
-External Services:
-┌────────────────┐  ┌─────────────────┐  ┌──────────────────┐
-│  DO Spaces     │  │ DO GradientAI   │  │  Email Service   │
-│  (S3 Storage)  │  │  (LLM/KB API)   │  │  (SMTP)          │
-└────────────────┘  └─────────────────┘  └──────────────────┘
+│ API Layer: Auth | Course | Document | Chat | Admin Handlers    │
+├─────────────────────────────────────────────────────────────────┤
+│ Middleware: JWT Verify | CORS | Rate Limit (Redis) | Logger    │
+├─────────────────────────────────────────────────────────────────┤
+│ Service Layer: AuthService | SyllabusExtractor | ChatService   │
+├─────────────────────────────────────────────────────────────────┤
+│ Repository Layer: User | Subject | Document | Chat (GORM)      │
+├─────────────────────────────────────────────────────────────────┤
+│ Data: PostgreSQL (30+ tables) | Redis (Cache/Sessions)         │
+├─────────────────────────────────────────────────────────────────┤
+│ External: DO Spaces (S3) | DO GradientAI (LLM/KB) | SMTP       │
+└─────────────────────────────────────────────────────────────────┘
     </div>
     
-    <h3>6.5.2 Frontend Component Hierarchy</h3>
+    <h3>6.6.2 Frontend Structure</h3>
     
     <div class="diagram-box">
 App (Next.js Router)
-│
-├── Layout
-│   ├── Header (Auth status, Theme toggle)
-│   ├── Sidebar (Navigation)
-│   └── Footer
-│
+├── Layout: Header | Sidebar | Footer
 ├── Pages
-│   ├── / (Landing)
-│   ├── /login
-│   ├── /register
-│   ├── /dashboard
-│   │   ├── Stats Cards
-│   │   ├── Recent Activity
-│   │   └── Quick Actions
-│   │
-│   ├── /universities
-│   │   ├── University List
-│   │   └── University Form (Create/Edit)
-│   │
-│   ├── /courses
-│   │   ├── Course List (Filtered by University)
-│   │   └── Course Form
-│   │
-│   ├── /subjects
-│   │   ├── Subject List
-│   │   ├── Subject Detail
-│   │   └── Document Manager
-│   │
-│   ├── /chat/[subjectId]
-│   │   ├── Session List (Sidebar)
-│   │   ├── Chat Area
-│   │   │   ├── Message List
-│   │   │   │   ├── User Message
-│   │   │   │   └── AI Message (with Citations)
-│   │   │   └── Input Box (with streaming)
-│   │   └── Citation Panel
-│   │
-│   ├── /analytics
-│   │   ├── Usage Charts (Recharts)
-│   │   ├── Statistics Cards
-│   │   └── User Activity Table
-│   │
-│   └── /admin
-│       ├── User Management
-│       ├── System Settings
-│       └── Audit Logs
-│
-├── Providers
-│   ├── TanStack QueryProvider (API cache)
-│   ├── ThemeProvider (Dark mode)
-│   └── AuthProvider (User context)
-│
-└── Utilities
-    ├── API Client (Axios)
-    ├── Hooks (useAuth, useChat, useUpload)
-    └── Validators (Zod schemas)
+│   ├── Auth: /login, /register
+│   ├── Dashboard: Stats, Activity, Actions
+│   ├── Academic: /universities, /courses, /subjects
+│   ├── Chat: /chat/[subjectId] - Sessions, Messages, Citations
+│   ├── Analytics: Charts, Stats, Activity Table
+│   └── Admin: Users, Settings, Audit Logs
+├── Providers: QueryProvider | ThemeProvider | AuthProvider
+└── Utils: API Client (Axios) | Hooks | Validators (Zod)
     </div>
-    
-    <div class="page-number">6</div>
+
 </body>
 </html>

@@ -18,6 +18,8 @@
         th, td { border: 1px solid #000; padding: 6px; text-align: left; vertical-align: top; }
         th { background-color: #f0f0f0; font-weight: bold; }
         .table-name { font-weight: bold; font-size: 11pt; margin-top: 15px; margin-bottom: 5px; }
+        .table-group { margin: 15px 0; padding: 10px; border-left: 3px solid #333; }
+        .compact-table td { padding: 4px 6px; }
     </style>
 </head>
 <body>
@@ -25,328 +27,163 @@
     
     <h2>7.1 Database Overview</h2>
     
-    <p>The Study in Woods platform uses PostgreSQL 15.x as its primary relational database management system, storing all persistent application data across 14 core tables. The database schema is designed following normalization principles (3NF) to minimize data redundancy while maintaining referential integrity through foreign key constraints. GORM (Go Object Relational Mapping) library manages database operations, automatic migrations, and relationship handling.</p>
+    <p>The Study in Woods platform uses PostgreSQL 15.x as its primary relational database management system, storing all persistent application data across <strong>30+ tables</strong>. The database schema follows normalization principles (3NF) to minimize data redundancy while maintaining referential integrity through foreign key constraints. GORM (Go Object Relational Mapping) library manages database operations, automatic migrations, and relationship handling.</p>
     
-    <h2>7.2 Core Tables</h2>
-    
-    <h3>7.2.1 User Management Tables</h3>
-    
-    <p class="table-name">Table: users</p>
-    <p class="no-indent">Stores user account information including authentication credentials and profile data.</p>
+    <h2>7.2 Database Schema Summary</h2>
     
     <table>
         <thead>
             <tr>
-                <th>Column</th>
-                <th>Type</th>
-                <th>Constraints</th>
-                <th>Description</th>
+                <th>Category</th>
+                <th>Tables</th>
+                <th>Purpose</th>
             </tr>
         </thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Auto-incrementing user identifier</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Account creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last modification timestamp</td></tr>
-            <tr><td>deleted_at</td><td>TIMESTAMP</td><td>NULL, INDEX</td><td>Soft delete timestamp (NULL = active)</td></tr>
-            <tr><td>email</td><td>VARCHAR(255)</td><td>UNIQUE, NOT NULL</td><td>User email address (login identifier)</td></tr>
-            <tr><td>password_hash</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>bcrypt hashed password (cost factor 10)</td></tr>
-            <tr><td>password_salt</td><td>BYTEA</td><td>NOT NULL</td><td>Random salt for key derivation</td></tr>
-            <tr><td>name</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Full name of user</td></tr>
-            <tr><td>role</td><td>VARCHAR(20)</td><td>DEFAULT 'student'</td><td>User role: 'student' or 'admin'</td></tr>
-            <tr><td>semester</td><td>INTEGER</td><td>DEFAULT 1</td><td>Current semester number (for students)</td></tr>
-            <tr><td>token_version</td><td>INTEGER</td><td>DEFAULT 0</td><td>Incremented to invalidate all user tokens</td></tr>
+            <tr><td>User Management</td><td>users, jwt_token_blacklist</td><td>Authentication, authorization, session management</td></tr>
+            <tr><td>Academic Hierarchy</td><td>universities, courses, semesters, subjects</td><td>Educational structure and curriculum organization</td></tr>
+            <tr><td>Document Management</td><td>documents, syllabuses, syllabus_units, syllabus_topics</td><td>File storage, syllabus extraction, content indexing</td></tr>
+            <tr><td>Chat System</td><td>chat_sessions, chat_messages, chat_memories, chat_compacted_contexts</td><td>AI conversations, context management, memory optimization</td></tr>
+            <tr><td>PYQ System</td><td>pyq_papers, pyq_questions, pyq_question_choices, pyq_crawler_sources, pyq_crawled_papers</td><td>Previous year questions management and crawling</td></tr>
+            <tr><td>System & Audit</td><td>api_keys, api_key_usage_logs, user_activities, admin_audit_logs, app_settings</td><td>API management, activity tracking, configuration</td></tr>
+            <tr><td>Background Jobs</td><td>indexing_jobs, indexing_job_items, cron_job_logs</td><td>Asynchronous processing, job scheduling</td></tr>
+            <tr><td>User Engagement</td><td>user_notifications, user_courses</td><td>Notifications, enrollment tracking</td></tr>
         </tbody>
     </table>
     
-    <p class="no-indent"><strong>Indexes:</strong> email (unique), deleted_at (partial), role</p>
-    <p class="no-indent"><strong>Relationships:</strong> Has many ChatSessions, ChatMessages, UserCourses, AdminAuditLogs</p>
+    <h2>7.3 Core Table Definitions</h2>
     
-    <h3>7.2.2 Academic Hierarchy Tables</h3>
-    
-    <p class="table-name">Table: universities</p>
-    <table>
+    <h3>7.3.1 users</h3>
+    <p class="no-indent">Primary table for user authentication and profile management.</p>
+    <table class="compact-table">
         <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+            <tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr>
         </thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>University identifier</td></tr>
-            <tr><td>name</td><td>VARCHAR(255)</td><td>UNIQUE, NOT NULL</td><td>Full university name</td></tr>
-            <tr><td>code</td><td>VARCHAR(50)</td><td>UNIQUE, NOT NULL</td><td>University code (e.g., "AKTU", "DU")</td></tr>
-            <tr><td>location</td><td>VARCHAR(255)</td><td>NULL</td><td>City/State location</td></tr>
-            <tr><td>website</td><td>VARCHAR(255)</td><td>NULL</td><td>Official website URL</td></tr>
-            <tr><td>is_active</td><td>BOOLEAN</td><td>DEFAULT TRUE</td><td>Active status flag</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+            <tr><td>email</td><td>VARCHAR(255)</td><td>UNIQUE, NOT NULL</td></tr>
+            <tr><td>password_hash, password_salt</td><td>VARCHAR(255), BYTEA</td><td>NOT NULL (bcrypt)</td></tr>
+            <tr><td>name</td><td>VARCHAR(255)</td><td>NOT NULL</td></tr>
+            <tr><td>role</td><td>VARCHAR(20)</td><td>DEFAULT 'student' (student/admin)</td></tr>
+            <tr><td>semester, token_version</td><td>INTEGER</td><td>DEFAULT 1, 0</td></tr>
+            <tr><td>created_at, updated_at, deleted_at</td><td>TIMESTAMP</td><td>Soft delete support</td></tr>
         </tbody>
     </table>
+    <p class="no-indent"><strong>Relations:</strong> Has many ChatSessions, ChatMessages, UserCourses, AdminAuditLogs</p>
     
-    <p class="table-name">Table: courses</p>
-    <table>
+    <h3>7.3.2 Academic Hierarchy (universities → courses → semesters → subjects)</h3>
+    
+    <table class="compact-table">
         <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+            <tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr>
         </thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Course identifier</td></tr>
-            <tr><td>university_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References universities(id) ON DELETE CASCADE</td></tr>
-            <tr><td>name</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Course name (e.g., "MCA", "BCA")</td></tr>
-            <tr><td>code</td><td>VARCHAR(50)</td><td>UNIQUE, NOT NULL</td><td>Course code</td></tr>
-            <tr><td>description</td><td>TEXT</td><td>NULL</td><td>Course description</td></tr>
-            <tr><td>duration</td><td>INTEGER</td><td>DEFAULT 4</td><td>Duration in semesters</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>universities</td><td>id, name, code (UNIQUE), location, is_active</td><td>—</td></tr>
+            <tr><td>courses</td><td>id, name, code (UNIQUE), duration, description</td><td>university_id → universities(id)</td></tr>
+            <tr><td>semesters</td><td>id, number, name</td><td>course_id → courses(id)</td></tr>
+            <tr><td>subjects</td><td>id, name, code, credits, knowledge_base_uuid, agent_uuid</td><td>semester_id → semesters(id)</td></tr>
         </tbody>
     </table>
-    
-    <p class="table-name">Table: semesters</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Semester identifier</td></tr>
-            <tr><td>course_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References courses(id) ON DELETE CASCADE</td></tr>
-            <tr><td>number</td><td>INTEGER</td><td>NOT NULL</td><td>Semester number (1, 2, 3...)</td></tr>
-            <tr><td>name</td><td>VARCHAR(50)</td><td>NULL</td><td>Display name (e.g., "Semester 1")</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
-        </tbody>
-    </table>
-    
-    <p class="table-name">Table: subjects</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Subject identifier</td></tr>
-            <tr><td>semester_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References semesters(id) ON DELETE CASCADE</td></tr>
-            <tr><td>name</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Subject name</td></tr>
-            <tr><td>code</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Subject code</td></tr>
-            <tr><td>credits</td><td>INTEGER</td><td>DEFAULT 0</td><td>Credit hours</td></tr>
-            <tr><td>description</td><td>TEXT</td><td>NULL</td><td>Subject description</td></tr>
-            <tr><td>knowledge_base_uuid</td><td>VARCHAR(100)</td><td>NULL</td><td>DigitalOcean Knowledge Base UUID</td></tr>
-            <tr><td>agent_uuid</td><td>VARCHAR(100)</td><td>NULL</td><td>DigitalOcean Agent UUID</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
-        </tbody>
-    </table>
+    <p class="no-indent">All tables include created_at, updated_at timestamps. CASCADE delete propagates through hierarchy.</p>
     
     <div class="page-break"></div>
     
-    <h3>7.2.3 Document Management Tables</h3>
-    
-    <p class="table-name">Table: documents</p>
-    <table>
+    <h3>7.3.3 documents</h3>
+    <p class="no-indent">Stores uploaded PDFs and tracks indexing status with DigitalOcean Knowledge Base.</p>
+    <table class="compact-table">
         <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+            <tr><th>Column</th><th>Type</th><th>Purpose</th></tr>
         </thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Document identifier</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References subjects(id) ON DELETE CASCADE</td></tr>
-            <tr><td>type</td><td>VARCHAR(20)</td><td>NOT NULL</td><td>Type: 'syllabus', 'pyq', 'book', 'reference', 'notes'</td></tr>
-            <tr><td>filename</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>Original filename</td></tr>
-            <tr><td>original_url</td><td>TEXT</td><td>NULL</td><td>Original source URL (if crawled)</td></tr>
-            <tr><td>spaces_url</td><td>TEXT</td><td>NOT NULL</td><td>DigitalOcean Spaces full URL</td></tr>
-            <tr><td>spaces_key</td><td>VARCHAR(255)</td><td>NOT NULL</td><td>S3 object key in Spaces</td></tr>
-            <tr><td>data_source_id</td><td>VARCHAR(100)</td><td>NULL</td><td>Knowledge Base data source ID</td></tr>
-            <tr><td>indexing_job_id</td><td>VARCHAR(100)</td><td>NULL</td><td>Knowledge Base indexing job ID</td></tr>
-            <tr><td>indexing_status</td><td>VARCHAR(20)</td><td>DEFAULT 'pending'</td><td>'pending', 'in_progress', 'completed', 'failed'</td></tr>
-            <tr><td>indexing_error</td><td>TEXT</td><td>NULL</td><td>Error message if indexing failed</td></tr>
-            <tr><td>file_size</td><td>BIGINT</td><td>DEFAULT 0</td><td>File size in bytes</td></tr>
-            <tr><td>page_count</td><td>INTEGER</td><td>DEFAULT 0</td><td>Number of pages (PDF)</td></tr>
-            <tr><td>uploaded_by_user_id</td><td>INTEGER</td><td>FOREIGN KEY</td><td>References users(id) ON DELETE SET NULL</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Upload timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+            <tr><td>subject_id</td><td>INTEGER</td><td>FK → subjects(id)</td></tr>
+            <tr><td>type</td><td>VARCHAR(20)</td><td>'syllabus', 'pyq', 'book', 'reference', 'notes'</td></tr>
+            <tr><td>filename, file_size, page_count</td><td>VARCHAR, BIGINT, INT</td><td>File metadata</td></tr>
+            <tr><td>spaces_url, spaces_key</td><td>TEXT, VARCHAR</td><td>DigitalOcean Spaces storage</td></tr>
+            <tr><td>data_source_id, indexing_job_id</td><td>VARCHAR(100)</td><td>Knowledge Base integration</td></tr>
+            <tr><td>indexing_status</td><td>VARCHAR(20)</td><td>'pending', 'in_progress', 'completed', 'failed'</td></tr>
         </tbody>
     </table>
     
-    <h3>7.2.4 Syllabus Tables</h3>
-    
-    <p class="table-name">Table: syllabuses</p>
-    <table>
+    <h3>7.3.4 Syllabus Structure (syllabuses → syllabus_units → syllabus_topics)</h3>
+    <table class="compact-table">
         <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
+            <tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr>
         </thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Syllabus identifier</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References subjects(id) ON DELETE CASCADE</td></tr>
-            <tr><td>document_id</td><td>INTEGER</td><td>FOREIGN KEY</td><td>References documents(id) ON DELETE SET NULL</td></tr>
-            <tr><td>subject_name</td><td>VARCHAR(255)</td><td>NULL</td><td>Extracted subject name</td></tr>
-            <tr><td>subject_code</td><td>VARCHAR(50)</td><td>NULL</td><td>Extracted subject code</td></tr>
-            <tr><td>total_credits</td><td>INTEGER</td><td>DEFAULT 0</td><td>Total credit hours</td></tr>
-            <tr><td>extraction_status</td><td>VARCHAR(20)</td><td>DEFAULT 'pending'</td><td>'pending', 'processing', 'completed', 'failed'</td></tr>
-            <tr><td>extraction_error</td><td>TEXT</td><td>NULL</td><td>Error message if extraction failed</td></tr>
-            <tr><td>raw_extraction</td><td>TEXT</td><td>NULL</td><td>Raw LLM output for debugging</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>syllabuses</td><td>id, subject_name, subject_code, total_credits, extraction_status, raw_extraction</td><td>subject_id, document_id</td></tr>
+            <tr><td>syllabus_units</td><td>id, unit_number, title, description, hours</td><td>syllabus_id → syllabuses(id)</td></tr>
+            <tr><td>syllabus_topics</td><td>id, topic_number, title, description, keywords</td><td>unit_id → syllabus_units(id)</td></tr>
         </tbody>
     </table>
     
-    <p class="table-name">Table: syllabus_units</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
+    <h3>7.3.5 Chat System</h3>
+    
+    <p class="table-name">chat_sessions</p>
+    <table class="compact-table">
+        <thead><tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr></thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Unit identifier</td></tr>
-            <tr><td>syllabus_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References syllabuses(id) ON DELETE CASCADE</td></tr>
-            <tr><td>unit_number</td><td>INTEGER</td><td>NOT NULL</td><td>Unit number (1, 2, 3...)</td></tr>
-            <tr><td>title</td><td>VARCHAR(1000)</td><td>NOT NULL</td><td>Unit title</td></tr>
-            <tr><td>description</td><td>TEXT</td><td>NULL</td><td>Unit description</td></tr>
-            <tr><td>raw_text</td><td>TEXT</td><td>NULL</td><td>Verbatim text from syllabus</td></tr>
-            <tr><td>hours</td><td>INTEGER</td><td>DEFAULT 0</td><td>Teaching hours allocated</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+            <tr><td>user_id</td><td>INTEGER</td><td>FK → users(id)</td></tr>
+            <tr><td>subject_id</td><td>INTEGER</td><td>FK → subjects(id)</td></tr>
+            <tr><td>title</td><td>VARCHAR(255)</td><td>Auto-generated or user-set</td></tr>
         </tbody>
     </table>
     
-    <p class="table-name">Table: syllabus_topics</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
+    <p class="table-name">chat_messages</p>
+    <table class="compact-table">
+        <thead><tr><th>Column</th><th>Type</th><th>Purpose</th></tr></thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Topic identifier</td></tr>
-            <tr><td>unit_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References syllabus_units(id) ON DELETE CASCADE</td></tr>
-            <tr><td>topic_number</td><td>INTEGER</td><td>NOT NULL</td><td>Topic order within unit</td></tr>
-            <tr><td>title</td><td>VARCHAR(500)</td><td>NOT NULL</td><td>Topic title</td></tr>
-            <tr><td>description</td><td>TEXT</td><td>NULL</td><td>Topic description</td></tr>
-            <tr><td>keywords</td><td>TEXT</td><td>NULL</td><td>Comma-separated keywords</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
+            <tr><td>id, session_id, subject_id, user_id</td><td>INTEGER</td><td>PK and Foreign Keys</td></tr>
+            <tr><td>role</td><td>VARCHAR(20)</td><td>'user', 'assistant', 'system'</td></tr>
+            <tr><td>content</td><td>TEXT</td><td>Message content</td></tr>
+            <tr><td>citations</td><td>JSONB</td><td>Knowledge Base citations array</td></tr>
+            <tr><td>tokens_used, model_used, response_time</td><td>INT, VARCHAR, INT</td><td>Usage analytics</td></tr>
+            <tr><td>is_streamed</td><td>BOOLEAN</td><td>SSE streaming flag</td></tr>
         </tbody>
     </table>
     
-    <div class="page-break"></div>
+    <p class="no-indent"><strong>Additional Chat Tables:</strong> chat_memories (conversation context), chat_memory_batches (batch processing), chat_compacted_contexts (compressed long-term memory)</p>
     
-    <h3>7.2.5 Chat System Tables</h3>
-    
-    <p class="table-name">Table: chat_sessions</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
+    <h3>7.3.6 System & Audit Tables</h3>
+    <table class="compact-table">
+        <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
         <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Session identifier</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References subjects(id) ON DELETE CASCADE</td></tr>
-            <tr><td>title</td><td>VARCHAR(255)</td><td>NULL</td><td>Session title (auto-generated or user-set)</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Session creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last message timestamp</td></tr>
+            <tr><td>api_keys</td><td>id, user_id, key_hash, name, is_active</td><td>Encrypted API key storage</td></tr>
+            <tr><td>api_key_usage_logs</td><td>id, user_id, service, endpoint, status_code</td><td>API consumption tracking</td></tr>
+            <tr><td>user_activities</td><td>id, user_id, action, resource_type, resource_id, ip_address</td><td>User action tracking</td></tr>
+            <tr><td>admin_audit_logs</td><td>id, admin_id, action, target_type, target_id, changes (JSONB)</td><td>Admin action audit trail</td></tr>
+            <tr><td>app_settings</td><td>id, key (UNIQUE), value, description</td><td>Application configuration</td></tr>
+            <tr><td>jwt_token_blacklist</td><td>id, user_id, token_hash (UNIQUE), expires_at</td><td>Invalidated token tracking</td></tr>
         </tbody>
     </table>
     
-    <p class="table-name">Table: chat_messages</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Message identifier</td></tr>
-            <tr><td>session_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References chat_sessions(id) ON DELETE CASCADE</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References subjects(id) ON DELETE CASCADE</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>role</td><td>VARCHAR(20)</td><td>NOT NULL</td><td>'user', 'assistant', 'system'</td></tr>
-            <tr><td>content</td><td>TEXT</td><td>NOT NULL</td><td>Message content</td></tr>
-            <tr><td>citations</td><td>JSONB</td><td>NULL</td><td>Array of citation objects from KB</td></tr>
-            <tr><td>tokens_used</td><td>INTEGER</td><td>DEFAULT 0</td><td>Token count for this message</td></tr>
-            <tr><td>model_used</td><td>VARCHAR(100)</td><td>NULL</td><td>AI model identifier (e.g., 'llama-3.3-70b')</td></tr>
-            <tr><td>response_time</td><td>INTEGER</td><td>DEFAULT 0</td><td>Response time in milliseconds</td></tr>
-            <tr><td>is_streamed</td><td>BOOLEAN</td><td>DEFAULT FALSE</td><td>Whether response was streamed via SSE</td></tr>
-            <tr><td>metadata</td><td>JSONB</td><td>NULL</td><td>Additional metadata</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Message timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
-        </tbody>
-    </table>
+    <h2>7.4 Entity Relationships</h2>
     
-    <h3>7.2.6 System & Audit Tables</h3>
+    <p>The database follows a hierarchical structure with cascading relationships:</p>
     
-    <p class="table-name">Table: external_api_keys (DEPRECATED)</p>
-    <p class="no-indent">Note: This table is deprecated. API keys now stored client-side.</p>
+    <p class="no-indent"><strong>Primary Relationships:</strong></p>
+    <ul style="margin-left: 0.5in; margin-bottom: 15px;">
+        <li>universities (1) → (M) courses → (M) semesters → (M) subjects</li>
+        <li>subjects (1) → (M) documents, syllabuses, chat_sessions</li>
+        <li>users (1) → (M) chat_sessions → (M) chat_messages</li>
+        <li>syllabuses (1) → (M) syllabus_units → (M) syllabus_topics</li>
+        <li>users (1) → (M) api_keys, user_activities, admin_audit_logs</li>
+    </ul>
     
-    <p class="table-name">Table: api_key_usage_logs</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Log identifier</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FOREIGN KEY</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>service</td><td>VARCHAR(50)</td><td>NOT NULL</td><td>Service name (e.g., 'firecrawl', 'tavily')</td></tr>
-            <tr><td>endpoint</td><td>VARCHAR(255)</td><td>NULL</td><td>API endpoint called</td></tr>
-            <tr><td>status_code</td><td>INTEGER</td><td>NULL</td><td>HTTP response status code</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Log timestamp</td></tr>
-        </tbody>
-    </table>
+    <p class="no-indent"><strong>ER Diagram Reference:</strong> The complete Entity-Relationship diagram is available in the Design section (Chapter 6), showing all 30+ tables with their relationships, cardinality, and key constraints.</p>
     
-    <p class="table-name">Table: user_activities</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Activity identifier</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FOREIGN KEY, INDEX</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>action</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Action type (e.g., 'login', 'upload_document')</td></tr>
-            <tr><td>resource_type</td><td>VARCHAR(50)</td><td>NULL</td><td>Resource type affected</td></tr>
-            <tr><td>resource_id</td><td>INTEGER</td><td>NULL</td><td>Resource ID affected</td></tr>
-            <tr><td>details</td><td>JSONB</td><td>NULL</td><td>Additional activity details</td></tr>
-            <tr><td>ip_address</td><td>VARCHAR(45)</td><td>NULL</td><td>User IP address (IPv4/IPv6)</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Activity timestamp</td></tr>
-        </tbody>
-    </table>
+    <h2>7.5 Indexes and Performance</h2>
     
-    <p class="table-name">Table: admin_audit_logs</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Log identifier</td></tr>
-            <tr><td>admin_id</td><td>INTEGER</td><td>FOREIGN KEY</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>action</td><td>VARCHAR(100)</td><td>NOT NULL</td><td>Admin action performed</td></tr>
-            <tr><td>target_type</td><td>VARCHAR(50)</td><td>NULL</td><td>Target resource type</td></tr>
-            <tr><td>target_id</td><td>INTEGER</td><td>NULL</td><td>Target resource ID</td></tr>
-            <tr><td>changes</td><td>JSONB</td><td>NULL</td><td>JSON of changes made</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Log timestamp</td></tr>
-        </tbody>
-    </table>
+    <p>Strategic indexing optimizes query performance:</p>
+    <ul style="margin-left: 0.5in; margin-bottom: 15px;">
+        <li><strong>B-tree indexes:</strong> All foreign keys (user_id, subject_id, session_id, course_id, semester_id)</li>
+        <li><strong>Unique indexes:</strong> Email addresses, codes, token hashes</li>
+        <li><strong>Composite indexes:</strong> (user_id, created_at) for user activity queries</li>
+        <li><strong>Partial indexes:</strong> indexing_status='pending' for background job processing</li>
+        <li><strong>GIN indexes:</strong> JSONB columns (citations, metadata) for @> containment queries</li>
+    </ul>
     
-    <p class="table-name">Table: app_settings</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Setting identifier</td></tr>
-            <tr><td>key</td><td>VARCHAR(100)</td><td>UNIQUE, NOT NULL</td><td>Setting key</td></tr>
-            <tr><td>value</td><td>TEXT</td><td>NULL</td><td>Setting value</td></tr>
-            <tr><td>description</td><td>TEXT</td><td>NULL</td><td>Setting description</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Creation timestamp</td></tr>
-            <tr><td>updated_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Last update timestamp</td></tr>
-        </tbody>
-    </table>
-    
-    <p class="table-name">Table: jwt_token_blacklist</p>
-    <table>
-        <thead>
-            <tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr>
-        </thead>
-        <tbody>
-            <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td><td>Entry identifier</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FOREIGN KEY</td><td>References users(id) ON DELETE CASCADE</td></tr>
-            <tr><td>token_hash</td><td>VARCHAR(255)</td><td>UNIQUE, NOT NULL</td><td>SHA-256 hash of invalidated token</td></tr>
-            <tr><td>expires_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Token expiration (for auto-cleanup)</td></tr>
-            <tr><td>created_at</td><td>TIMESTAMP</td><td>NOT NULL</td><td>Blacklist timestamp</td></tr>
-        </tbody>
-    </table>
-    
-    <h2>7.3 Indexes and Performance</h2>
-    
-    <p>The database employs strategic indexing to optimize query performance. Primary indexes include B-tree indexes on all foreign keys (user_id, subject_id, session_id, course_id, semester_id), unique indexes on email addresses and codes, composite indexes on (user_id, created_at) for user activity queries, and partial indexes on indexing_status='pending' for background job processing. GIN indexes on JSONB columns (citations, metadata) enable fast containment queries using @> operator.</p>
-    
-    <p>Connection pooling through pgx driver maintains 25-100 concurrent connections with maximum connection lifetime of 1 hour. Query optimization includes automatic prepared statement caching, N+1 query prevention through GORM preloading, and query result caching in Redis with 5-minute TTL for frequently accessed data.</p>
-    
-    <div class="page-number">7</div>
+    <p><strong>Connection Management:</strong> pgx driver maintains 25-100 concurrent connections with 1-hour max lifetime. Query optimization includes prepared statement caching, GORM preloading to prevent N+1 queries, and Redis caching with 5-minute TTL.</p>
 </body>
 </html>

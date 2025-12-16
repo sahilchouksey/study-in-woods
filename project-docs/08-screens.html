@@ -26,111 +26,79 @@
     <h2>8.1 Authentication Screens</h2>
     
     <h3>8.1.1 Login Screen</h3>
-    <p>The login page presents a centered authentication form with email and password input fields, "Remember Me" checkbox, and "Sign In" button. The page features the Study in Woods logo and tagline. Form validation provides inline error messages for invalid email format and missing credentials. Failed login attempts display error notifications using toast messages. The interface is fully responsive, adapting to mobile, tablet, and desktop screen sizes.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /login</p>
-    <p class="no-indent"><strong>Components:</strong> Email input (with validation), Password input (masked), Remember Me checkbox, Sign In button, "Forgot Password?" link, "Create Account" link</p>
-    <p class="no-indent"><strong>Validation:</strong> Email format check, minimum password length (8 characters), required field validation</p>
+    <p class="no-indent"><strong>URL:</strong> /login — Centered authentication form with email/password inputs and form validation.</p>
+    <p class="no-indent"><strong>Components:</strong> Email input, Password input, Remember Me checkbox, Sign In button, Forgot Password link</p>
     
     <h3>8.1.2 Registration Screen</h3>
-    <p>The registration page collects user information including full name, email address, password, and password confirmation. Password strength indicator visualizes password security level (weak, medium, strong) based on character diversity. Terms of service checkbox must be accepted before account creation. Successful registration redirects to dashboard with welcome message.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /register</p>
-    <p class="no-indent"><strong>Components:</strong> Name input, Email input, Password input (with strength meter), Confirm Password input, Terms checkbox, Register button</p>
+    <p class="no-indent"><strong>URL:</strong> /register — User registration with password strength indicator.</p>
+    <p class="no-indent"><strong>Components:</strong> Name input, Email input, Password input (with strength meter), Confirm Password, Terms checkbox</p>
     
     <h2>8.2 Dashboard & Navigation</h2>
     
     <h3>8.2.1 Main Dashboard</h3>
-    <p>The dashboard serves as the central hub displaying overview statistics, recent activity, and quick actions. Statistics cards show total universities (3), enrolled courses (5), uploaded documents (42), and chat sessions (28). Recent activity timeline lists last 10 actions with timestamps and icons. Quick action buttons provide shortcuts to upload documents, start chat, and view analytics. The sidebar navigation menu enables access to Universities, Courses, Subjects, Documents, Chat, and Analytics sections.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /dashboard</p>
+    <p class="no-indent"><strong>URL:</strong> /dashboard — Central hub with statistics, recent activity, and quick actions.</p>
     <p class="no-indent"><strong>Layout:</strong> Sidebar (left, 250px), Header (top, with profile dropdown), Content area (main)</p>
-    <p class="no-indent"><strong>Components:</strong> Stats cards (4 cards in grid), Recent activity list, Quick action buttons, Navigation sidebar</p>
+    <p class="no-indent"><strong>Components:</strong> Stats cards (4), Recent activity list, Quick action buttons, Navigation sidebar</p>
     
     <h2>8.3 Academic Management Screens</h2>
     
     <h3>8.3.1 Universities List</h3>
-    <p>Displays all universities in card layout showing name, code, location, and website. Search bar filters universities by name or code. "Add University" button (admin only) opens creation modal. Each card includes "View Courses" button navigating to that university's courses.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /universities</p>
-    <p class="no-indent"><strong>Features:</strong> Search/filter, Card grid layout, Add/Edit/Delete (admin), View associated courses</p>
+    <p class="no-indent"><strong>URL:</strong> /universities — Card layout of universities with search and filter.</p>
+    <p class="no-indent"><strong>Features:</strong> Search/filter, Card grid, Add/Edit/Delete (admin), View associated courses</p>
     
     <h3>8.3.2 Course List</h3>
-    <p>Shows courses organized by university with breadcrumb navigation. Each course displays name, code, duration, and semester count. Color-coded badges indicate course status (active/inactive). Click course to view semesters and subjects.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /courses?university_id=X</p>
+    <p class="no-indent"><strong>URL:</strong> /courses?university_id=X — Courses organized by university with breadcrumbs.</p>
     <p class="no-indent"><strong>Features:</strong> Breadcrumbs, Filter by university, Course cards, Semester navigation</p>
     
     <h3>8.3.3 Subject Detail</h3>
-    <p>Comprehensive subject view with tabs for Overview, Syllabus, Documents, and Chat. Overview tab shows subject details (code, credits, description). Syllabus tab displays extracted units and topics in accordion format. Documents tab lists all uploaded materials with download buttons. Chat tab provides embedded chat interface.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /subjects/[id]</p>
+    <p class="no-indent"><strong>URL:</strong> /subjects/[id] — Comprehensive subject view with tabbed interface.</p>
     <p class="no-indent"><strong>Tabs:</strong> Overview, Syllabus, Documents (with upload), Chat, Analytics</p>
-    
-    <div class="page-break"></div>
     
     <h2>8.4 Document Management Screens</h2>
     
     <h3>8.4.1 Document Upload Interface</h3>
-    <p>Drag-and-drop zone accepts PDF files up to 10MB. Multiple file upload supported with queue showing each file's progress. Progress bars display upload percentage and estimated time remaining. Post-upload processing status shown: "Uploading → Processing → Indexing → Complete". Upload history table lists all documents with filename, size, upload date, status, and actions (download, delete).</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=documents</p>
-    <p class="no-indent"><strong>Components:</strong> Dropzone (drag-drop area), Upload queue (progress bars), Document list (table), Filter/search</p>
-    <p class="no-indent"><strong>Real-time Updates:</strong> SSE for upload progress, Indexing status polling, Success/error notifications</p>
+    <p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=documents — Drag-and-drop upload with real-time progress.</p>
+    <p class="no-indent"><strong>Components:</strong> Dropzone, Upload queue (progress bars), Document list table, Filter/search</p>
     
     <h3>8.4.2 Syllabus Viewer</h3>
-    <p>Hierarchical display of extracted syllabus with expandable/collapsible units. Each unit shows title, hours allocated, and nested topics list. Topics display title, description, and keywords. Edit button (admin) enables manual correction of AI-extracted content. Export button generates PDF of formatted syllabus.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=syllabus</p>
-    <p class="no-indent"><strong>Features:</strong> Accordion units, Expand/collapse all, Edit mode (admin), Export to PDF, Search within syllabus</p>
+    <p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=syllabus — Hierarchical display of extracted syllabus.</p>
+    <p class="no-indent"><strong>Features:</strong> Accordion units, Expand/collapse all, Edit mode (admin), Export to PDF</p>
     
     <h2>8.5 Chat Interface</h2>
     
     <h3>8.5.1 Chat Screen</h3>
-    <p>Three-column layout: Session list (left sidebar), Chat area (center), Citation panel (right). Session list shows past conversations with preview of first message. Chat area displays conversation with user messages right-aligned (blue background) and AI responses left-aligned (gray background). Message input box at bottom supports multiline text with shift+enter for new line. AI responses stream token-by-token creating typing effect. Citations appear below AI messages as expandable cards showing source document and relevance score.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /chat/[subjectId]?session=[sessionId]</p>
+    <p class="no-indent"><strong>URL:</strong> /chat/[subjectId]?session=[sessionId] — AI-powered chat with document citations.</p>
     <p class="no-indent"><strong>Layout:</strong> Sessions sidebar (250px), Chat area (flex), Citation panel (300px, collapsible)</p>
-    <p class="no-indent"><strong>Components:</strong> Session list, Message bubbles (with markdown), Input box (autosize), Citation cards, Typing indicator</p>
-    <p class="no-indent"><strong>Features:</strong> Real-time streaming (SSE), Markdown rendering, Code syntax highlighting, Copy code button, New session, Delete session</p>
+    <p class="no-indent"><strong>Components:</strong> Session list, Message bubbles (markdown), Input box, Citation cards, Typing indicator</p>
+    <p class="no-indent"><strong>Features:</strong> Real-time streaming (SSE), Markdown rendering, Code syntax highlighting</p>
     
     <h3>8.5.2 Chat Session Management</h3>
-    <p>Session sidebar lists all user's chat sessions grouped by subject. Each session shows title, last message timestamp, and message count. Hover reveals delete icon. "New Session" button creates fresh conversation. Active session highlighted with blue background. Session search enables finding past conversations.</p>
-    
-    <p class="no-indent"><strong>Features:</strong> Session list, Search sessions, New session button, Delete with confirmation, Auto-generated titles</p>
+    <p class="no-indent"><strong>Features:</strong> Session list, Search sessions, New session button, Delete with confirmation</p>
     
     <h2>8.6 Analytics Dashboard</h2>
     
     <h3>8.6.1 Analytics Overview</h3>
-    <p>Comprehensive analytics showing usage metrics and trends. Time-series line chart displays daily active users over last 30 days. Bar chart shows documents uploaded per week. Pie chart illustrates chat activity by subject. Statistics cards highlight key metrics: total users (145), documents (842), chat messages (3,254), API calls (15,623). User leaderboard ranks top 10 users by activity score.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /analytics</p>
+    <p class="no-indent"><strong>URL:</strong> /analytics — Usage metrics and trends visualization.</p>
     <p class="no-indent"><strong>Charts:</strong> Daily active users (line), Documents uploaded (bar), Chat by subject (pie), API calls (area)</p>
     <p class="no-indent"><strong>Components:</strong> Stats cards, Charts (Recharts), Leaderboard table, Date range picker, Export CSV</p>
     
     <h2>8.7 Admin Panel</h2>
     
     <h3>8.7.1 User Management</h3>
-    <p>Tabbed interface for user administration. User list table displays email, name, role, registration date, and actions. Search filters by email or name. Role dropdown changes user permissions (student/admin). Reset password button sends password reset email. Delete user requires confirmation modal with warning about cascade deletion. Bulk actions enable selecting multiple users for role change or deletion.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /admin/users</p>
+    <p class="no-indent"><strong>URL:</strong> /admin/users — User administration with role management.</p>
     <p class="no-indent"><strong>Features:</strong> User table (sortable), Search/filter, Edit role, Reset password, Delete user, Bulk actions</p>
     
     <h3>8.7.2 System Settings</h3>
-    <p>Configuration interface for system-wide settings. Sections include General (app name, description), Authentication (JWT expiration, bcrypt cost), File Upload (max size, allowed types), AI Configuration (model selection, temperature, max tokens), and Rate Limiting (requests per minute by user role). Each setting includes description, current value, and save button.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /admin/settings</p>
+    <p class="no-indent"><strong>URL:</strong> /admin/settings — System-wide configuration interface.</p>
     <p class="no-indent"><strong>Sections:</strong> General, Authentication, File Upload, AI Config, Rate Limits, Email, Advanced</p>
     
     <h3>8.7.3 Audit Logs</h3>
-    <p>Read-only table of administrative actions with timestamp, admin user, action type, target resource, and changes made (JSON diff). Filter by date range, admin user, or action type. Pagination handles large log volumes. Export filtered logs to CSV for external analysis.</p>
-    
-    <p class="no-indent"><strong>URL:</strong> /admin/audit-logs</p>
+    <p class="no-indent"><strong>URL:</strong> /admin/audit-logs — Read-only administrative action logs.</p>
     <p class="no-indent"><strong>Features:</strong> Filterable table, Date range filter, Action type filter, JSON diff viewer, Export CSV</p>
     
     <h2>8.8 Responsive Design</h2>
     
-    <p>All screens implement responsive design supporting three breakpoints: mobile (320px-767px), tablet (768px-1023px), and desktop (1024px+). Mobile layout collapses sidebar into hamburger menu, stacks cards vertically, and simplifies tables to card view. Tablet maintains sidebar but reduces content column width. Desktop provides full three-column layouts where applicable. Touch targets on mobile meet minimum 44x44px accessibility guideline. Font sizes scale appropriately: mobile 14px base, tablet 15px base, desktop 16px base.</p>
+    <p class="no-indent">All screens support three breakpoints: mobile (320px-767px), tablet (768px-1023px), and desktop (1024px+). Mobile collapses sidebar to hamburger menu and stacks content vertically.</p>
     
     <div class="page-number">8</div>
 </body>

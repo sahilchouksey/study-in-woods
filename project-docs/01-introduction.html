@@ -100,161 +100,63 @@
         
         <h2>1.1 About the Project</h2>
         
-        <p><strong>Study in Woods</strong> is an innovative AI-powered educational platform designed to transform the way students interact with their academic materials. In today's digital age, students face significant challenges in organizing course content, understanding complex syllabi, and accessing relevant study materials efficiently. This project addresses these challenges by providing an intelligent study companion that leverages artificial intelligence to enhance the learning experience.</p>
-        
-        <p>The platform serves as a comprehensive academic management system that integrates modern web technologies with advanced AI capabilities to create a seamless educational ecosystem. It enables students to upload course syllabi in PDF format, which are then automatically processed using state-of-the-art natural language processing to extract structured information including course units, topics, subtopics, and learning outcomes.</p>
-        
-        <p>Furthermore, the system incorporates an intelligent chat interface powered by large language models, allowing students to engage in natural conversations about their course materials. This conversational AI has contextual awareness of uploaded documents and can provide detailed explanations, answer questions, and offer study guidance tailored to specific subjects and topics.</p>
+        <p><strong>Study in Woods</strong> is an AI-powered educational platform that helps students organize academic materials and interact with course content intelligently. The system processes syllabus PDFs using NLP to extract structured information and provides an AI chat interface for study guidance.</p>
         
         <h2>1.2 Purpose of the Project</h2>
         
-        <p class="no-indent">The primary objectives of Study in Woods are:</p>
+        <p class="no-indent">The primary objectives are:</p>
         
         <ul>
-            <li><strong>Academic Organization:</strong> To provide students with a centralized platform for organizing their university courses, semesters, and subjects in a hierarchical structure that mirrors real academic institutions.</li>
-            
-            <li><strong>Intelligent Content Extraction:</strong> To automatically process and extract structured information from syllabus PDFs using AI, eliminating the need for manual data entry and ensuring accuracy in course content representation.</li>
-            
-            <li><strong>AI-Assisted Learning:</strong> To offer students an intelligent study companion that can answer questions, provide explanations, and offer study guidance based on their specific course materials and uploaded documents.</li>
-            
-            <li><strong>Exam Preparation Support:</strong> To help students prepare for examinations by extracting and categorizing questions from past year question papers, linking them to relevant syllabus topics for targeted revision.</li>
-            
-            <li><strong>Progress Tracking:</strong> To enable students to track their study progress, create personalized study plans, and manage academic todos effectively.</li>
-            
-            <li><strong>Multi-University Scalability:</strong> To support multiple educational institutions, courses, and programs, making the platform adaptable to diverse academic environments.</li>
-            
-            <li><strong>Real-Time Collaboration:</strong> To facilitate knowledge sharing and collaborative learning among students through shared resources and study materials.</li>
+            <li><strong>Academic Organization:</strong> Centralized platform for managing universities, courses, semesters, and subjects</li>
+            <li><strong>Intelligent Content Extraction:</strong> AI-powered processing of syllabus PDFs with automatic data extraction</li>
+            <li><strong>AI-Assisted Learning:</strong> Conversational AI for answering questions and providing study guidance</li>
+            <li><strong>Exam Preparation:</strong> Past year question paper extraction and categorization linked to syllabus topics</li>
+            <li><strong>Progress Tracking:</strong> Study progress monitoring and personalized study plan management</li>
         </ul>
         
-        <h2>1.3 Project and Product Overview</h2>
+        <h2>1.3 System Architecture</h2>
         
-        <p><strong>Study in Woods</strong> is architected as a full-stack web application following modern software engineering practices. The system employs a microservices-oriented architecture with clearly separated frontend and backend components, ensuring maintainability, scalability, and optimal performance.</p>
-        
-        <h3>1.3.1 System Architecture</h3>
-        
-        <p>The application follows a three-tier architecture comprising:</p>
+        <p>The application follows a three-tier microservices architecture:</p>
         
         <ul>
-            <li><strong>Presentation Layer (Frontend):</strong> Built using Next.js 15 with React 19, providing a responsive and intuitive user interface accessible across all devices.</li>
-            
-            <li><strong>Application Layer (Backend):</strong> Developed in Go (Golang) using the Fiber framework, handling business logic, API endpoints, and third-party integrations.</li>
-            
-            <li><strong>Data Layer:</strong> PostgreSQL serves as the primary relational database, with Redis providing high-performance caching and session management.</li>
+            <li><strong>Frontend:</strong> Next.js 15 with React 19 providing responsive UI</li>
+            <li><strong>Backend:</strong> Go (Golang) with Fiber framework handling API and business logic</li>
+            <li><strong>Data Layer:</strong> PostgreSQL for primary storage, Redis for caching and sessions</li>
+            <li><strong>OCR Service:</strong> Python FastAPI microservice for text extraction from scanned documents</li>
         </ul>
         
-        <h3>1.3.2 Core Functionalities</h3>
-        
-        <p class="no-indent">The platform delivers the following key functionalities:</p>
+        <h2>1.4 Core Functionalities</h2>
         
         <ol>
-            <li><strong>User Management:</strong> Secure authentication and authorization system with role-based access control (Admin and Student roles)</li>
-            
-            <li><strong>Academic Hierarchy Management:</strong> Create and manage Universities, Courses, Semesters, and Subjects</li>
-            
-            <li><strong>Document Processing:</strong> Upload syllabi and study materials with automatic AI-powered content extraction</li>
-            
-            <li><strong>AI Chat Interface:</strong> Interactive conversational AI providing subject-specific assistance and study guidance</li>
-            
-            <li><strong>Past Year Questions (PYQ) Management:</strong> Extract, categorize, and organize previous examination questions</li>
-            
-            <li><strong>Analytics Dashboard:</strong> Track usage statistics, student engagement, and system performance</li>
-            
-            <li><strong>API Access:</strong> RESTful API with 96 endpoints for programmatic access and external integrations</li>
+            <li><strong>User Management:</strong> Secure authentication with role-based access (Admin/Student)</li>
+            <li><strong>Document Processing:</strong> Syllabus upload with AI-powered content extraction</li>
+            <li><strong>AI Chat Interface:</strong> Subject-specific conversational assistance</li>
+            <li><strong>PYQ Management:</strong> Question paper extraction and categorization</li>
+            <li><strong>Analytics Dashboard:</strong> Usage statistics and performance tracking</li>
+            <li><strong>RESTful API:</strong> 100+ endpoints for programmatic access</li>
         </ol>
         
+        <h2>1.5 User Characteristics</h2>
+        
+        <p class="no-indent"><strong>Students:</strong> MCA or similar program students seeking AI-assisted learning and exam preparation tools.</p>
+        
+        <p class="no-indent"><strong>Administrators:</strong> Academic staff managing universities, courses, and system settings with audit capabilities.</p>
+        
+        <h2>1.6 Operating Environment</h2>
+        
+        <ul>
+            <li><strong>Client:</strong> Modern web browsers (Chrome, Firefox, Safari, Edge) on all devices</li>
+            <li><strong>Server:</strong> Docker containerized deployment on Linux with HTTPS</li>
+            <li><strong>Cloud:</strong> DigitalOcean Spaces for storage, GradientAI (Llama 3.3 70B) for AI features</li>
+        </ul>
+        
+        <h2>1.7 Constraints and Dependencies</h2>
+        
+        <p class="no-indent"><strong>Constraints:</strong> Go/Next.js stack required; PDF-only uploads; must support 1000+ concurrent users.</p>
+        
+        <p class="no-indent"><strong>Dependencies:</strong> DigitalOcean services (AI, storage), PostgreSQL, Redis, third-party libraries.</p>
+        
         <div class="page-number">1</div>
-    </div>
-    
-    <div class="page">
-        <h2>1.4 Overall Description of the Project</h2>
-        
-        <h3>1.4.1 Product Perspective</h3>
-        
-        <p>Study in Woods operates as a standalone web-based application while maintaining integration capabilities with external AI services and cloud infrastructure. The system is designed to be:</p>
-        
-        <ul>
-            <li><strong>Self-Contained:</strong> All core functionalities operate independently without mandatory external dependencies</li>
-            
-            <li><strong>Cloud-Native:</strong> Deployed on DigitalOcean cloud infrastructure with containerized services for scalability</li>
-            
-            <li><strong>API-First:</strong> RESTful architecture enables integration with mobile applications and third-party services</li>
-            
-            <li><strong>AI-Enhanced:</strong> Leverages DigitalOcean's GradientAI platform (Llama 3.3 70B model) for intelligent features</li>
-        </ul>
-        
-        <h3>1.4.2 User Characteristics</h3>
-        
-        <p class="no-indent">The system caters to two primary user categories:</p>
-        
-        <p class="no-indent"><strong>Students (Primary Users):</strong></p>
-        <ul>
-            <li>Enrolled in Master of Computer Applications (MCA) or similar programs</li>
-            <li>Possess basic computer literacy and web browsing skills</li>
-            <li>Require tools for organizing academic content and exam preparation</li>
-            <li>Seek AI-assisted learning and study guidance</li>
-        </ul>
-        
-        <p class="no-indent"><strong>Administrators (System Managers):</strong></p>
-        <ul>
-            <li>Academic staff or system administrators</li>
-            <li>Responsible for managing universities, courses, and system settings</li>
-            <li>Monitor system usage, user activity, and performance metrics</li>
-            <li>Require advanced access controls and audit capabilities</li>
-        </ul>
-        
-        <h3>1.4.3 Operating Environment</h3>
-        
-        <p class="no-indent">The application operates in the following environment:</p>
-        
-        <ul>
-            <li><strong>Client-Side:</strong> Modern web browsers (Chrome, Firefox, Safari, Edge) on desktop, tablet, and mobile devices</li>
-            
-            <li><strong>Server-Side:</strong> Containerized deployment using Docker on Linux-based systems</li>
-            
-            <li><strong>Database:</strong> PostgreSQL 15 for relational data storage</li>
-            
-            <li><strong>Caching:</strong> Redis 7 for high-speed data caching and session management</li>
-            
-            <li><strong>Cloud Services:</strong> DigitalOcean Spaces for file storage and GradientAI for AI capabilities</li>
-            
-            <li><strong>Network:</strong> HTTPS-enabled secure communication for all client-server interactions</li>
-        </ul>
-        
-        <h3>1.4.4 Design and Implementation Constraints</h3>
-        
-        <ul>
-            <li><strong>Technology Stack:</strong> Backend must be implemented in Go (Golang) for performance; frontend must use Next.js with React</li>
-            
-            <li><strong>Database:</strong> PostgreSQL required for ACID compliance and relational data integrity</li>
-            
-            <li><strong>Security:</strong> Must comply with industry-standard security practices including JWT authentication, password hashing, and encrypted API keys</li>
-            
-            <li><strong>AI Integration:</strong> Limited to DigitalOcean GradientAI platform for cost-effectiveness and regional availability</li>
-            
-            <li><strong>File Processing:</strong> PDF format only for document uploads, with maximum file size constraints</li>
-            
-            <li><strong>Scalability:</strong> System must support minimum 1000 concurrent users with horizontal scaling capabilities</li>
-        </ul>
-        
-        <h3>1.4.5 Assumptions and Dependencies</h3>
-        
-        <p class="no-indent"><strong>Assumptions:</strong></p>
-        <ul>
-            <li>Users have stable internet connectivity for accessing cloud-based services</li>
-            <li>Uploaded syllabi are in readable PDF format (not scanned images without OCR)</li>
-            <li>Students have valid institutional email addresses for registration</li>
-            <li>Administrative personnel have technical competency for system management</li>
-        </ul>
-        
-        <p class="no-indent"><strong>Dependencies:</strong></p>
-        <ul>
-            <li><strong>DigitalOcean Services:</strong> For AI processing and cloud file storage</li>
-            <li><strong>PostgreSQL Database:</strong> For persistent data storage</li>
-            <li><strong>Redis Cache:</strong> For session management and performance optimization</li>
-            <li><strong>Third-Party Libraries:</strong> Go modules and npm packages as specified in dependency manifests</li>
-        </ul>
-        
-        <div class="page-number">2</div>
     </div>
 </body>
 </html>
