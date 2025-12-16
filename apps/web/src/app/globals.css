@@ -203,11 +203,34 @@
 }
 
 @keyframes rayquaza-fly {
-  0% { transform: translateX(-100%) translateY(0) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  50% { transform: translateX(50vw) translateY(-50px) rotate(5deg); }
-  90% { opacity: 1; }
-  100% { transform: translateX(calc(100% + 200px)) translateY(0) rotate(0deg); opacity: 0; }
+  0% { 
+    transform: translateX(-120px) translateY(0) rotate(-5deg) scale(0.8); 
+    opacity: 0; 
+  }
+  8% { 
+    opacity: 0.9; 
+    transform: translateX(5vw) translateY(-10px) rotate(-2deg) scale(0.95);
+  }
+  25% { 
+    transform: translateX(25vw) translateY(-30px) rotate(3deg) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: translateX(50vw) translateY(-20px) rotate(-2deg) scale(1); 
+    opacity: 1;
+  }
+  75% { 
+    transform: translateX(75vw) translateY(-35px) rotate(4deg) scale(1);
+    opacity: 1;
+  }
+  92% { 
+    opacity: 0.8; 
+    transform: translateX(95vw) translateY(-15px) rotate(2deg) scale(0.95);
+  }
+  100% { 
+    transform: translateX(calc(100vw + 120px)) translateY(0) rotate(-3deg) scale(0.8); 
+    opacity: 0; 
+  }
 }
 
 @keyframes spin-slow {

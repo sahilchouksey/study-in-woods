@@ -127,6 +127,9 @@ ENV/
 # Docker essentials (local dev script)
 apps/api/docker_essentials
 
+# VPS architecture docs (deployment-specific)
+VPS_ARCHITECTURE_SUMMARY.md
+
 # Logs
 logs
 dev-debug.log

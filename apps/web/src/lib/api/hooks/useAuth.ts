@@ -58,14 +58,14 @@ export function useLogout() {
       // Clear all cached data
       queryClient.clear();
       showSuccessToast('You have been logged out', 'Logout Successful');
-      router.push('/login');
+      router.push('/');
     },
     onError: (error) => {
       // Still clear tokens and redirect even if API call fails
       authService.clearTokens();
       queryClient.clear();
       showErrorToast(error, 'Logout Error');
-      router.push('/login');
+      router.push('/');
     },
   });
 }

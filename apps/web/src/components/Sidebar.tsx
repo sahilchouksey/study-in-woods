@@ -28,7 +28,7 @@ export function Sidebar() {
     try {
       await authService.logout();
       queryClient.clear(); // Clear all cached data
-      router.push('/login');
+      router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }

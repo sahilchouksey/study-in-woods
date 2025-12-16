@@ -52,8 +52,9 @@ apiClient.interceptors.response.use(
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           
-          // Only redirect if not already on auth pages
+          // Only redirect if not on public pages (landing, login, register)
           if (typeof window !== 'undefined' && 
+              window.location.pathname !== '/' &&
               !window.location.pathname.startsWith('/login') &&
               !window.location.pathname.startsWith('/register')) {
             window.location.href = '/login';

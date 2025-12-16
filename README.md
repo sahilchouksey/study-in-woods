@@ -494,27 +494,4 @@ npm run build
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
----
 
-## 👥 Team
-
-[Add team information here]
-
----
-
-## 📞 Support
-
-For issues, questions, or contributions:
-- GitHub Issues: [Create an issue](https://github.com/sahilchouksey/study-in-woods/issues)
-- Email: [Add email]
-
----
-
-## 🎉 Status
-
-**Project Status**: ✅ **Production Ready**
-
-Both backend and frontend are feature-complete and ready for deployment!
-
-**Last Updated**: November 15, 2025  
-**Version**: 1.0.0

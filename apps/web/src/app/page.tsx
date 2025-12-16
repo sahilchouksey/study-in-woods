@@ -1,105 +1,130 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef, memo } from 'react';
 import Image from 'next/image';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Search, BookOpen } from 'lucide-react';
-import { storePendingQuery } from '@/lib/utils/sessionStorage';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
-import { useQueryState } from 'nuqs';
 
-// Example questions from syllabus
-const EXAMPLE_QUESTIONS = [
-  "Explain Apriori algorithm in Data Mining",
-  "What is difference between Data Warehouse and OLAP?",
-  "Describe backpropagation in Neural Networks",
-  "What are production systems in AI?",
-  "Explain Django MVT architecture",
-  "What is difference between TCP and UDP?",
-  "Describe AJAX and XMLHttpRequest",
-  "What is MapReduce in Hadoop?",
-];
+// Google Fonts URL for Cedarville Cursive - using woff2 for better performance
+const CEDARVILLE_FONT_URL = 'https://fonts.gstatic.com/s/cedarvillecursive/v17/yYL00g_a2veiudhUmxjo5VKkoqA-B_neJbBxw8BeTg.woff2';
 
-
+// Memoized Rayquaza component to prevent re-renders during animation
+const RayquazaAnimation = memo(function RayquazaAnimation({ animationKey }: { animationKey: number }) {
+  return (
+    <div
+      key={animationKey}
+      className="fixed pointer-events-none"
+      style={{
+        top: '30%',
+        left: 0,
+        zIndex: 9999,
+        animation: 'rayquaza-fly 5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+        willChange: 'transform, opacity',
+      }}
+    >
+      <Image
+        src="/rayquaza.png"
+        alt="Rayquaza"
+        width={80}
+        height={80}
+        className="drop-shadow-lg opacity-90"
+        style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}
+        priority
+      />
+    </div>
+  );
+});
 
 export default function HomePage() {
-  const [question, setQuestion] = useQueryState('q', { defaultValue: '' });
-  const [university, setUniversity] = useState('RGPV University');
-  const [course, setCourse] = useState('MCA');
-  const [semester, setSemester] = useState('Semester 3');
-  const [subject, setSubject] = useState('Distributed Systems');
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [showRayquaza, setShowRayquaza] = useState(false);
-  const [clickCount, setClickCount] = useState(0);
+  const [fontLoaded, setFontLoaded] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const fontLoadAttempted = useRef(false);
 
-  const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Load Cedarville Cursive font
+  // Set up portal container on mount
   useEffect(() => {
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Cedarville+Cursive&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-
-    return () => {
-      document.head.removeChild(link);
-    };
+    setPortalContainer(document.body);
   }, []);
 
-  // Rotate placeholder text every 3 seconds
+  // Load Cedarville Cursive font using FontFace API for precise loading detection
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % EXAMPLE_QUESTIONS.length);
-    }, 3000);
-    return () => clearInterval(interval);
+    // Prevent double loading in strict mode
+    if (fontLoadAttempted.current) return;
+    fontLoadAttempted.current = true;
+
+    // Check if font is already loaded (e.g., from cache)
+    if (document.fonts.check('1em "Cedarville Cursive"')) {
+      setFontLoaded(true);
+      return;
+    }
+
+    // Create FontFace and load it
+    const font = new FontFace(
+      'Cedarville Cursive',
+      `url(${CEDARVILLE_FONT_URL})`,
+      { style: 'normal', weight: '400' }
+    );
+
+    font.load().then((loadedFont) => {
+      // Add font to document
+      document.fonts.add(loadedFont);
+      setFontLoaded(true);
+    }).catch((err) => {
+      console.error('Failed to load Cedarville Cursive font:', err);
+      // Still show the text with fallback font after error
+      setFontLoaded(true);
+    });
   }, []);
-
-
 
   // Easter egg - Rayquaza appears on 5 clicks on title
+  // Using refs to completely avoid re-render issues during animation
+  const isAnimating = useRef(false);
+  const clickCountRef = useRef(0);
+  const clickResetTimer = useRef<NodeJS.Timeout | null>(null);
+  const rayquazaKeyRef = useRef(0);
+  const [rayquazaKey, setRayquazaKey] = useState(0);
+  const CLICK_RESET_MS = 2000;
+  
   const handleTitleClick = () => {
-    setClickCount((prev) => {
-      const newCount = prev + 1;
-      if (newCount === 5) {
-        setShowRayquaza(true);
-        setTimeout(() => setShowRayquaza(false), 5000);
-        return 0;
-      }
-      return newCount;
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!question.trim()) return;
-
-    // Store question in sessionStorage
-    storePendingQuery(question.trim());
-
-    // Redirect to login if not authenticated, otherwise to dashboard
-    if (!isAuthenticated) {
-      router.push('/login');
-    } else {
-      router.push('/dashboard');
+    // Completely ignore clicks while animation is playing
+    if (isAnimating.current) return;
+    
+    // Clear any existing reset timer
+    if (clickResetTimer.current) {
+      clearTimeout(clickResetTimer.current);
+      clickResetTimer.current = null;
     }
+    
+    clickCountRef.current += 1;
+    
+    if (clickCountRef.current >= 5) {
+      // Lock and trigger animation
+      isAnimating.current = true;
+      clickCountRef.current = 0;
+      rayquazaKeyRef.current += 1;
+      setRayquazaKey(rayquazaKeyRef.current);
+      setShowRayquaza(true);
+      
+      // Hide after animation completes (5s animation + 500ms buffer)
+      setTimeout(() => {
+        setShowRayquaza(false);
+        // Small delay before allowing new triggers
+        setTimeout(() => {
+          isAnimating.current = false;
+        }, 500);
+      }, 5500);
+      return;
+    }
+    
+    // Reset click count after inactivity
+    clickResetTimer.current = setTimeout(() => {
+      clickCountRef.current = 0;
+    }, CLICK_RESET_MS);
   };
 
   return (
@@ -109,6 +134,50 @@ export default function HomePage() {
           font-family: "Cedarville Cursive", cursive;
           font-weight: 400;
           font-style: normal;
+        }
+        
+        /* Font loading skeleton animation */
+        .font-skeleton {
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .font-skeleton-bar {
+          height: 0.8em;
+          border-radius: 0.4em;
+          background: linear-gradient(
+            90deg,
+            rgba(34, 197, 94, 0.2) 0%,
+            rgba(34, 197, 94, 0.4) 50%,
+            rgba(34, 197, 94, 0.2) 100%
+          );
+          background-size: 200% 100%;
+          animation: shimmer 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+        
+        /* Fade in animation for loaded font */
+        .font-loaded {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: rotate(-5deg) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: rotate(-5deg) scale(1);
+          }
         }
       `}</style>
 
@@ -121,24 +190,27 @@ export default function HomePage() {
               <span className="font-semibold text-lg">Study in Woods 🪵</span>
             </div>
 
-            {!isLoading && (
-              <div className="flex items-center gap-3">
-                {isAuthenticated ? (
-                  <Link href="/dashboard">
-                    <Button>Go to Dashboard</Button>
-                  </Link>
-                ) : (
-                  <>
-                    <Link href="/login">
-                      <Button variant="outline">Login</Button>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <Link href="/dashboard">
+                      <Button>Go to Dashboard</Button>
                     </Link>
-                    <Link href="/register">
-                      <Button>Signup</Button>
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
+                  ) : (
+                    <>
+                      <Link href="/login">
+                        <Button variant="outline">Login</Button>
+                      </Link>
+                      <Link href="/register">
+                        <Button>Signup</Button>
+                      </Link>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -162,245 +234,64 @@ export default function HomePage() {
 
           <div className="relative w-full space-y-8 sm:space-y-12">
 
-            {/* Rayquaza Easter Egg */}
-            {showRayquaza && (
-              <div
-                className="fixed pointer-events-none z-50"
-                style={{
-                  top: '20%',
-                  left: 0,
-                  animation: 'rayquaza-fly 5s ease-in-out forwards',
-                }}
-              >
-                <Image
-                  src="/rayquaza.png"
-                  alt="Rayquaza"
-                  width={200}
-                  height={200}
-                  className="drop-shadow-2xl"
-                />
-              </div>
+            {/* Rayquaza Easter Egg - rendered via portal to isolate from main component tree */}
+            {showRayquaza && portalContainer && createPortal(
+              <RayquazaAnimation animationKey={rayquazaKey} />,
+              portalContainer
             )}
 
 
 
             {/* Heading with Cursive Font - Rotated with Woods Texture & Sparkles */}
             <div className="text-center space-y-4 relative ">
-              <h1
-                className="text-7xl sm:text-8xl lg:text-[10rem] cedarville-cursive font-black woods-text-effect leading-none cursor-pointer select-none "
-                style={{ transform: 'rotate(-5deg)' }}
-                onClick={handleTitleClick}
-              >
-                <span >
-                    Study in Woods
-                </span>
-                {/* Sparkles */}
-                <span className="sparkle" style={{ top: '10%', left: '15%', animationDelay: '0s' }}></span>
-                <span className="sparkle" style={{ top: '20%', right: '20%', animationDelay: '0.3s' }}></span>
-                <span className="sparkle" style={{ bottom: '25%', left: '25%', animationDelay: '0.6s' }}></span>
-                <span className="sparkle" style={{ top: '30%', right: '15%', animationDelay: '0.9s' }}></span>
-                <span className="sparkle" style={{ bottom: '15%', right: '30%', animationDelay: '1.2s' }}></span>
-              </h1>
-            </div>
-
-            {/* Context Selectors - Equal Width & Disabled */}
-            <div className="mt-[56px] max-w-4xl mx-auto">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Select value={university} disabled>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RGPV University">RGPV University</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={course} disabled>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MCA">MCA</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={semester} disabled>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Semester 3">Semester 3</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={subject} disabled>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Distributed Systems">Distributed Systems</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <form onSubmit={handleSubmit} className="max-w-4xl mx-auto mb-8">
-              <div className="relative group">
-                <Input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                  placeholder={EXAMPLE_QUESTIONS[placeholderIndex]}
-                  className="h-16 pl-6 pr-14 text-base shadow-lg border-2 focus-visible:shadow-xl transition-all"
-                />
-                <button
-                  type="submit"
-                  disabled={!question.trim()}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed enabled:hover:bg-neutral-100 dark:enabled:hover:bg-neutral-800 enabled:active:scale-95"
-                  aria-label="Submit question"
+              {!fontLoaded ? (
+                /* Skeleton loader while font is loading */
+                <div 
+                  className="font-skeleton flex flex-col items-center gap-2 sm:gap-3"
+                  style={{ transform: 'rotate(-5deg)' }}
                 >
-                  <Search className="h-5 w-5 text-neutral-600 dark:text-neutral-400" />
-                </button>
-                {question.trim() && (
-                  <div className="absolute left-6 -bottom-7 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in duration-200">
-                    Press Enter to submit
-                  </div>
-                )}
-              </div>
+                  {/* "Study in" skeleton */}
+                  <div className="font-skeleton-bar w-[280px] sm:w-[380px] lg:w-[520px] h-[60px] sm:h-[80px] lg:h-[120px]" />
+                  {/* "Woods" skeleton */}
+                  <div className="font-skeleton-bar w-[200px] sm:w-[280px] lg:w-[380px] h-[60px] sm:h-[80px] lg:h-[120px]" />
+                </div>
+              ) : (
+                <h1
+                  className="text-7xl sm:text-8xl lg:text-[10rem] cedarville-cursive font-black woods-text-effect leading-none cursor-pointer select-none font-loaded"
+                  style={{ transform: 'rotate(-5deg)' }}
+                  onClick={handleTitleClick}
+                >
+                  <span>
+                    Study in Woods
+                  </span>
+                  {/* Sparkles */}
+                  <span className="sparkle" style={{ top: '10%', left: '15%', animationDelay: '0s' }}></span>
+                  <span className="sparkle" style={{ top: '20%', right: '20%', animationDelay: '0.3s' }}></span>
+                  <span className="sparkle" style={{ bottom: '25%', left: '25%', animationDelay: '0.6s' }}></span>
+                  <span className="sparkle" style={{ top: '30%', right: '15%', animationDelay: '0.9s' }}></span>
+                  <span className="sparkle" style={{ bottom: '15%', right: '30%', animationDelay: '1.2s' }}></span>
+                </h1>
+              )}
+            </div>
 
-              {/* Quick Action Question Chips */}
-              <div className="flex flex-wrap gap-2 mt-6 justify-center">
-                {['Explain Apriori algorithm', 'What is OLAP?', 'Describe Backpropagation', 'What is MapReduce?'].map((quickQ) => (
-                  <button
-                    key={quickQ}
-                    type="button"
-                    onClick={() => setQuestion(quickQ)}
-                    className="px-4 py-2 rounded-full text-sm bg-white text-black hover:bg-neutral-100 dark:bg-neutral-200 dark:hover:bg-neutral-300 dark:text-black transition-all shadow-md border border-neutral-200 dark:border-neutral-300"
-                  >
-                    {quickQ}
-                  </button>
-                ))}
-              </div>
-            </form>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="py-20 border-t border-neutral-200 dark:border-neutral-800">
-          <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
-              Frequently Asked Questions
-            </h2>
-
-            <Accordion type="single" collapsible className="w-full space-y-4">
-              <AccordionItem value="item-1" className="border border-neutral-200 dark:border-neutral-800 rounded-lg px-6">
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
-                  How does Study in Woods answer my questions?
-                </AccordionTrigger>
-                <AccordionContent className="text-neutral-600 dark:text-neutral-400">
-                  Study in Woods uses advanced AI technology to analyze your course materials,
-                  including lecture notes, textbooks, and previous year question papers. When you
-                  ask a question, our AI searches through these materials and provides accurate,
-                  context-aware answers specifically tailored to your university, course, and semester.
-                  The system understands the context of your syllabus and provides relevant explanations
-                  that match your curriculum.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2" className="border border-neutral-200 dark:border-neutral-800 rounded-lg px-6">
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
-                  Where does the data come from?
-                </AccordionTrigger>
-                <AccordionContent className="text-neutral-600 dark:text-neutral-400">
-                  All the data comes from verified academic sources that you and other students upload
-                  to the platform. This includes:
-                  <ul className="list-disc pl-6 mt-2 space-y-1">
-                    <li>Official lecture notes from professors</li>
-                    <li>University-approved textbooks and reference materials</li>
-                    <li>Previous year question papers (PYQs) with solutions</li>
-                    <li>Assignment solutions and study guides</li>
-                  </ul>
-                  <p className="mt-2">
-                    We ensure all content is relevant to your specific university and course by organizing
-                    materials by institution, program, semester, and subject. Your data remains secure
-                    and is only used to help you and your peers learn better.
-                  </p>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3" className="border border-neutral-200 dark:border-neutral-800 rounded-lg px-6">
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
-                  Is my data secure?
-                </AccordionTrigger>
-                <AccordionContent className="text-neutral-600 dark:text-neutral-400">
-                  Yes, absolutely! We take data security seriously. All your documents and personal
-                  information are encrypted and stored securely. Your uploaded materials are only
-                  accessible to users in the same course context and are never shared with third
-                  parties. We comply with all data protection regulations to ensure your privacy.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4" className="border border-neutral-200 dark:border-neutral-800 rounded-lg px-6">
-                <AccordionTrigger className="text-left font-medium hover:no-underline">
-                  Can I upload my own study materials?
-                </AccordionTrigger>
-                <AccordionContent className="text-neutral-600 dark:text-neutral-400">
-                  Yes! You can upload your lecture notes, solved assignments, and study materials to
-                  help both yourself and your peers. The more quality content in the system, the better
-                  the AI can answer questions. All uploads are reviewed to ensure they're relevant and
-                  helpful for the community.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
           </div>
         </div>
 
         {/* Footer */}
-        <footer className="border-t border-neutral-200 dark:border-neutral-800 py-8 mt-20">
-          <div className="text-center space-y-3">
+        <footer className="border-t border-neutral-200 dark:border-neutral-800 py-8">
+          <div className="text-center space-y-2">
             <div className="text-sm text-neutral-600 dark:text-neutral-400">
               © 2025 Study in Woods. All rights reserved.
             </div>
-            <div className="flex items-center justify-center gap-3 text-xs text-neutral-500">
-              <span>Made by</span>
+            <div className="text-xs text-neutral-500">
+              Made by{' '}
               <a
-                href="https://github.com/sahilchouksey"
+                href="https://sahilchouksey.in"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors group"
+                className="font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
               >
-                <pre
-                  className="m-0 p-0 group-hover:opacity-100 transition-opacity text-cyan-500 dark:text-cyan-400 whitespace-pre font-bold"
-                  style={{
-                    fontFamily: "'Courier New', monospace",
-                    fontSize: '5.2px',
-                    lineHeight: '0.7',
-                    opacity: 0.7,
-                  }}
-                >{`               .
-              .=.    .
-       ..     :+-    :-
-      .=.     -+=.   :+:
-      -+:    .=++:   :+=:
-     :++:    :+++=.  :++=.
-    .=++:   .=++++:  :+++=.
-    -+++-   .=++++:  :++++-
-   .=+++-   .-+++=.  .+++=.
-    -+++-    -+++-.  .=++:
-    .-++-    :+++:   .=+=.
-     .=+=.   .=+=.   .==.
-      :==.   .=+-    .=:
-       :=.   .-+:     :
-        .     -=.
-              ::`}</pre>
-                <span className="font-semibold">xix3r</span>
+                @sahilchouksey
               </a>
             </div>
           </div>
