@@ -49,3 +49,18 @@ tmp/
 thoughts/
 worktrees/
 **worktree**
+
+# Compiled binaries (scripts)
+e2etest
+backfill_api_keys
+cleanup_all
+go-init-setup
+
+# Debug files
+debug_*.txt
+debug_*.json
+services/debug_*.json
+
+# Backup files
+*.bak
+*.backup

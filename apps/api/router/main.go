@@ -94,9 +94,16 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	documentService := services.NewDocumentService(db)
 	documentHandler := document_handlers.NewDocumentHandler(db, documentService)
 
-	// Initialize Phase 7 handlers with ChatService
+	// Initialize Phase 7 handlers with ChatService, ChatContextService, and ChatMemoryService
+	chatContextService := services.NewChatContextService(db)
+	chatMemoryService := services.NewChatMemoryService(db)
 	chatService := services.NewChatService(db)
 	chatHandler := chat_handlers.NewChatHandler(db, chatService)
+	chatContextHandler := chat_handlers.NewChatContextHandler(chatContextService)
+	chatHistoryHandler := chat_handlers.NewChatHistoryHandler(db, chatMemoryService)
+	// Set context service and memory service on chat service
+	chatService.SetContextService(chatContextService)
+	chatService.SetMemoryService(chatMemoryService)
 
 	// Initialize Phase 8 handlers with AnalyticsService
 	analyticsService := services.NewAnalyticsService(db)
@@ -301,6 +308,17 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// Chat routes (all protected - require authentication)
 	chat := api.Group("/chat", authMiddleware.Required())
 
+	// Chat context for dropdown selection (single API call to get all dropdown data)
+	chat.Get("/context", chatContextHandler.GetChatContext) // Protected: Get all dropdown data for chat setup
+
+	// Chat context individual endpoints (for lazy loading if needed)
+	chatContext := chat.Group("/context")
+	chatContext.Get("/universities", chatContextHandler.GetUniversities)                            // Protected: List universities
+	chatContext.Get("/universities/:university_id/courses", chatContextHandler.GetCourses)          // Protected: List courses for university
+	chatContext.Get("/courses/:course_id/semesters", chatContextHandler.GetSemesters)               // Protected: List semesters for course
+	chatContext.Get("/semesters/:semester_id/subjects", chatContextHandler.GetSubjects)             // Protected: List subjects with KB+Agent
+	chatContext.Get("/subjects/:subject_id/syllabus", chatContextHandler.GetSubjectSyllabusContext) // Protected: Get syllabus context for prompts
+
 	// Session management
 	chat.Get("/sessions", chatHandler.ListSessions)                // Protected: List user's chat sessions
 	chat.Post("/sessions", chatHandler.CreateSession)              // Protected: Create new chat session
@@ -311,6 +329,14 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// Message management
 	chat.Get("/sessions/:id/messages", chatHandler.GetMessages)  // Protected: Get session messages
 	chat.Post("/sessions/:id/messages", chatHandler.SendMessage) // Protected: Send message (supports streaming)
+
+	// Chat history routes (for history page with infinite scroll)
+	chatHistory := chat.Group("/history")
+	chatHistory.Get("/", chatHistoryHandler.GetAllSessions)                   // Protected: Get all sessions with pagination
+	chatHistory.Get("/:id", chatHistoryHandler.GetSessionHistory)             // Protected: Get full session history with messages
+	chatHistory.Post("/:id/search", chatHistoryHandler.SearchMemory)          // Protected: Search conversation memory
+	chatHistory.Get("/:id/contexts", chatHistoryHandler.GetCompactedContexts) // Protected: Get compacted contexts
+	chatHistory.Get("/:id/batches", chatHistoryHandler.GetBatches)            // Protected: Get message batches
 
 	// ======================================================================
 

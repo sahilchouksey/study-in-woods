@@ -90,6 +90,10 @@ func (s *GORMStore) Init() error {
 		&model.ChatSession{},
 		&model.ChatMessage{},
 
+		// Chat memory models (order matters - batch before context due to FK)
+		&model.ChatMemoryBatch{},
+		&model.ChatCompactedContext{},
+
 		// Payment model
 		&model.CoursePayment{},
 

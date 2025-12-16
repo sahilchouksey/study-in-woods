@@ -174,10 +174,8 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	// Get configuration from environment
 	embeddingModel := os.Getenv("DO_EMBEDDING_MODEL_UUID")
 	projectID := os.Getenv("DO_PROJECT_ID")
-	// spacesName and spacesRegion are available but we don't use them for KB creation
-	// Individual documents are added with specific ItemPath when uploaded
-	// spacesName := os.Getenv("DO_SPACES_NAME")
-	// spacesRegion := os.Getenv("DO_SPACES_REGION")
+	spacesName := os.Getenv("DO_SPACES_NAME")
+	spacesRegion := os.Getenv("DO_SPACES_REGION")
 	// DatabaseID allows reusing a single OpenSearch database across multiple knowledge bases
 	// instead of creating a new database for each one (which is expensive and wasteful)
 	databaseID := os.Getenv("DO_GENAI_DATABASE_ID")
@@ -185,6 +183,11 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	// GenAI is only available in tor1 region - use tor1 for both KB and Agent
 	// to ensure compatibility
 	genAIRegion := "tor1"
+
+	// Spaces region defaults to blr1 if not set
+	if spacesRegion == "" {
+		spacesRegion = "blr1"
+	}
 
 	createKBReq := digitalocean.CreateKnowledgeBaseRequest{
 		Name:           kbName,
@@ -195,11 +198,20 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		DatabaseID:     databaseID,  // Reuse existing database if provided
 	}
 
-	// NOTE: We intentionally do NOT add a bucket-level data source here.
-	// Adding a bucket without ItemPath would index ALL files in the bucket,
-	// including files from other subjects. Instead, individual documents
-	// are added as data sources with specific ItemPath when they are uploaded.
-	// This ensures each subject's KB only contains its own documents.
+	// Add subject-scoped data source - only indexes this subject's folder
+	// Documents are uploaded to subjects/{id}/pyqs/ so this KB only sees its own documents
+	if spacesName != "" {
+		subjectFolderPath := fmt.Sprintf("subjects/%d/", subject.ID)
+		createKBReq.DataSources = []digitalocean.DataSourceCreateInput{
+			{
+				SpacesDataSource: &digitalocean.SpacesDataSourceInput{
+					BucketName: spacesName,
+					Region:     spacesRegion,
+					ItemPath:   subjectFolderPath,
+				},
+			},
+		}
+	}
 
 	kb, err := s.doClient.CreateKnowledgeBase(ctx, createKBReq)
 	if err != nil {
@@ -404,8 +416,14 @@ func (s *SubjectService) SetupSubjectAI(ctx context.Context, subjectID uint) (*C
 	// Get configuration from environment
 	embeddingModel := os.Getenv("DO_EMBEDDING_MODEL_UUID")
 	projectID := os.Getenv("DO_PROJECT_ID")
+	spacesName := os.Getenv("DO_SPACES_NAME")
+	spacesRegion := os.Getenv("DO_SPACES_REGION")
 	databaseID := os.Getenv("DO_GENAI_DATABASE_ID")
 	genAIRegion := "tor1"
+
+	if spacesRegion == "" {
+		spacesRegion = "blr1"
+	}
 
 	// 1. Create Knowledge Base if not exists
 	if subject.KnowledgeBaseUUID == "" {
@@ -421,10 +439,19 @@ func (s *SubjectService) SetupSubjectAI(ctx context.Context, subjectID uint) (*C
 			DatabaseID:     databaseID,
 		}
 
-		// NOTE: We intentionally do NOT add a bucket-level data source here.
-		// Adding a bucket without ItemPath would index ALL files in the bucket,
-		// including files from other subjects. Individual documents are added
-		// as data sources with specific ItemPath when they are uploaded.
+		// Add subject-scoped data source - only indexes this subject's folder
+		if spacesName != "" {
+			subjectFolderPath := fmt.Sprintf("subjects/%d/", subject.ID)
+			createKBReq.DataSources = []digitalocean.DataSourceCreateInput{
+				{
+					SpacesDataSource: &digitalocean.SpacesDataSourceInput{
+						BucketName: spacesName,
+						Region:     spacesRegion,
+						ItemPath:   subjectFolderPath,
+					},
+				},
+			}
+		}
 
 		kb, err := s.doClient.CreateKnowledgeBase(ctx, createKBReq)
 		if err != nil {

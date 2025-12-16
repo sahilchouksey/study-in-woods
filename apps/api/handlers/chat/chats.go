@@ -2,12 +2,16 @@ package chat
 
 import (
 	"bufio"
+	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/model"
 	"github.com/sahilchouksey/go-init-setup/services"
+	"github.com/sahilchouksey/go-init-setup/services/digitalocean"
 	"github.com/sahilchouksey/go-init-setup/utils/middleware"
 	"github.com/sahilchouksey/go-init-setup/utils/response"
 	"github.com/sahilchouksey/go-init-setup/utils/validation"
@@ -37,10 +41,18 @@ type CreateSessionRequest struct {
 	Description string `json:"description" validate:"omitempty,max=1000"`
 }
 
+// AISettings represents user-configurable AI settings sent from the client
+type AISettings struct {
+	SystemPrompt     string `json:"system_prompt" validate:"omitempty,max=10000"`
+	IncludeCitations *bool  `json:"include_citations"` // Pointer to distinguish between false and not set
+	MaxTokens        *int   `json:"max_tokens" validate:"omitempty,min=256,max=8192"`
+}
+
 // SendMessageRequest represents the request to send a chat message
 type SendMessageRequest struct {
-	Content string `json:"content" validate:"required,min=1,max=10000"`
-	Stream  bool   `json:"stream" validate:"omitempty"`
+	Content  string      `json:"content" validate:"required,min=1,max=10000"`
+	Stream   bool        `json:"stream" validate:"omitempty"`
+	Settings *AISettings `json:"settings" validate:"omitempty"`
 }
 
 // ListSessions handles GET /api/v1/chat/sessions
@@ -258,17 +270,31 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Invalid session ID")
 	}
 
+	// Extract user API keys from headers
+	userAPIKeys := h.extractUserAPIKeys(c)
+
+	// Convert handler AISettings to service AISettings
+	var aiSettings *services.AISettings
+	if req.Settings != nil {
+		aiSettings = &services.AISettings{
+			SystemPrompt:     req.Settings.SystemPrompt,
+			IncludeCitations: req.Settings.IncludeCitations,
+			MaxTokens:        req.Settings.MaxTokens,
+		}
+	}
+
 	// Check if streaming is requested
 	if req.Stream {
-		return h.handleStreamMessage(c, uint(sessionID), user.ID, req.Content)
+		return h.handleStreamMessage(c, uint(sessionID), user.ID, req.Content, userAPIKeys, aiSettings)
 	}
 
 	// Send non-streaming message
-	result, err := h.chatService.SendMessage(c.Context(), services.SendMessageRequest{
+	result, err := h.chatService.SendMessageWithKeys(c.Context(), services.SendMessageRequest{
 		SessionID: uint(sessionID),
 		UserID:    user.ID,
 		Content:   req.Content,
-	})
+		Settings:  aiSettings,
+	}, userAPIKeys)
 
 	if err != nil {
 		return response.InternalServerError(c, "Failed to send message: "+err.Error())
@@ -280,8 +306,17 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 	})
 }
 
-// handleStreamMessage handles streaming chat responses
-func (h *ChatHandler) handleStreamMessage(c *fiber.Ctx, sessionID uint, userID uint, content string) error {
+// extractUserAPIKeys extracts API keys from request headers
+func (h *ChatHandler) extractUserAPIKeys(c *fiber.Ctx) *services.UserAPIKeys {
+	return &services.UserAPIKeys{
+		TavilyKey:    c.Get("X-Tavily-Api-Key"),
+		ExaKey:       c.Get("X-Exa-Api-Key"),
+		FirecrawlKey: c.Get("X-Firecrawl-Api-Key"),
+	}
+}
+
+// handleStreamMessage handles streaming chat responses with enhanced event types
+func (h *ChatHandler) handleStreamMessage(c *fiber.Ctx, sessionID uint, userID uint, content string, userAPIKeys *services.UserAPIKeys, aiSettings *services.AISettings) error {
 	// Set headers for SSE
 	c.Set("Content-Type", "text/event-stream")
 	c.Set("Cache-Control", "no-cache")
@@ -295,32 +330,101 @@ func (h *ChatHandler) handleStreamMessage(c *fiber.Ctx, sessionID uint, userID u
 		fmt.Fprintf(w, "data: {\"status\":\"streaming\"}\n\n")
 		w.Flush()
 
-		// Stream message
-		result, err := h.chatService.StreamMessage(c.Context(), services.StreamMessageRequest{
+		// Use background context for streaming - fasthttp context becomes invalid in goroutine
+		streamCtx := context.Background()
+
+		// Use enhanced streaming with separate callbacks for reasoning and content
+		result, err := h.chatService.StreamMessageEnhancedWithKeys(streamCtx, services.EnhancedStreamMessageRequest{
 			SessionID: sessionID,
 			UserID:    userID,
 			Content:   content,
-		}, func(chunk string) error {
-			// Send chunk as SSE
-			fmt.Fprintf(w, "event: chunk\n")
-			fmt.Fprintf(w, "data: %s\n\n", chunk)
-			return w.Flush()
+			Settings:  aiSettings,
+		}, userAPIKeys, services.EnhancedStreamCallbacks{
+			// Send reasoning chunks as they arrive
+			OnReasoning: func(chunk string) error {
+				// Escape newlines for SSE transport
+				escaped := strings.ReplaceAll(chunk, "\\", "\\\\")
+				escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+				escaped = strings.ReplaceAll(escaped, "\r", "\\r")
+				fmt.Fprintf(w, "event: reasoning\n")
+				fmt.Fprintf(w, "data: %s\n\n", escaped)
+				return w.Flush()
+			},
+			// Send content chunks as they arrive
+			OnContent: func(chunk string) error {
+				// Escape newlines for SSE transport - newlines in content break SSE protocol
+				escaped := strings.ReplaceAll(chunk, "\\", "\\\\")
+				escaped = strings.ReplaceAll(escaped, "\n", "\\n")
+				escaped = strings.ReplaceAll(escaped, "\r", "\\r")
+				fmt.Fprintf(w, "event: chunk\n")
+				fmt.Fprintf(w, "data: %s\n\n", escaped)
+				return w.Flush()
+			},
+			// Send citations when available
+			OnCitations: func(citations []model.Citation) error {
+				citationsJSON, jsonErr := json.Marshal(citations)
+				if jsonErr != nil {
+					return nil // Don't fail on JSON error
+				}
+				fmt.Fprintf(w, "event: citations\n")
+				fmt.Fprintf(w, "data: %s\n\n", string(citationsJSON))
+				return w.Flush()
+			},
+			// Send usage info when available
+			OnUsage: func(usage *digitalocean.StreamUsage) error {
+				if usage == nil {
+					return nil
+				}
+				fmt.Fprintf(w, "event: usage\n")
+				fmt.Fprintf(w, "data: {\"prompt_tokens\":%d,\"completion_tokens\":%d,\"total_tokens\":%d}\n\n",
+					usage.PromptTokens, usage.CompletionTokens, usage.TotalTokens)
+				return w.Flush()
+			},
+			// Send tool events (tool_start, tool_end) for UI indicators
+			OnToolEvent: func(event services.ToolEvent) error {
+				eventJSON, jsonErr := json.Marshal(event)
+				if jsonErr != nil {
+					return nil // Don't fail on JSON error
+				}
+				fmt.Fprintf(w, "event: tool\n")
+				fmt.Fprintf(w, "data: %s\n\n", string(eventJSON))
+				return w.Flush()
+			},
 		})
 
 		if err != nil {
 			// Send error event
 			fmt.Fprintf(w, "event: error\n")
-			fmt.Fprintf(w, "data: {\"error\":\"%s\"}\n\n", err.Error())
+			fmt.Fprintf(w, "data: {\"error\":\"%s\"}\n\n", escapeJSON(err.Error()))
 			w.Flush()
 			return
 		}
 
-		// Send completion event
+		// Check for nil result or messages
+		if result == nil || result.UserMessage == nil || result.AssistantMessage == nil {
+			fmt.Fprintf(w, "event: error\n")
+			fmt.Fprintf(w, "data: {\"error\":\"incomplete response from AI service\"}\n\n")
+			w.Flush()
+			return
+		}
+
+		// Send completion event with full message details
 		fmt.Fprintf(w, "event: done\n")
-		fmt.Fprintf(w, "data: {\"user_message_id\":%d,\"assistant_message_id\":%d}\n\n",
-			result.UserMessage.ID, result.AssistantMessage.ID)
+		fmt.Fprintf(w, "data: {\"user_message_id\":%d,\"assistant_message_id\":%d,\"tokens_used\":%d}\n\n",
+			result.UserMessage.ID, result.AssistantMessage.ID, result.AssistantMessage.TokensUsed)
 		w.Flush()
 	})
 
 	return nil
+}
+
+// escapeJSON escapes a string for safe inclusion in JSON
+func escapeJSON(s string) string {
+	// Simple JSON string escaping
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	s = strings.ReplaceAll(s, "\n", "\\n")
+	s = strings.ReplaceAll(s, "\r", "\\r")
+	s = strings.ReplaceAll(s, "\t", "\\t")
+	return s
 }

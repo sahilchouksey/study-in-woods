@@ -31,6 +31,37 @@ type Citation struct {
 // Citations is a custom type for storing citation data as JSONB
 type Citations []Citation
 
+// JSONMap is a custom type for storing JSON data as JSONB
+type JSONMap map[string]interface{}
+
+// Scan implements the sql.Scanner interface for reading from database
+func (j *JSONMap) Scan(value interface{}) error {
+	if value == nil {
+		*j = JSONMap{}
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("failed to unmarshal JSONMap value")
+	}
+
+	if len(bytes) == 0 {
+		*j = JSONMap{}
+		return nil
+	}
+
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implements the driver.Valuer interface for writing to database
+func (j JSONMap) Value() (driver.Value, error) {
+	if len(j) == 0 {
+		return []byte("{}"), nil // Return empty JSON object instead of nil
+	}
+	return json.Marshal(j)
+}
+
 // Scan implements the sql.Scanner interface for reading from database
 func (c *Citations) Scan(value interface{}) error {
 	if value == nil {
@@ -49,7 +80,7 @@ func (c *Citations) Scan(value interface{}) error {
 // Value implements the driver.Valuer interface for writing to database
 func (c Citations) Value() (driver.Value, error) {
 	if len(c) == 0 {
-		return nil, nil
+		return []byte("[]"), nil // Return empty JSON array instead of nil
 	}
 	return json.Marshal(c)
 }
@@ -70,7 +101,7 @@ type ChatMessage struct {
 	ModelUsed    string         `gorm:"type:varchar(100)" json:"model_used"`
 	ResponseTime int            `gorm:"default:0" json:"response_time_ms"` // Response time in milliseconds
 	IsStreamed   bool           `gorm:"default:false" json:"is_streamed"`
-	Metadata     string         `gorm:"type:jsonb" json:"metadata,omitempty"`
+	Metadata     JSONMap        `gorm:"type:jsonb;default:'{}'" json:"metadata,omitempty"`
 
 	// Relationships
 	Session ChatSession `gorm:"foreignKey:SessionID;constraint:OnDelete:CASCADE" json:"session,omitempty"`

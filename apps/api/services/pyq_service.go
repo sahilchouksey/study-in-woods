@@ -200,91 +200,110 @@ var pyqExtractionSchema = map[string]any{
 }
 
 // pyqExtractionPrompt is the system prompt for LLM extraction
-const pyqExtractionPrompt = `You are an expert at extracting structured information from academic examination question papers (Previous Year Questions / PYQs).
+const pyqExtractionPrompt = `You are an expert at extracting structured information from Indian university examination question papers (Previous Year Questions / PYQs).
 
-CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no explanations, no code blocks, no text before or after the JSON. Start your response with { and end with }.
+CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no explanations, no code blocks. Start with { and end with }.
 
-IMPORTANT - UNDERSTAND THE EXAM PAPER STRUCTURE:
-Most university exam papers have this structure:
-- Questions are numbered 1, 2, 3, 4, etc.
-- Each question typically has SUB-PARTS labeled (a), (b), (c) - these are SEPARATE questions that students must answer
-- Sometimes a question has "OR" - meaning student chooses ONE option from alternatives
+IMPORTANT - UNDERSTAND INDIAN UNIVERSITY EXAM PAPER STRUCTURE:
+1. Papers typically have 8 questions numbered 1-8
+2. Each main question has SUB-PARTS labeled a), b) - these are SEPARATE questions to be answered
+3. "Attempt any X questions" means questions are OPTIONAL (is_compulsory = false)
+4. "All questions carry equal marks" - divide total marks by required questions, then by sub-parts
+   Example: 70 marks, attempt 5 questions = 14 marks per question = 7 marks per sub-part (a/b)
+5. Papers often have bilingual text (English + Hindi) - extract ONLY the English version
+6. Ignore Hindi/Devanagari text completely
 
-EXTRACTION RULES:
-1. SUB-PARTS (a), (b) = Extract as SEPARATE questions with question_number "1a", "1b", "2a", "2b", etc.
+CRITICAL EXTRACTION RULES:
+
+1. MARKS CALCULATION:
+   - If "All questions carry equal marks" and "Attempt any 5 questions" with 70 total marks:
+     * Each question = 70/5 = 14 marks
+     * Each sub-part (a, b) = 14/2 = 7 marks
+   - ALWAYS calculate and assign marks - NEVER leave as 0
+
+2. SUB-PARTS (a), (b) = Extract as SEPARATE question entries:
+   - Question number format: "1a", "1b", "2a", "2b", etc.
    - has_choices = false
-   - Each sub-part is its own question entry
-   
-2. OR CHOICES = When you see "OR" between options, extract as ONE question with choices array
-   - has_choices = true
-   - Put the alternatives in the choices array
-   - Example: "Write short notes on any three: (a) Topic1 OR (b) Topic2 OR (c) Topic3"
+   - Each sub-part gets its own marks (typically half of main question)
 
-Your task is to analyze the provided question paper and extract information into this exact JSON structure:
+3. COMPULSORY vs OPTIONAL:
+   - "Attempt any X questions" = is_compulsory: false for ALL questions
+   - "Attempt all questions" or "Compulsory" = is_compulsory: true
 
+4. QUESTION TEXT - BE COMPLETE:
+   - Extract the FULL question text in English
+   - Include all parts of multi-part questions
+   - If question says "Discuss X and Y", include both X and Y
+   - If question has sub-items (i, ii, iii), include them in the text
+
+5. CHOICES (has_choices = true):
+   - Only use when question explicitly says "any X of the following" or has "OR" between options
+   - For questions like "Discuss in detail about the following: i) X, ii) Y, iii) Z, iv) W"
+     * Set has_choices = true
+     * Include all items in the question_text
+     * Put each item in choices array
+
+6. NEVER SKIP OR LEAVE EMPTY:
+   - Every question must have question_text - no empty strings allowed
+   - Every question must have marks > 0
+   - Extract ALL sub-questions (typically 8 questions × 2 sub-parts = 16 entries)
+
+OUTPUT FORMAT:
 {
   "year": 2024,
-  "month": "December",
+  "month": "May",
   "exam_type": "End Semester Examination",
   "total_marks": 70,
-  "duration": "3 Hours",
+  "duration": "Three Hours",
   "instructions": "Attempt any five questions. All questions carry equal marks.",
   "questions": [
     {
       "question_number": "1a",
-      "section_name": "Section A",
-      "question_text": "Explain the KDD process with example.",
-      "marks": 7,
-      "is_compulsory": false,
-      "has_choices": false,
-      "unit_number": 1,
-      "topic": "KDD Process",
-      "keywords": ["KDD", "knowledge discovery"],
-      "choices": []
-    },
-    {
-      "question_number": "1b",
-      "section_name": "Section A",
-      "question_text": "What are the applications of data mining?",
-      "marks": 7,
-      "is_compulsory": false,
-      "has_choices": false,
-      "unit_number": 1,
-      "topic": "Data Mining Applications",
-      "keywords": ["applications", "data mining"],
-      "choices": []
-    },
-    {
-      "question_number": "8",
       "section_name": "",
-      "question_text": "Write short notes on any three of the following:",
-      "marks": 14,
+      "question_text": "Define Artificial Intelligence (AI). What is an AI technique?",
+      "marks": 7,
+      "is_compulsory": false,
+      "has_choices": false,
+      "unit_number": 0,
+      "topic_keywords": "AI, artificial intelligence, technique",
+      "choices": []
+    },
+    {
+      "question_number": "8a",
+      "section_name": "",
+      "question_text": "Discuss in detail about the following: i) A* Algorithm, ii) Hill Climbing, iii) ANN, iv) Types of Learning",
+      "marks": 7,
       "is_compulsory": false,
       "has_choices": true,
       "unit_number": 0,
-      "topic": "Short Notes",
-      "keywords": ["short notes"],
+      "topic_keywords": "A* algorithm, hill climbing, ANN, learning types",
       "choices": [
-        {"choice_label": "a", "choice_text": "Constraint Based Association Mining"},
-        {"choice_label": "b", "choice_text": "Outlier Analysis"},
-        {"choice_label": "c", "choice_text": "Gini Index"},
-        {"choice_label": "d", "choice_text": "Data Integration"},
-        {"choice_label": "e", "choice_text": "OLAP, MOLAP, HOLAP"}
+        {"choice_label": "i", "choice_text": "A* Algorithm"},
+        {"choice_label": "ii", "choice_text": "Hill Climbing"},
+        {"choice_label": "iii", "choice_text": "ANN"},
+        {"choice_label": "iv", "choice_text": "Types of Learning"}
       ]
     }
   ]
 }
 
-Guidelines:
-1. Extract year, month from the paper header (e.g., "December 2024" -> year: 2024, month: "December")
-2. ALWAYS split sub-parts (a), (b) into separate question entries with numbers like "1a", "1b", "2a", "2b"
-3. Only use has_choices=true and choices array when there's "OR" or "any X of the following"
-4. Include section_name if paper has sections (Section A, Part I, etc.)
-5. Try to identify unit_number and topic for each question
-6. Add relevant keywords for searchability
-7. Extract ALL questions - don't miss any sub-parts!
+HANDLING OCR ARTIFACTS AND MISSING TEXT:
+- OCR may have gaps or garbled text - do your best to reconstruct meaning
+- If a question number appears but text is missing/garbled, look for related content nearby
+- Question numbers like "3 a)" followed by incomplete text may have content on next line
+- If you see fragments like "using suitable examples", look for the topic before it
+- For multi-column PDFs, text may be interleaved - reconstruct logically
+- Never leave question_text empty - if truly unreadable, put "[OCR text unclear]"
 
-REMEMBER: Output ONLY the JSON object. No markdown formatting. No explanatory text. Start with { end with }.`
+VALIDATION CHECKLIST (verify before output):
+- All questions extracted (8 main questions × 2 sub-parts = 16 entries for typical paper)
+- No empty question_text fields - use "[OCR text unclear]" if needed
+- All marks fields are > 0 (calculate from total marks / required questions / sub-parts)
+- is_compulsory is false for "Attempt any X" papers
+- Year and month extracted correctly from header
+- Only English text extracted (no Hindi/Devanagari)
+
+REMEMBER: Output ONLY the JSON object. Start with { end with }.`
 
 // ExtractPYQFromDocument extracts PYQ data from a document
 // Uses OCR text if available (preferred), otherwise falls back to PDF text extraction
@@ -468,54 +487,42 @@ func (s *PYQService) extractWithLLMFallback(ctx context.Context, documentText st
 		documentText = documentText[:maxChars] + "\n\n[Document truncated due to length]"
 	}
 
-	fallbackPrompt := `You are a JSON extraction assistant. You MUST output ONLY valid JSON with no other text.
+	fallbackPrompt := `You are a JSON extraction assistant for Indian university exam papers. Output ONLY valid JSON.
 
-IMPORTANT STRUCTURE:
-- Sub-parts (a), (b) = Extract as SEPARATE questions with numbers "1a", "1b", "2a", "2b"
-- OR choices = ONE question with has_choices=true and choices array
+CRITICAL RULES:
+1. Extract ONLY English text - ignore Hindi/Devanagari completely
+2. Sub-parts (a), (b) = SEPARATE questions numbered "1a", "1b", "2a", "2b", etc.
+3. Calculate marks: If "All questions carry equal marks" with 70 total and "Attempt any 5":
+   - Per question = 70/5 = 14 marks
+   - Per sub-part = 14/2 = 7 marks
+4. "Attempt any X" = is_compulsory: false for ALL questions
+5. NEVER leave marks as 0 - always calculate
+6. NEVER leave question_text empty - extract full text
 
-Extract question paper information into this EXACT JSON structure:
+Extract into this EXACT JSON structure:
 {
   "year": 2024,
-  "month": "December",
-  "exam_type": "End Semester",
+  "month": "May",
+  "exam_type": "End Semester Examination",
   "total_marks": 70,
-  "duration": "3 Hours",
-  "instructions": "General instructions here",
+  "duration": "Three Hours",
+  "instructions": "Attempt any five questions. All questions carry equal marks.",
   "questions": [
     {
       "question_number": "1a",
       "section_name": "",
-      "question_text": "First sub-part question text",
+      "question_text": "Define Artificial Intelligence (AI). What is an AI technique?",
       "marks": 7,
       "is_compulsory": false,
       "has_choices": false,
-      "unit_number": 1,
-      "topic": "Topic name",
-      "keywords": ["keyword1"],
-      "choices": []
-    },
-    {
-      "question_number": "1b",
-      "section_name": "",
-      "question_text": "Second sub-part question text",
-      "marks": 7,
-      "is_compulsory": false,
-      "has_choices": false,
-      "unit_number": 1,
-      "topic": "Topic name",
-      "keywords": ["keyword1"],
+      "unit_number": 0,
+      "topic_keywords": "AI, artificial intelligence",
       "choices": []
     }
   ]
 }
 
-RULES:
-1. Output ONLY JSON - no markdown, no code blocks, no explanations
-2. Start response with { and end with }
-3. Extract ALL questions - split (a), (b) sub-parts into separate entries like "1a", "1b"
-4. Only use has_choices=true when there's "OR" between options, fill choices array with:
-   {"choice_label": "a", "choice_text": "Choice text here"}`
+OUTPUT: Start with { end with }. No markdown. No explanations.`
 
 	userPrompt := fmt.Sprintf("Extract as JSON:\n\n%s", documentText)
 
@@ -553,8 +560,13 @@ func (s *PYQService) savePYQData(paper *model.PYQPaper, data *PYQExtractionResul
 	}()
 
 	// Update paper basic info
-	paper.Year = data.Year
-	paper.Month = data.Month
+	// Only update year/month if AI extracted valid values (preserve original crawler data)
+	if data.Year > 0 {
+		paper.Year = data.Year
+	}
+	if data.Month != "" {
+		paper.Month = data.Month
+	}
 	paper.ExamType = data.ExamType
 	paper.TotalMarks = data.TotalMarks
 	paper.Duration = data.Duration

@@ -52,7 +52,7 @@ func SetupSecurity(app *fiber.App, config SecurityConfig) {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     strings.Join(origins, ","),
 		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Tavily-Api-Key,X-Exa-Api-Key,X-Firecrawl-Api-Key",
 		AllowCredentials: true,
 		MaxAge:           86400,
 	}))
