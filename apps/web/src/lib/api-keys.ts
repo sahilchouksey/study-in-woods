@@ -9,27 +9,28 @@ const STORAGE_KEYS = {
 const CURRENT_VERSION = '1.0';
 
 // Provider information and test endpoints
+// Note: keyPattern is a basic sanity check - actual validation happens via API call
 export const PROVIDER_INFO: Record<ApiProvider, ProviderInfo> = {
   tavily: {
     name: 'Tavily',
     description: 'Real-time web search and news discovery',
     capabilities: ['Web Search', 'News Search', 'Real-time Data'],
-    testEndpoint: 'https://api.tavily.com/search',
-    keyPattern: /^tvly-[a-zA-Z0-9]{32,}$/,
+    testEndpoint: 'https://api.tavily.com/usage',
+    keyPattern: /^.{10,}$/, // Just check minimum length, let API validate
   },
   exa: {
     name: 'Exa',
     description: 'Semantic search and content discovery',
     capabilities: ['Semantic Search', 'Content Discovery', 'Research'],
     testEndpoint: 'https://api.exa.ai/search',
-    keyPattern: /^[a-zA-Z0-9]{40,}$/,
+    keyPattern: /^.{10,}$/, // Just check minimum length, let API validate
   },
   firecrawl: {
     name: 'Firecrawl',
     description: 'Web scraping, crawling, and content extraction',
     capabilities: ['Web Scraping', 'Site Crawling', 'Content Extraction', 'Site Mapping'],
-    testEndpoint: 'https://api.firecrawl.dev/v1/scrape',
-    keyPattern: /^fc-[a-zA-Z0-9]{32,}$/,
+    testEndpoint: 'https://api.firecrawl.dev/v1/team/credit-usage',
+    keyPattern: /^.{10,}$/, // Just check minimum length, let API validate
   },
 };
 
@@ -227,26 +228,31 @@ const testProviderConnection = async (provider: ApiProvider, apiKey: string): Pr
 };
 
 /**
- * Test Tavily API connection
+ * Test Tavily API connection using the /usage endpoint (doesn't consume credits)
  */
 const testTavilyConnection = async (apiKey: string): Promise<ApiKeyTestResult> => {
   try {
-    const response = await fetch('https://api.tavily.com/search', {
-      method: 'POST',
+    const response = await fetch('https://api.tavily.com/usage', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        api_key: apiKey,
-        query: 'test',
-        max_results: 1,
-      }),
     });
 
     if (response.ok) {
+      const data = await response.json();
+      const account = data.account;
+      const plan = account?.current_plan ?? 'Unknown';
+      const usage = account?.plan_usage ?? 0;
+      const limit = account?.plan_limit;
+      
+      // Build usage string
+      const usageStr = limit ? `${usage}/${limit}` : `${usage}`;
+      const remaining = limit ? ` (${limit - usage} remaining)` : '';
+      
       return {
         success: true,
-        message: 'Tavily API key is valid and working',
+        message: `Valid - ${plan} plan: ${usageStr} searches${remaining}`,
         capabilities: PROVIDER_INFO.tavily.capabilities,
       };
     } else if (response.status === 401) {
@@ -254,22 +260,28 @@ const testTavilyConnection = async (apiKey: string): Promise<ApiKeyTestResult> =
         success: false,
         message: 'Invalid Tavily API key',
       };
-    } else {
+    } else if (response.status === 402) {
       return {
         success: false,
-        message: `Tavily API error: ${response.status}`,
+        message: 'Tavily API: Payment required - out of credits or subscription expired',
+      };
+    } else {
+      const errorText = await response.text().catch(() => '');
+      return {
+        success: false,
+        message: `Tavily API error: ${response.status}${errorText ? ` - ${errorText}` : ''}`,
       };
     }
   } catch (error) {
     return {
       success: false,
-      message: 'Failed to connect to Tavily API',
+      message: `Failed to connect to Tavily API: ${error instanceof Error ? error.message : 'Network error'}`,
     };
   }
 };
 
 /**
- * Test Exa API connection
+ * Test Exa API connection using minimal search (uses x-api-key header)
  */
 const testExaConnection = async (apiKey: string): Promise<ApiKeyTestResult> => {
   try {
@@ -277,7 +289,7 @@ const testExaConnection = async (apiKey: string): Promise<ApiKeyTestResult> => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'x-api-key': apiKey,
       },
       body: JSON.stringify({
         query: 'test',
@@ -296,41 +308,46 @@ const testExaConnection = async (apiKey: string): Promise<ApiKeyTestResult> => {
         success: false,
         message: 'Invalid Exa API key',
       };
-    } else {
+    } else if (response.status === 400) {
+      const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
-        message: `Exa API error: ${response.status}`,
+        message: `Exa API error: ${errorData.error || 'Bad request'}`,
+      };
+    } else {
+      const errorText = await response.text().catch(() => '');
+      return {
+        success: false,
+        message: `Exa API error: ${response.status}${errorText ? ` - ${errorText}` : ''}`,
       };
     }
   } catch (error) {
     return {
       success: false,
-      message: 'Failed to connect to Exa API',
+      message: `Failed to connect to Exa API: ${error instanceof Error ? error.message : 'Network error'}`,
     };
   }
 };
 
 /**
- * Test Firecrawl API connection
+ * Test Firecrawl API connection using the /v1/team/credit-usage endpoint (doesn't consume credits)
  */
 const testFirecrawlConnection = async (apiKey: string): Promise<ApiKeyTestResult> => {
   try {
-    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
-      method: 'POST',
+    const response = await fetch('https://api.firecrawl.dev/v1/team/credit-usage', {
+      method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        url: 'https://example.com',
-        formats: ['markdown'],
-      }),
     });
 
     if (response.ok) {
+      const data = await response.json();
+      const creditsUsed = data.credits_used ?? 0;
+      const creditsLimit = data.credits_limit ?? 0;
       return {
         success: true,
-        message: 'Firecrawl API key is valid and working',
+        message: `Firecrawl API key is valid (Credits: ${creditsUsed}/${creditsLimit} used)`,
         capabilities: PROVIDER_INFO.firecrawl.capabilities,
       };
     } else if (response.status === 401) {
@@ -338,16 +355,22 @@ const testFirecrawlConnection = async (apiKey: string): Promise<ApiKeyTestResult
         success: false,
         message: 'Invalid Firecrawl API key',
       };
-    } else {
+    } else if (response.status === 402) {
       return {
         success: false,
-        message: `Firecrawl API error: ${response.status}`,
+        message: 'Firecrawl API: Payment required - out of credits',
+      };
+    } else {
+      const errorText = await response.text().catch(() => '');
+      return {
+        success: false,
+        message: `Firecrawl API error: ${response.status}${errorText ? ` - ${errorText}` : ''}`,
       };
     }
   } catch (error) {
     return {
       success: false,
-      message: 'Failed to connect to Firecrawl API',
+      message: `Failed to connect to Firecrawl API: ${error instanceof Error ? error.message : 'Network error'}`,
     };
   }
 };

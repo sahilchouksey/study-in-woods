@@ -9,12 +9,13 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  refetchUser: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { data: user, isLoading } = useUser();
+  const { data: user, isLoading, refetch } = useUser();
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading: !isClient || isLoading,
     isAuthenticated: !!user,
     isAdmin: user?.role === 'admin',
+    refetchUser: refetch,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -6,12 +6,12 @@ import {
   CheckCircle2,
   AlertCircle,
   Info,
-  Loader2,
   AlertTriangle,
   Trash2,
   CheckCheck,
   X,
 } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -25,12 +25,13 @@ import { useNotifications, type Notification, formatNotificationTime } from '@/p
 import type { NotificationType } from '@/lib/api/notifications';
 import { cn } from '@/lib/utils';
 
+// Note: in_progress uses InlineSpinner component directly in the render
 const typeIcons: Record<NotificationType, React.ElementType> = {
   info: Info,
   success: CheckCircle2,
   warning: AlertTriangle,
   error: AlertCircle,
-  in_progress: Loader2,
+  in_progress: Info, // Placeholder, handled separately with InlineSpinner
 };
 
 const typeColors: Record<NotificationType, string> = {
@@ -65,7 +66,7 @@ function NotificationItem({
         {/* Icon */}
         <div className={cn('shrink-0 mt-0.5', colorClass)}>
           {notification.type === 'in_progress' ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <InlineSpinner />
           ) : (
             <Icon className="h-4 w-4" />
           )}
@@ -180,8 +181,7 @@ export function NotificationsPanel() {
         {/* Notifications List */}
         {isLoading ? (
           <div className="p-8 text-center">
-            <Loader2 className="h-6 w-6 mx-auto mb-2 text-muted-foreground/50 animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading notifications...</p>
+            <LoadingSpinner size="md" text="Loading notifications..." centered />
           </div>
         ) : notifications.length > 0 ? (
           <ScrollArea className="max-h-[400px]">

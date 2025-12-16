@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { FileText, Download, Trash2, RefreshCw, Loader2, Upload, X, AlertCircle } from 'lucide-react';
+import { FileText, Download, Trash2, RefreshCw, Upload, X, AlertCircle } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,7 +149,7 @@ function DocumentCard({
                 disabled={downloadDocument.isPending}
               >
                 {downloadDocument.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <InlineSpinner />
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
@@ -371,7 +372,7 @@ function DocumentUploadForm({ subjectId, onSuccess, excludeTypes = [] }: Documen
       >
         {uploadDocument.isPending ? (
           <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            <InlineSpinner className="mr-2" />
             Uploading...
           </>
         ) : (
@@ -415,7 +416,7 @@ function DocumentList({ subjectId, userId, isAdmin }: DocumentListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <LoadingSpinner size="md" />
       </div>
     );
   }

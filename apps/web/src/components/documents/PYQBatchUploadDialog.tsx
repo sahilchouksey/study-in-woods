@@ -4,13 +4,13 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Upload, 
   FileText, 
-  Loader2, 
   CheckCircle2, 
   AlertCircle,
   Trash2,
   ExternalLink,
   Plus
 } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import {
   Dialog,
   DialogContent,
@@ -360,7 +360,7 @@ export function PYQBatchUploadDialog({
                               ) : status?.status === 'error' ? (
                                 <AlertCircle className="h-4 w-4 text-destructive" />
                               ) : isIngesting || status?.status === 'ingesting' ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                <LoadingSpinner size="sm" className="text-primary" />
                               ) : (
                                 <FileText className="h-4 w-4 text-muted-foreground" />
                               )}
@@ -442,7 +442,7 @@ export function PYQBatchUploadDialog({
                             ) : localFile.status === 'error' ? (
                               <AlertCircle className="h-4 w-4 text-destructive" />
                             ) : isIngesting || localFile.status === 'uploading' ? (
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                              <LoadingSpinner size="sm" className="text-primary" />
                             ) : (
                               <FileText className="h-4 w-4 text-muted-foreground" />
                             )}
@@ -503,7 +503,7 @@ export function PYQBatchUploadDialog({
           >
             {isIngesting ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <InlineSpinner />
                 Ingesting...
               </>
             ) : (

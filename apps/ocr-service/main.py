@@ -24,7 +24,7 @@ converter = None
 
 
 def get_converter():
-    """Lazy load Docling converter"""
+    """Lazy load Docling converter with optimized settings for exam papers"""
     global converter
     if converter is None:
         logger.info("Initializing Docling converter...")
@@ -34,13 +34,15 @@ def get_converter():
         pipeline_options = PdfPipelineOptions()
         pipeline_options.do_ocr = True
         pipeline_options.do_table_structure = True
-        pipeline_options.images_scale = 1.0
+        # Higher image scale for better OCR quality on scanned documents
+        # Default is 1.0, we use 2.0 for better text recognition on exam papers
+        pipeline_options.images_scale = 2.0
 
         converter = DocumentConverter(
             allowed_formats=None,
-            format_options={"PDF": pipeline_options},
+            format_options={"PDF": pipeline_options},  # type: ignore
         )
-        logger.info("Docling converter ready")
+        logger.info("Docling converter ready with enhanced settings (images_scale=2.0)")
     return converter
 
 

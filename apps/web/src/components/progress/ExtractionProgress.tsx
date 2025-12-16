@@ -9,7 +9,6 @@ import {
   Merge, 
   Database, 
   CheckCircle2, 
-  Loader2,
   XCircle,
   RefreshCw,
   ChevronDown,
@@ -19,6 +18,7 @@ import {
   Zap,
   AlertTriangle
 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,7 +46,7 @@ const phaseConfig: Record<string, {
   bgColor: string;
 }> = {
   initializing: { 
-    icon: Loader2, 
+    icon: Clock, 
     label: 'Initializing', 
     color: 'text-blue-500',
     bgColor: 'bg-blue-500/10'
@@ -242,7 +242,7 @@ const eventTypeConfig: Record<string, {
     label: 'PROG',
     colorClass: 'text-sky-600 dark:text-sky-400',
     bgClass: 'bg-sky-100 dark:bg-sky-500/20',
-    icon: Loader2,
+    icon: Clock,
   },
   info: {
     label: 'INFO',
@@ -386,7 +386,7 @@ function EventLogs({
       >
         {filteredEvents.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground text-xs">
-            <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
+            <LoadingSpinner size="xs" className="mr-1.5" />
             Waiting for events...
           </div>
         ) : (

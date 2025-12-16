@@ -5,11 +5,11 @@ import {
   FileText, 
   Upload, 
   AlertCircle, 
-  Loader2, 
   CheckCircle2,
   Plus,
   Trash2
 } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -315,7 +315,7 @@ export function MultiFileUploadForm({
                       {/* Status Icon */}
                       <div className="shrink-0">
                         {localFile.status === 'uploading' && (
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          <LoadingSpinner size="sm" className="text-primary" />
                         )}
                         {localFile.status === 'done' && (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -415,7 +415,7 @@ export function MultiFileUploadForm({
           >
             {isUploading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <InlineSpinner className="mr-2" />
                 Uploading...
               </>
             ) : (

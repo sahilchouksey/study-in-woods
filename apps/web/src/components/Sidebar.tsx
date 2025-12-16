@@ -1,23 +1,26 @@
 'use client';
 
-import { MessageSquare, History, BookOpen, Settings, LogOut } from 'lucide-react';
+import { MessageSquare, History, BookOpen, Settings, LogOut, Bell } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { authService } from '@/lib/api/auth';
 import { useQueryClient } from '@tanstack/react-query';
+import { useNotifications } from '@/providers/notification-provider';
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { unreadCount } = useNotifications();
   
   const tabs = [
     { href: '/chat', icon: MessageSquare, label: 'Chat' },
     { href: '/history', icon: History, label: 'History' },
     { href: '/courses', icon: BookOpen, label: 'Courses' },
+    { href: '/notifications', icon: Bell, label: 'Notifications', badge: unreadCount },
     { href: '/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -38,10 +41,7 @@ export function Sidebar() {
           <h1 className="text-foreground flex items-center gap-2">
             Study in Woods 🪵
           </h1>
-          <div className="flex items-center gap-1">
-            <NotificationsPanel />
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
       </div>
 
@@ -57,6 +57,14 @@ export function Sidebar() {
               >
                 <Icon className="mr-3 h-5 w-5" />
                 {tab.label}
+                {tab.badge !== undefined && tab.badge > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="ml-auto h-5 min-w-5 px-1.5 text-xs"
+                  >
+                    {tab.badge > 99 ? '99+' : tab.badge}
+                  </Badge>
+                )}
               </Button>
             </Link>
           );

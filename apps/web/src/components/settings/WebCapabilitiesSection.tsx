@@ -1,12 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { Globe, Search, Download, Upload, Shield, Lock, Eye } from 'lucide-react';
+import { Globe, Search, Shield, Lock, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { ApiKeyInput } from '@/components/ui/api-key-input';
 import { ConnectionTester } from './ConnectionTester';
@@ -15,12 +12,7 @@ import {
   saveApiKey, 
   deleteApiKey, 
   getApiKey, 
-  getWebCapabilitiesConfig, 
-  saveWebCapabilitiesConfig,
-  clearAllApiKeys,
-  exportConfiguration,
-  importConfiguration,
-  PROVIDER_INFO 
+  getWebCapabilitiesConfig,
 } from '@/lib/api-keys';
 
 export function WebCapabilitiesSection() {
@@ -149,54 +141,6 @@ export function WebCapabilitiesSection() {
     }));
   };
 
-  const handleExportConfig = async () => {
-    try {
-      const exportData = await exportConfiguration();
-      const blob = new Blob([exportData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `study-woods-config-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export failed:', error);
-    }
-  };
-
-  const handleImportConfig = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const configData = e.target?.result as string;
-        await importConfiguration(configData);
-        await loadConfiguration();
-      } catch (error) {
-        console.error('Import failed:', error);
-        // You might want to show a toast notification here
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const handleClearAll = async () => {
-    if (confirm('Are you sure you want to clear all API keys and settings? This cannot be undone.')) {
-      try {
-        await clearAllApiKeys();
-        setApiKeys({ tavily: '', exa: '', firecrawl: '' });
-        setValidationStates({ tavily: {}, exa: {}, firecrawl: {} });
-        await loadConfiguration();
-      } catch (error) {
-        console.error('Failed to clear all data:', error);
-      }
-    }
-  };
-
   if (isLoading || !config) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
   }
@@ -209,20 +153,16 @@ export function WebCapabilitiesSection() {
           <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
           <div className="space-y-2">
             <h4 className="font-medium text-blue-900 dark:text-blue-100">
-              🔒 Your Keys Are Safe With Us
+              Your Keys Are Safe
             </h4>
             <div className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <p className="flex items-center gap-2">
                 <Lock className="h-4 w-4" />
-                All your data is encrypted and can only be decrypted by you
+                All keys are encrypted locally on your device
               </p>
               <p className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                No one else, including us, can access your API keys
-              </p>
-              <p className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                Keys are stored locally on your device using military-grade encryption
+                Keys are sent securely with each chat request
               </p>
             </div>
           </div>
@@ -230,10 +170,9 @@ export function WebCapabilitiesSection() {
       </div>
 
       <Tabs defaultValue="search" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="search">Search Providers</TabsTrigger>
           <TabsTrigger value="scraping">Scraping Provider</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
         </TabsList>
 
         {/* Search Providers Tab */}
@@ -244,7 +183,7 @@ export function WebCapabilitiesSection() {
               <h3 className="text-lg font-medium">Web Search APIs</h3>
             </div>
             <p className="text-sm text-muted-foreground">
-              Configure API keys for web search providers to enable real-time information retrieval.
+              Configure API keys for web search providers to enable real-time information retrieval in chat.
             </p>
           </div>
 
@@ -406,74 +345,6 @@ export function WebCapabilitiesSection() {
                 onTestComplete={(result) => handleTestComplete('firecrawl', result)}
               />
             )}
-          </div>
-        </TabsContent>
-
-        {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Preferences & Data Management</h3>
-          </div>
-
-          {/* Search Preferences */}
-          <div className="border rounded-lg p-4 space-y-4">
-            <h4 className="font-medium">Search Preferences</h4>
-            
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="defaultProvider">Default Search Provider</Label>
-                <Select value={config.search.defaultProvider}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tavily">Tavily (Real-time)</SelectItem>
-                    <SelectItem value="exa">Exa (Semantic)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          {/* Data Management */}
-          <div className="border rounded-lg p-4 space-y-4">
-            <h4 className="font-medium">Data Management</h4>
-            
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <Button variant="outline" onClick={handleExportConfig}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Configuration
-                </Button>
-                
-                <div>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleImportConfig}
-                    className="hidden"
-                    id="import-config"
-                  />
-                  <Button variant="outline" asChild>
-                    <label htmlFor="import-config" className="cursor-pointer">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import Configuration
-                    </label>
-                  </Button>
-                </div>
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Danger Zone: This will permanently delete all stored API keys and settings.
-                </p>
-                <Button variant="destructive" onClick={handleClearAll}>
-                  Clear All Data
-                </Button>
-              </div>
-            </div>
           </div>
         </TabsContent>
       </Tabs>

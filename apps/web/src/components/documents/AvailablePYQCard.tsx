@@ -1,6 +1,7 @@
 'use client';
 
-import { CheckCircle, Plus, Loader2, Calendar } from 'lucide-react';
+import { CheckCircle, Plus, Calendar } from 'lucide-react';
+import { InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -77,7 +78,7 @@ export function AvailablePYQCard({
               >
                 {isIngesting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <InlineSpinner />
                     Adding...
                   </>
                 ) : (

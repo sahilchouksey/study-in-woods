@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useQueryState, parseAsString, parseAsInteger } from 'nuqs';
 import { useQueryClient } from '@tanstack/react-query';
 import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -431,9 +432,7 @@ export function CoursesTab() {
             )}
             
             {universitiesLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white" />
-              </div>
+              <LoadingSpinner size="lg" centered withPadding />
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredUniversities.length === 0 ? (
@@ -506,9 +505,7 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Select Course</h3>
-                  {coursesLoading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
-                  )}
+                  {coursesLoading && <InlineSpinner />}
                 </div>
                 {isAdmin && (
                   <AdminActionButtons
@@ -542,9 +539,7 @@ export function CoursesTab() {
               )}
               
               {coursesLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white" />
-                </div>
+                <LoadingSpinner size="lg" centered withPadding />
               ) : courses.length === 0 ? (
                 <div className="text-center py-12 text-neutral-600 dark:text-neutral-400">
                   No courses available for this university
@@ -624,9 +619,7 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookMarked className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Select Semester</h3>
-                  {semestersLoading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
-                  )}
+                  {semestersLoading && <InlineSpinner />}
                 </div>
                 {isAdmin && (
                   <AdminActionButtons
@@ -643,9 +636,7 @@ export function CoursesTab() {
               </p>
 
               {semestersLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white" />
-                </div>
+                <LoadingSpinner size="lg" centered withPadding />
               ) : semesters.length === 0 ? (
                 <div className="text-center py-12 text-neutral-600 dark:text-neutral-400">
                   No semesters available for this course
@@ -691,9 +682,7 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Subjects</h3>
-                  {subjectsLoading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
-                  )}
+                  {subjectsLoading && <InlineSpinner />}
                 </div>
                 <div className="flex items-center gap-2">
                   {isAdmin && (subjectsPagination?.total ?? subjects.length) > 0 && selectedSemesterId && (
@@ -771,9 +760,7 @@ export function CoursesTab() {
               </div>
 
               {subjectsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white" />
-                </div>
+                <LoadingSpinner size="lg" centered withPadding />
               ) : subjects.length === 0 && !subjectSearchQuery ? (
                 <div className="text-center py-12">
                   <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
@@ -834,11 +821,6 @@ export function CoursesTab() {
                                 <Badge variant="outline" className="text-xs">
                                   {subject.code}
                                 </Badge>
-                                {subject.credits && (
-                                  <span className="ml-2 text-xs">
-                                    {subject.credits} credits
-                                  </span>
-                                )}
                               </CardDescription>
                             </div>
                             <div className="flex items-center gap-2">

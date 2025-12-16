@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Clock,
   FileText,
-  Loader2,
   RefreshCw,
   AlertCircle,
   CheckCircle2,
@@ -14,6 +13,7 @@ import {
   GraduationCap,
   Hash,
 } from 'lucide-react';
+import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,9 +76,8 @@ export function SyllabusTab({ subjectId }: SyllabusTabProps) {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[350px] text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin mb-3" />
-        <p>Loading syllabus...</p>
+      <div className="flex flex-col items-center justify-center h-[350px]">
+        <LoadingSpinner size="lg" text="Loading syllabus..." centered />
       </div>
     );
   }
@@ -105,7 +104,7 @@ export function SyllabusTab({ subjectId }: SyllabusTabProps) {
                 disabled={extractMutation.isPending}
               >
                 {extractMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <InlineSpinner className="mr-2" />
                 ) : (
                   <FileText className="h-4 w-4 mr-2" />
                 )}
@@ -124,7 +123,7 @@ export function SyllabusTab({ subjectId }: SyllabusTabProps) {
     return (
       <div className="flex flex-col items-center justify-center h-[350px] text-center">
         <div className="relative">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <LoadingSpinner size="xl" className="text-primary" />
           <div className={`absolute -top-1 -right-1 h-3 w-3 rounded-full ${statusConfig.color}`} />
         </div>
         <p className="font-medium mt-4">{statusConfig.label}</p>
@@ -154,7 +153,7 @@ export function SyllabusTab({ subjectId }: SyllabusTabProps) {
           disabled={retryMutation.isPending}
         >
           {retryMutation.isPending ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            <InlineSpinner className="mr-2" />
           ) : (
             <RefreshCw className="h-4 w-4 mr-2" />
           )}

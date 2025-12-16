@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 
 // Routes where sidebar should be shown (authenticated routes)
-const SIDEBAR_ROUTES = ['/dashboard', '/chat', '/history', '/courses', '/settings'];
+const SIDEBAR_ROUTES = ['/dashboard', '/chat', '/history', '/courses', '/notifications', '/settings'];
 
 export function ConditionalSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

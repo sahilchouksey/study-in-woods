@@ -11,6 +11,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { ArrowLeft, XCircle } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -176,7 +177,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-neutral-900 dark:border-neutral-100" />
+          <LoadingSpinner size="xl" />
         </div>
       }
     >

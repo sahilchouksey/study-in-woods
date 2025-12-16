@@ -1,7 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle, XCircle, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { CheckCircle, XCircle, Wifi, WifiOff } from 'lucide-react';
+import { InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ApiProvider, ApiKeyTestResult } from '@/types/api-keys';
@@ -45,7 +46,7 @@ export function ConnectionTester({
 
   const getStatusIcon = () => {
     if (isLoading) {
-      return <Loader2 className="h-4 w-4 animate-spin" />;
+      return <InlineSpinner />;
     }
     
     if (!lastResult) {

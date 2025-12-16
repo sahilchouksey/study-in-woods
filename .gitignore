@@ -63,6 +63,16 @@ next-env.d.ts
 apps/api/bin/
 apps/api/tmp/
 apps/api/vendor/
+
+# Python (OCR Service - apps/ocr-service)
+apps/ocr-service/venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
 *.exe
 *.exe~
 *.dll
