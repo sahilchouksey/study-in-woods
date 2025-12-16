@@ -1,0 +1,46 @@
+{
+    "object-store": "https://ds4sd-public-artifacts.s3.eu-de.cloud-object-storage.appdomain.cloud",
+
+    "data":
+    {
+	"bucket": "ds4sd-public-artifacts",
+	"prefix": "deepsearch_glm/v1/data",
+
+	"text": {
+	    "arxiv-abstracts": ["text/arxiv-abstracts.jsonl",
+				"data/text/arxiv-abstracts.jsonl"],
+
+	    "arxiv-abstracts-2020": ["text/arxiv-abstracts-2020.jsonl",
+				     "data/text/arxiv-abstracts-2020.jsonl"],
+
+	    "arxiv-abstracts-2020-txt": ["text/arxiv-abstracts-2020.txt",
+					 "data/text/arxiv-abstracts-2020.txt"],
+
+	    "arxiv-abstracts-2020-Jan": ["text/arxiv-abstracts-2020-Jan.jsonl",
+					 "data/text/arxiv-abstracts-2020-Jan.jsonl"],
+
+	    "arxiv-abstracts-2020-Jan-txt": ["text/arxiv-abstracts-2020-Jan.txt",
+					     "data/text/arxiv-abstracts-2020-Jan.txt"]	    
+	},
+
+	"crf": {
+	    "materials": ["nlp/nlp.crf.materials.jsonl",
+			  "data/nlp/crf.materials.jsonl"]
+	},
+	
+	"fst": {
+	    "names-classifier-small": ["nlp/nlp.fst.names-classifier.small.jsonl",
+				       "data/nlp/nlp.fst.names-classifier.small.jsonl"]
+	}
+    },
+
+    "services":
+    {
+	"anystyle":
+	{
+	    "token": "9fEhg+39p0J60Bs+WTTwTMcqqTFAUYoyjLlp8nEys4wnfgACn0IoqravX8Exsx/+2q1p4sU7636DR22xUeneLg==",
+	    "session": "9GFKMlFoJwbMV6W1Z37YFsG9nbXLqmGicXVzL4r5mn4SqTLcf0revMMFvAjfxcjqR8YBnj2M0fgTWBW12kK1KMFcOgZvZnwQv5lZZ3PQgPP9sait9WgoDR72BHqRpbPe0c1B6%2BNFtYE7aqpugLsTupqBuj%2B%2Fef0tbyd84wC61GkVA9Vtz2nSNC90hDliCre%2BZ2gQUc6runu6yt1M4xa0F8kM4Cxt2pN92XB8hRusqGNfsaCsw5JKdU%2FcDFtdh%2BYDSEBz6DjQFfJq81%2FTI%2F4ulku7mlv73vOC7ew%3D--o%2B2gjgNJqgCjYf4V--3mSN%2FKmNt68WTJsxBh9Bww%3D%3D",
+	    "agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"
+	}
+    }
+}

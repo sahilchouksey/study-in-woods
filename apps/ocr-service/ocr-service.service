@@ -1,0 +1,59 @@
+[Unit]
+Description=Docling OCR Service
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/ocr-service
+
+# Environment
+Environment="PATH=/opt/ocr-service/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# Load environment from file
+EnvironmentFile=/opt/ocr-service/.env
+
+# Memory limits (800MB max)
+MemoryMax=800M
+MemoryHigh=700M
+
+# CPU quota (max 50% of CPU)
+CPUQuota=50%
+
+# Process limits
+LimitNOFILE=4096
+
+# Start command - Gunicorn with limited workers
+ExecStart=/opt/ocr-service/venv/bin/gunicorn \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 1 \
+    --threads 2 \
+    --worker-connections 100 \
+    --max-requests 500 \
+    --max-requests-jitter 50 \
+    --timeout 120 \
+    --graceful-timeout 30 \
+    --keep-alive 5 \
+    --bind 127.0.0.1:8080 \
+    --access-logfile /var/log/ocr-service/access.log \
+    --error-logfile /var/log/ocr-service/error.log \
+    --log-level info \
+    main:app
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/ocr-service /tmp
+
+[Install]
+WantedBy=multi-user.target

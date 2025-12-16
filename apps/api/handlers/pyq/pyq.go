@@ -13,15 +13,17 @@ import (
 
 // PYQHandler handles PYQ-related requests
 type PYQHandler struct {
-	db         *gorm.DB
-	pyqService *services.PYQService
+	db                *gorm.DB
+	pyqService        *services.PYQService
+	pyqCrawlerService *services.PYQCrawlerService
 }
 
 // NewPYQHandler creates a new PYQ handler
 func NewPYQHandler(db *gorm.DB, pyqService *services.PYQService) *PYQHandler {
 	return &PYQHandler{
-		db:         db,
-		pyqService: pyqService,
+		db:                db,
+		pyqService:        pyqService,
+		pyqCrawlerService: services.NewPYQCrawlerService(),
 	}
 }
 
@@ -366,5 +368,199 @@ func (h *PYQHandler) SearchQuestions(c *fiber.Ctx) error {
 		"query":   query,
 		"count":   len(questionsResp),
 		"results": questionsResp,
+	})
+}
+
+// SearchAvailablePYQs handles GET /api/v1/subjects/:subject_id/pyqs/search-available
+// Searches for available PYQ papers from external sources (crawlers)
+// Query params:
+//   - search: optional fuzzy search query to filter by name within the subject code group
+//   - course: course name (default: MCA)
+//   - year: filter by year
+//   - month: filter by month
+//   - limit: max results (default: 50)
+func (h *PYQHandler) SearchAvailablePYQs(c *fiber.Ctx) error {
+	subjectID := c.Params("subject_id")
+
+	// Parse subject ID
+	subID, err := strconv.ParseUint(subjectID, 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "Invalid subject ID")
+	}
+
+	// Get subject details
+	var subject model.Subject
+	if err := h.db.First(&subject, subID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return response.NotFound(c, "Subject not found")
+		}
+		return response.InternalServerError(c, "Failed to fetch subject")
+	}
+
+	// Get optional search query - if provided, use it for additional filtering
+	// Otherwise use the subject name for keyword matching
+	searchQuery := c.Query("search", "")
+
+	// Build search request
+	// SubjectCode is used for code-based matching
+	// SubjectName is used for keyword-based fuzzy matching (PRIMARY filter)
+	subjectNameForSearch := subject.Name
+	if searchQuery != "" {
+		// If user provided a search query, use that instead
+		subjectNameForSearch = searchQuery
+	}
+
+	searchReq := services.SearchPapersRequest{
+		SubjectCode: subject.Code,
+		SubjectName: subjectNameForSearch,     // Use subject name for keyword matching
+		Course:      c.Query("course", "MCA"), // Default to MCA, can be made dynamic
+		Semester:    c.Query("semester", ""),
+		Year:        0,
+		Month:       c.Query("month", ""),
+		SourceName:  c.Query("source", ""),
+		Limit:       50,
+	}
+
+	// Parse year if provided
+	if yearStr := c.Query("year"); yearStr != "" {
+		if year, err := strconv.Atoi(yearStr); err == nil {
+			searchReq.Year = year
+		}
+	}
+
+	// Parse limit if provided
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if limit, err := strconv.Atoi(limitStr); err == nil && limit > 0 {
+			searchReq.Limit = limit
+		}
+	}
+
+	// Search for papers using crawler service
+	searchResult, err := h.pyqCrawlerService.SearchPapers(c.Context(), searchReq)
+	if err != nil {
+		return response.InternalServerError(c, "Failed to search PYQ papers: "+err.Error())
+	}
+
+	// Get already ingested papers to filter them out
+	ingestedPapers, _ := h.pyqService.GetPYQsBySubject(c.Context(), uint(subID))
+	ingestedKeys := make(map[string]bool)
+	for _, paper := range ingestedPapers {
+		key := strconv.Itoa(paper.Year) + "-" + paper.Month
+		ingestedKeys[key] = true
+	}
+
+	// Filter out already ingested papers from both matched and unmatched
+	var availableMatched []services.PYQCrawlerPaperResult
+	for _, paper := range searchResult.MatchedPapers {
+		key := strconv.Itoa(paper.Year) + "-" + paper.Month
+		if !ingestedKeys[key] {
+			availableMatched = append(availableMatched, paper)
+		}
+	}
+
+	var availableUnmatched []services.PYQCrawlerPaperResult
+	for _, paper := range searchResult.UnmatchedPapers {
+		key := strconv.Itoa(paper.Year) + "-" + paper.Month
+		if !ingestedKeys[key] {
+			availableUnmatched = append(availableUnmatched, paper)
+		}
+	}
+
+	return response.Success(c, fiber.Map{
+		"subject_id":       subID,
+		"subject_name":     subject.Name,
+		"subject_code":     subject.Code,
+		"matched_papers":   availableMatched,
+		"unmatched_papers": availableUnmatched,
+		"matched_count":    len(availableMatched),
+		"unmatched_count":  len(availableUnmatched),
+		"total_available":  len(availableMatched) + len(availableUnmatched),
+		"ingested_count":   len(ingestedPapers),
+	})
+}
+
+// GetCrawlerSources handles GET /api/v1/pyqs/crawler-sources
+// Returns available crawler sources
+func (h *PYQHandler) GetCrawlerSources(c *fiber.Ctx) error {
+	sources := h.pyqCrawlerService.GetAvailableSources()
+	return response.Success(c, fiber.Map{
+		"sources": sources,
+		"count":   len(sources),
+	})
+}
+
+// IngestCrawledPYQ handles POST /api/v1/subjects/:subject_id/pyqs/ingest
+// Downloads and ingests a PYQ paper from a crawler source
+func (h *PYQHandler) IngestCrawledPYQ(c *fiber.Ctx) error {
+	subjectID := c.Params("subject_id")
+
+	// Get user from context
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+
+	// Parse subject ID
+	subID, err := strconv.ParseUint(subjectID, 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "Invalid subject ID")
+	}
+
+	// Get subject details
+	var subject model.Subject
+	if err := h.db.First(&subject, subID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return response.NotFound(c, "Subject not found")
+		}
+		return response.InternalServerError(c, "Failed to fetch subject")
+	}
+
+	// Parse request body
+	type IngestRequest struct {
+		PDFURL     string `json:"pdf_url"`
+		Title      string `json:"title"`
+		Year       int    `json:"year"`
+		Month      string `json:"month"`
+		ExamType   string `json:"exam_type"`
+		SourceName string `json:"source_name"`
+	}
+
+	var req IngestRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.BadRequest(c, "Invalid request body")
+	}
+
+	// Validate required fields
+	if req.PDFURL == "" || req.Title == "" {
+		return response.BadRequest(c, "PDF URL and title are required")
+	}
+
+	// Check if paper with same year and month already exists
+	existingPapers, _ := h.pyqService.GetPYQsBySubject(c.Context(), uint(subID))
+	for _, paper := range existingPapers {
+		if paper.Year == req.Year && paper.Month == req.Month {
+			return response.BadRequest(c, "A PYQ paper for this year and month already exists")
+		}
+	}
+
+	// This will trigger document upload and PYQ extraction
+	// The actual implementation would:
+	// 1. Download PDF from URL
+	// 2. Upload to storage (S3/Spaces)
+	// 3. Create document record
+	// 4. Trigger PYQ extraction
+
+	// For now, return a success message indicating the process
+	return response.Success(c, fiber.Map{
+		"message": "PYQ ingestion initiated",
+		"status":  "pending",
+		"details": fiber.Map{
+			"pdf_url":    req.PDFURL,
+			"title":      req.Title,
+			"year":       req.Year,
+			"month":      req.Month,
+			"subject_id": subID,
+		},
+		"note": "Implementation pending: Document download, upload to storage, and extraction will be completed in next phase",
 	})
 }

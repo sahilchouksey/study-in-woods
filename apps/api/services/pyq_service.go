@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -10,22 +9,26 @@ import (
 
 	"github.com/sahilchouksey/go-init-setup/model"
 	"github.com/sahilchouksey/go-init-setup/services/digitalocean"
+	"github.com/sahilchouksey/go-init-setup/utils"
 	"gorm.io/gorm"
 )
 
 // PYQService handles PYQ extraction and management
 type PYQService struct {
-	db              *gorm.DB
-	inferenceClient *digitalocean.InferenceClient
-	spacesClient    *digitalocean.SpacesClient
-	enableAI        bool
-	enableSpaces    bool
+	db               *gorm.DB
+	inferenceClient  *digitalocean.InferenceClient
+	spacesClient     *digitalocean.SpacesClient
+	pdfExtractor     *PDFExtractor
+	chunkedExtractor *ChunkedPYQExtractor
+	enableAI         bool
+	enableSpaces     bool
 }
 
 // NewPYQService creates a new PYQ service
 func NewPYQService(db *gorm.DB) *PYQService {
 	service := &PYQService{
 		db:           db,
+		pdfExtractor: NewPDFExtractor(),
 		enableAI:     false,
 		enableSpaces: false,
 	}
@@ -48,6 +51,17 @@ func NewPYQService(db *gorm.DB) *PYQService {
 	} else {
 		service.spacesClient = spacesClient
 		service.enableSpaces = true
+	}
+
+	// Initialize chunked extractor for parallel processing
+	if service.enableAI && service.enableSpaces {
+		service.chunkedExtractor = NewChunkedPYQExtractor(
+			db,
+			service.inferenceClient,
+			service.spacesClient,
+			service.pdfExtractor,
+			DefaultChunkedPYQExtractorConfig(),
+		)
 	}
 
 	return service
@@ -188,29 +202,93 @@ var pyqExtractionSchema = map[string]any{
 // pyqExtractionPrompt is the system prompt for LLM extraction
 const pyqExtractionPrompt = `You are an expert at extracting structured information from academic examination question papers (Previous Year Questions / PYQs).
 
-Your task is to analyze the provided question paper and extract:
+CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no explanations, no code blocks, no text before or after the JSON. Start your response with { and end with }.
 
-1. **Paper Information**: Year, month, exam type, total marks, duration, and general instructions
-2. **Questions**: Each question with its number, section, text, marks, and whether it's compulsory
-3. **Choices/Alternatives**: Many papers have questions with OR choices where students can choose one. Identify these and structure them properly.
+IMPORTANT - UNDERSTAND THE EXAM PAPER STRUCTURE:
+Most university exam papers have this structure:
+- Questions are numbered 1, 2, 3, 4, etc.
+- Each question typically has SUB-PARTS labeled (a), (b), (c) - these are SEPARATE questions that students must answer
+- Sometimes a question has "OR" - meaning student chooses ONE option from alternatives
 
-Important guidelines for handling choices:
-- If a question says "Answer any ONE" or has "OR" between parts, set has_choices=true
-- Put alternative questions in the "choices" array with their labels (a, b, OR, etc.)
-- The choice_group should be the main question number to link alternatives
-- Example: "Q1. (a) Explain X OR (b) Explain Y" should have has_choices=true with two choices
+EXTRACTION RULES:
+1. SUB-PARTS (a), (b) = Extract as SEPARATE questions with question_number "1a", "1b", "2a", "2b", etc.
+   - has_choices = false
+   - Each sub-part is its own question entry
+   
+2. OR CHOICES = When you see "OR" between options, extract as ONE question with choices array
+   - has_choices = true
+   - Put the alternatives in the choices array
+   - Example: "Write short notes on any three: (a) Topic1 OR (b) Topic2 OR (c) Topic3"
 
-Question numbering guidelines:
-- Preserve the original numbering scheme (1, 2, 3 or 1a, 1b, etc.)
-- If there are sections (Section A, Part I), include section_name
+Your task is to analyze the provided question paper and extract information into this exact JSON structure:
 
-Topic identification:
-- Try to identify which unit/topic each question belongs to
-- Add relevant keywords for later searchability
+{
+  "year": 2024,
+  "month": "December",
+  "exam_type": "End Semester Examination",
+  "total_marks": 70,
+  "duration": "3 Hours",
+  "instructions": "Attempt any five questions. All questions carry equal marks.",
+  "questions": [
+    {
+      "question_number": "1a",
+      "section_name": "Section A",
+      "question_text": "Explain the KDD process with example.",
+      "marks": 7,
+      "is_compulsory": false,
+      "has_choices": false,
+      "unit_number": 1,
+      "topic": "KDD Process",
+      "keywords": ["KDD", "knowledge discovery"],
+      "choices": []
+    },
+    {
+      "question_number": "1b",
+      "section_name": "Section A",
+      "question_text": "What are the applications of data mining?",
+      "marks": 7,
+      "is_compulsory": false,
+      "has_choices": false,
+      "unit_number": 1,
+      "topic": "Data Mining Applications",
+      "keywords": ["applications", "data mining"],
+      "choices": []
+    },
+    {
+      "question_number": "8",
+      "section_name": "",
+      "question_text": "Write short notes on any three of the following:",
+      "marks": 14,
+      "is_compulsory": false,
+      "has_choices": true,
+      "unit_number": 0,
+      "topic": "Short Notes",
+      "keywords": ["short notes"],
+      "choices": [
+        {"choice_label": "a", "choice_text": "Constraint Based Association Mining"},
+        {"choice_label": "b", "choice_text": "Outlier Analysis"},
+        {"choice_label": "c", "choice_text": "Gini Index"},
+        {"choice_label": "d", "choice_text": "Data Integration"},
+        {"choice_label": "e", "choice_text": "OLAP, MOLAP, HOLAP"}
+      ]
+    }
+  ]
+}
 
-Be thorough - extract ALL questions including sub-parts. This data will be used for student practice.`
+Guidelines:
+1. Extract year, month from the paper header (e.g., "December 2024" -> year: 2024, month: "December")
+2. ALWAYS split sub-parts (a), (b) into separate question entries with numbers like "1a", "1b", "2a", "2b"
+3. Only use has_choices=true and choices array when there's "OR" or "any X of the following"
+4. Include section_name if paper has sections (Section A, Part I, etc.)
+5. Try to identify unit_number and topic for each question
+6. Add relevant keywords for searchability
+7. Extract ALL questions - don't miss any sub-parts!
+
+REMEMBER: Output ONLY the JSON object. No markdown formatting. No explanatory text. Start with { end with }.`
 
 // ExtractPYQFromDocument extracts PYQ data from a document
+// Uses OCR text if available (preferred), otherwise falls back to PDF text extraction
+// Uses chunked parallel extraction for PDFs with more than 10 pages (when no OCR text)
 func (s *PYQService) ExtractPYQFromDocument(ctx context.Context, documentID uint) (*model.PYQPaper, error) {
 	if !s.enableAI {
 		return nil, fmt.Errorf("AI extraction is not enabled - DO_INFERENCE_API_KEY not configured")
@@ -227,31 +305,87 @@ func (s *PYQService) ExtractPYQFromDocument(ctx context.Context, documentID uint
 		return nil, fmt.Errorf("document is not a PYQ type")
 	}
 
-	// 3. Create new PYQ paper record with processing status
-	paper := &model.PYQPaper{
-		SubjectID:        document.SubjectID,
-		DocumentID:       documentID,
-		ExtractionStatus: model.PYQExtractionProcessing,
-	}
-	if err := s.db.Create(paper).Error; err != nil {
-		return nil, fmt.Errorf("failed to create PYQ paper record: %w", err)
+	// 3. Verify document has a subject (PYQs must be associated with a subject)
+	if document.SubjectID == nil || *document.SubjectID == 0 {
+		return nil, fmt.Errorf("PYQ document must be associated with a subject")
 	}
 
-	// 4. Extract text from document
-	documentText, err := s.getDocumentText(ctx, &document)
-	if err != nil {
-		s.updatePYQError(paper, err.Error())
-		return paper, fmt.Errorf("failed to get document text: %w", err)
+	// 4. Check if there's an existing PYQ paper record (created by batch ingest)
+	var paper *model.PYQPaper
+	var existingPaper model.PYQPaper
+	if err := s.db.Where("document_id = ?", documentID).First(&existingPaper).Error; err == nil {
+		// Use existing paper record
+		paper = &existingPaper
+		paper.ExtractionStatus = model.PYQExtractionProcessing
+		s.db.Save(paper)
+		log.Printf("PYQService: Using existing PYQ paper record %d for document %d", paper.ID, documentID)
+	} else {
+		// Create new PYQ paper record with processing status
+		paper = &model.PYQPaper{
+			SubjectID:        *document.SubjectID,
+			DocumentID:       documentID,
+			ExtractionStatus: model.PYQExtractionProcessing,
+		}
+		if err := s.db.Create(paper).Error; err != nil {
+			return nil, fmt.Errorf("failed to create PYQ paper record: %w", err)
+		}
 	}
 
-	// 5. Call LLM for extraction
+	// 5. Check if we have OCR text available (preferred - works for scanned PDFs)
+	var documentText string
+	if document.OCRText != "" {
+		log.Printf("PYQService: Using OCR text for document %d (%d chars)", documentID, len(document.OCRText))
+		documentText = document.OCRText
+	} else {
+		// 6. No OCR text - fall back to PDF text extraction
+		log.Printf("PYQService: No OCR text available, falling back to PDF extraction for document %d", documentID)
+
+		if !s.enableSpaces || document.SpacesKey == "" || document.SpacesKey == "disabled" {
+			s.updatePYQError(paper, "document storage not available")
+			return paper, fmt.Errorf("document storage not available")
+		}
+
+		pdfContent, err := s.spacesClient.DownloadFile(ctx, document.SpacesKey)
+		if err != nil {
+			s.updatePYQError(paper, err.Error())
+			return paper, fmt.Errorf("failed to download document: %w", err)
+		}
+
+		// Check page count to decide extraction method
+		pageCount, err := s.pdfExtractor.GetPageCount(pdfContent)
+		if err != nil {
+			log.Printf("Warning: Could not get page count, using chunked extraction: %v", err)
+			pageCount = 100 // Assume large PDF, use chunked
+		}
+
+		// Use chunked extraction for PDFs with more than 10 pages
+		if pageCount > 10 && s.chunkedExtractor != nil {
+			log.Printf("PYQService: Using chunked extraction for %d page PDF", pageCount)
+			if err := s.chunkedExtractor.ExtractPYQChunked(ctx, paper, pdfContent); err != nil {
+				s.updatePYQError(paper, err.Error())
+				return paper, fmt.Errorf("chunked extraction failed: %w", err)
+			}
+			return paper, nil
+		}
+
+		// For smaller PDFs, use single-pass extraction
+		log.Printf("PYQService: Using single-pass PDF extraction for %d page PDF", pageCount)
+		documentText, err = s.pdfExtractor.ExtractText(pdfContent)
+		if err != nil {
+			s.updatePYQError(paper, err.Error())
+			return paper, fmt.Errorf("failed to extract text: %w", err)
+		}
+	}
+
+	// 7. Call LLM for structured question extraction
+	log.Printf("PYQService: Calling LLM to extract questions from %d chars of text", len(documentText))
 	extractedData, rawResponse, err := s.extractWithLLM(ctx, documentText)
 	if err != nil {
 		s.updatePYQError(paper, err.Error())
 		return paper, fmt.Errorf("failed to extract PYQ data: %w", err)
 	}
 
-	// 6. Save extracted data to database
+	// 8. Save extracted data to database
 	if err := s.savePYQData(paper, extractedData, rawResponse); err != nil {
 		s.updatePYQError(paper, err.Error())
 		return paper, fmt.Errorf("failed to save PYQ data: %w", err)
@@ -280,24 +414,13 @@ func (s *PYQService) getDocumentText(ctx context.Context, document *model.Docume
 	return string(fileContent), nil
 }
 
-// extractTextFromPDF extracts text from PDF content
+// extractTextFromPDF extracts text from PDF content using ledongthuc/pdf
 func (s *PYQService) extractTextFromPDF(content []byte, filename string) (string, error) {
-	text := string(content)
-
-	if len(text) > 0 {
-		var cleanText strings.Builder
-		for _, r := range text {
-			if r >= 32 && r < 127 || r == '\n' || r == '\t' {
-				cleanText.WriteRune(r)
-			}
-		}
-		extracted := cleanText.String()
-		if len(extracted) > 100 {
-			return extracted, nil
-		}
+	text, err := s.pdfExtractor.ExtractText(content)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract text from '%s': %w", filename, err)
 	}
-
-	return "", fmt.Errorf("unable to extract text from PDF '%s'. Consider uploading a text-based document or ensuring the PDF contains selectable text", filename)
+	return text, nil
 }
 
 // extractWithLLM calls the LLM to extract PYQ data using structured outputs
@@ -319,7 +442,7 @@ func (s *PYQService) extractWithLLM(ctx context.Context, documentText string) (*
 		"Structured extraction of previous year question paper with questions and choices",
 		pyqExtractionSchema,
 		digitalocean.WithInferenceMaxTokens(8192),
-		digitalocean.WithInferenceTemperature(0.1),
+		digitalocean.WithInferenceTemperature(0), // Deterministic output
 	)
 	if err != nil {
 		log.Printf("Structured output failed, falling back to JSONCompletion: %v", err)
@@ -327,7 +450,11 @@ func (s *PYQService) extractWithLLM(ctx context.Context, documentText string) (*
 	}
 
 	var result PYQExtractionResult
-	if err := json.Unmarshal([]byte(response), &result); err != nil {
+	if err := utils.ExtractJSONTo(response, &result); err != nil {
+		log.Printf("Failed to extract JSON from response (length=%d): %v", len(response), err)
+		if len(response) > 500 {
+			log.Printf("Response preview: %s...", response[:500])
+		}
 		return nil, response, fmt.Errorf("failed to parse LLM response as JSON: %w", err)
 	}
 
@@ -341,40 +468,71 @@ func (s *PYQService) extractWithLLMFallback(ctx context.Context, documentText st
 		documentText = documentText[:maxChars] + "\n\n[Document truncated due to length]"
 	}
 
-	fallbackPrompt := pyqExtractionPrompt + `
+	fallbackPrompt := `You are a JSON extraction assistant. You MUST output ONLY valid JSON with no other text.
 
-Respond with valid JSON only matching this structure:
+IMPORTANT STRUCTURE:
+- Sub-parts (a), (b) = Extract as SEPARATE questions with numbers "1a", "1b", "2a", "2b"
+- OR choices = ONE question with has_choices=true and choices array
+
+Extract question paper information into this EXACT JSON structure:
 {
-  "year": number,
-  "month": "string",
-  "exam_type": "string",
-  "total_marks": number,
-  "duration": "string",
-  "instructions": "string",
-  "questions": [...]
-}`
+  "year": 2024,
+  "month": "December",
+  "exam_type": "End Semester",
+  "total_marks": 70,
+  "duration": "3 Hours",
+  "instructions": "General instructions here",
+  "questions": [
+    {
+      "question_number": "1a",
+      "section_name": "",
+      "question_text": "First sub-part question text",
+      "marks": 7,
+      "is_compulsory": false,
+      "has_choices": false,
+      "unit_number": 1,
+      "topic": "Topic name",
+      "keywords": ["keyword1"],
+      "choices": []
+    },
+    {
+      "question_number": "1b",
+      "section_name": "",
+      "question_text": "Second sub-part question text",
+      "marks": 7,
+      "is_compulsory": false,
+      "has_choices": false,
+      "unit_number": 1,
+      "topic": "Topic name",
+      "keywords": ["keyword1"],
+      "choices": []
+    }
+  ]
+}
 
-	userPrompt := fmt.Sprintf("Extract the question paper information from the following document:\n\n%s", documentText)
+RULES:
+1. Output ONLY JSON - no markdown, no code blocks, no explanations
+2. Start response with { and end with }
+3. Extract ALL questions - split (a), (b) sub-parts into separate entries like "1a", "1b"
+4. Only use has_choices=true when there's "OR" between options, fill choices array with:
+   {"choice_label": "a", "choice_text": "Choice text here"}`
+
+	userPrompt := fmt.Sprintf("Extract as JSON:\n\n%s", documentText)
 
 	response, err := s.inferenceClient.JSONCompletion(
 		ctx,
 		fallbackPrompt,
 		userPrompt,
 		digitalocean.WithInferenceMaxTokens(8192),
-		digitalocean.WithInferenceTemperature(0.1),
+		digitalocean.WithInferenceTemperature(0), // Deterministic output
 	)
 	if err != nil {
 		return nil, "", fmt.Errorf("LLM extraction failed: %w", err)
 	}
 
 	var result PYQExtractionResult
-	cleanResponse := strings.TrimSpace(response)
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```json")
-	cleanResponse = strings.TrimPrefix(cleanResponse, "```")
-	cleanResponse = strings.TrimSuffix(cleanResponse, "```")
-	cleanResponse = strings.TrimSpace(cleanResponse)
-
-	if err := json.Unmarshal([]byte(cleanResponse), &result); err != nil {
+	if err := utils.ExtractJSONTo(response, &result); err != nil {
+		log.Printf("Fallback: Failed to extract JSON from response (length=%d): %v", len(response), err)
 		return nil, response, fmt.Errorf("failed to parse LLM response as JSON: %w", err)
 	}
 

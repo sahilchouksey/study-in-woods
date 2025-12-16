@@ -115,3 +115,66 @@ export function useDeletePYQ() {
     },
   });
 }
+
+// ============= CRAWLER Queries =============
+
+/**
+ * Hook to search available PYQs from crawlers
+ * Note: This is disabled by default and must be manually triggered
+ */
+export function useSearchAvailablePYQs(
+  subjectId: string | null,
+  filters?: {
+    course?: string;
+    semester?: number;
+    year?: number;
+    month?: string;
+    source?: string;
+    limit?: number;
+  },
+  enabled: boolean = false
+) {
+  return useQuery({
+    queryKey: ['pyqs', 'search-available', subjectId, filters],
+    queryFn: () => pyqService.searchAvailablePYQs(subjectId!, filters),
+    enabled: enabled && !!subjectId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+  });
+}
+
+/**
+ * Hook to get available crawler sources
+ */
+export function useCrawlerSources() {
+  return useQuery({
+    queryKey: ['pyqs', 'crawler-sources'],
+    queryFn: () => pyqService.getCrawlerSources(),
+    staleTime: 10 * 60 * 1000, // 10 minutes (sources rarely change)
+  });
+}
+
+// ============= CRAWLER Mutations =============
+
+/**
+ * Hook to ingest a crawled PYQ paper
+ */
+export function useIngestPYQ() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ 
+      subjectId, 
+      data 
+    }: { 
+      subjectId: string; 
+      data: Parameters<typeof pyqService.ingestCrawledPYQ>[1] 
+    }) => pyqService.ingestCrawledPYQ(subjectId, data),
+    onSuccess: (_, variables) => {
+      // Invalidate PYQ queries for this subject
+      queryClient.invalidateQueries({ queryKey: ['pyqs', 'subject', variables.subjectId] });
+      // Invalidate search-available to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['pyqs', 'search-available', variables.subjectId] });
+    },
+  });
+}

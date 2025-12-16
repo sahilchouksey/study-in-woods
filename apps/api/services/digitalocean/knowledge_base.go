@@ -68,12 +68,47 @@ type DataSource struct {
 }
 
 // CreateDataSourceRequest represents a request to create a data source
+// According to DO API, must contain exactly ONE of: spaces_data_source, web_crawler_data_source, aws_data_source
 type CreateDataSourceRequest struct {
-	Name string `json:"name"`
-	Type string `json:"type"` // "file"
+	KnowledgeBaseUUID    string                     `json:"knowledge_base_uuid"`
+	SpacesDataSource     *SpacesDataSourceInput     `json:"spaces_data_source,omitempty"`
+	WebCrawlerDataSource *WebCrawlerDataSourceInput `json:"web_crawler_data_source,omitempty"`
 }
 
-// PresignedUploadURL represents a presigned URL for file upload
+// WebCrawlerDataSourceInput represents a web crawler data source configuration
+type WebCrawlerDataSourceInput struct {
+	BaseURL        string   `json:"base_url"`
+	CrawlingOption string   `json:"crawling_option,omitempty"` // SCOPED, FULL
+	EmbedMedia     bool     `json:"embed_media,omitempty"`
+	ExcludeTags    []string `json:"exclude_tags,omitempty"`
+}
+
+// FileUploadRequest represents a request to get presigned URLs for file upload
+type FileUploadRequest struct {
+	Files []FileUploadInfo `json:"files"`
+}
+
+// FileUploadInfo represents info about a file to upload
+type FileUploadInfo struct {
+	FileName string `json:"file_name"`
+	FileSize string `json:"file_size"` // Size in bytes as string
+}
+
+// FileUploadResponse represents the response from presigned URL request
+type FileUploadResponse struct {
+	RequestID string                   `json:"request_id"`
+	Uploads   []FilePresignedURLResult `json:"uploads"`
+}
+
+// FilePresignedURLResult represents a presigned URL for a single file
+type FilePresignedURLResult struct {
+	PresignedURL     string    `json:"presigned_url"`
+	ObjectKey        string    `json:"object_key"`
+	OriginalFileName string    `json:"original_file_name"`
+	ExpiresAt        time.Time `json:"expires_at"`
+}
+
+// PresignedUploadURL represents a presigned URL for file upload (legacy format)
 type PresignedUploadURL struct {
 	URL       string            `json:"url"`
 	Fields    map[string]string `json:"fields"`
@@ -195,19 +230,23 @@ func (c *Client) ListDataSources(ctx context.Context, kbUUID string, opts *ListO
 	return result.DataSources, pagination, nil
 }
 
-// GetDataSource retrieves a specific data source
-func (c *Client) GetDataSource(ctx context.Context, kbUUID, dsUUID string) (*DataSource, error) {
-	endpoint := fmt.Sprintf("/v2/gen-ai/knowledge_bases/%s/data_sources/%s", kbUUID, dsUUID)
-
-	var result struct {
-		DataSource DataSource `json:"data_source"`
-	}
-
-	if err := c.doRequest(ctx, "GET", endpoint, nil, &result); err != nil {
+// GetDataSource retrieves a specific data source by listing all and filtering
+// Note: The DO API doesn't support GET for a single data source, only LIST
+func (c *Client) GetDataSource(ctx context.Context, kbUUID, dsUUID string) (*KnowledgeBaseDataSource, error) {
+	// List all data sources and find the one we need
+	dataSources, err := c.ListKnowledgeBaseDataSources(ctx, kbUUID)
+	if err != nil {
 		return nil, err
 	}
 
-	return &result.DataSource, nil
+	for _, ds := range dataSources {
+		if ds.UUID == dsUUID {
+			dsCopy := ds // Create a copy to return a pointer
+			return &dsCopy, nil
+		}
+	}
+
+	return nil, fmt.Errorf("data source %s not found in knowledge base %s", dsUUID, kbUUID)
 }
 
 // CreateDataSource creates a new data source in a knowledge base
@@ -215,15 +254,15 @@ func (c *Client) CreateDataSource(ctx context.Context, kbUUID string, req Create
 	endpoint := fmt.Sprintf("/v2/gen-ai/knowledge_bases/%s/data_sources", kbUUID)
 
 	var result struct {
-		DataSource   DataSource         `json:"data_source"`
-		PresignedURL PresignedUploadURL `json:"presigned_url,omitempty"`
+		KnowledgeBaseDataSource DataSource         `json:"knowledge_base_data_source"`
+		PresignedURL            PresignedUploadURL `json:"presigned_url,omitempty"`
 	}
 
 	if err := c.doRequest(ctx, "POST", endpoint, req, &result); err != nil {
 		return nil, nil, err
 	}
 
-	return &result.DataSource, &result.PresignedURL, nil
+	return &result.KnowledgeBaseDataSource, &result.PresignedURL, nil
 }
 
 // DeleteDataSource deletes a data source from a knowledge base
@@ -246,6 +285,20 @@ type IndexingJob struct {
 	Status            string    `json:"status"` // INDEX_JOB_STATUS_PENDING, INDEX_JOB_STATUS_IN_PROGRESS, INDEX_JOB_STATUS_COMPLETED
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+// DataSourceIndexingJob represents the indexing job status for a specific data source
+// This is returned in the last_datasource_indexing_job field from the API
+type DataSourceIndexingJob struct {
+	DataSourceUUID    string `json:"data_source_uuid"`
+	TotalFileCount    string `json:"total_file_count"`
+	IndexedFileCount  string `json:"indexed_file_count"`
+	TotalBytes        string `json:"total_bytes"`
+	TotalBytesIndexed string `json:"total_bytes_indexed"`
+	StartedAt         string `json:"started_at"`
+	CompletedAt       string `json:"completed_at"`
+	IndexedItemCount  string `json:"indexed_item_count"`
+	Status            string `json:"status"` // DATA_SOURCE_STATUS_UPDATED, etc.
 }
 
 // StartIndexingJobRequest represents a request to start an indexing job
@@ -284,16 +337,24 @@ func (c *Client) GetIndexingJob(ctx context.Context, jobUUID string) (*IndexingJ
 	return &result.Job, nil
 }
 
-// ListKnowledgeBaseDataSources retrieves data sources for a knowledge base (API-compatible version)
+// KnowledgeBaseDataSource represents a data source in the knowledge base (full API schema)
 type KnowledgeBaseDataSource struct {
-	UUID             string `json:"uuid"`
-	BucketName       string `json:"bucket_name"`
-	Region           string `json:"region"`
-	SpacesDataSource struct {
+	UUID             string    `json:"uuid"`
+	BucketName       string    `json:"bucket_name,omitempty"` // Deprecated
+	Region           string    `json:"region,omitempty"`      // Deprecated
+	ItemPath         string    `json:"item_path,omitempty"`   // Deprecated
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+	SpacesDataSource *struct {
 		BucketName string `json:"bucket_name"`
 		ItemPath   string `json:"item_path"`
 		Region     string `json:"region"`
-	} `json:"spaces_data_source"`
+	} `json:"spaces_data_source,omitempty"`
+	WebCrawlerDataSource *struct {
+		BaseURL string `json:"base_url"`
+	} `json:"web_crawler_data_source,omitempty"`
+	LastIndexingJob           *IndexingJob           `json:"last_indexing_job,omitempty"`
+	LastDataSourceIndexingJob *DataSourceIndexingJob `json:"last_datasource_indexing_job,omitempty"`
 }
 
 func (c *Client) ListKnowledgeBaseDataSources(ctx context.Context, kbUUID string) ([]KnowledgeBaseDataSource, error) {

@@ -92,6 +92,79 @@ export interface PYQSearchResponse {
   results: PYQQuestion[];
 }
 
+// ============ CRAWLER INTERFACES ============
+
+/**
+ * Match confidence levels for PYQ papers
+ */
+export type MatchConfidence = 'exact' | 'partial' | 'none';
+
+/**
+ * Available PYQ paper from crawler
+ */
+export interface AvailablePYQPaper {
+  title: string;
+  source_url: string;
+  pdf_url: string;
+  file_type: string;
+  subject_code: string;
+  subject_name: string;
+  year: number;
+  month: string;
+  exam_type: string;
+  source_name: string;
+  /** Whether the subject code matches the current subject */
+  code_matched: boolean;
+  /** Match confidence: "exact", "partial", or "none" */
+  match_confidence: MatchConfidence;
+}
+
+/**
+ * Search available PYQs response (categorized)
+ */
+export interface SearchAvailablePYQsResponse {
+  subject_id: number;
+  subject_name: string;
+  subject_code: string;
+  /** Papers matching current subject code (prioritized) */
+  matched_papers: AvailablePYQPaper[];
+  /** Papers with different codes (older syllabus) */
+  unmatched_papers: AvailablePYQPaper[];
+  matched_count: number;
+  unmatched_count: number;
+  total_available: number;
+  ingested_count: number;
+}
+
+/**
+ * Ingest PYQ request
+ */
+export interface IngestPYQRequest {
+  pdf_url: string;
+  title: string;
+  year: number;
+  month: string;
+  exam_type?: string;
+  source_name: string;
+}
+
+/**
+ * Crawler source
+ */
+export interface CrawlerSource {
+  name: string;
+  display_name: string;
+  base_url: string;
+}
+
+/**
+ * Crawler sources response
+ */
+export interface CrawlerSourcesResponse {
+  sources: CrawlerSource[];
+  count: number;
+}
+
 /**
  * Status display configuration
  */
@@ -227,5 +300,61 @@ export const pyqService = {
       { params: { q: query } }
     );
     return response.data.data || { query, count: 0, results: [] };
+  },
+
+  // ============ CRAWLER FUNCTIONS ============
+
+  /**
+   * Search available PYQs from crawlers
+   */
+  async searchAvailablePYQs(
+    subjectId: string,
+    params?: {
+      course?: string;
+      semester?: number;
+      year?: number;
+      month?: string;
+      source?: string;
+      limit?: number;
+      /** Optional fuzzy search query to filter by name within results */
+      search?: string;
+    }
+  ): Promise<SearchAvailablePYQsResponse> {
+    const response = await apiClient.get<ApiResponse<SearchAvailablePYQsResponse>>(
+      `/api/v1/subjects/${subjectId}/pyqs/search-available`,
+      { params }
+    );
+    return response.data.data || {
+      subject_id: 0,
+      subject_name: '',
+      subject_code: '',
+      matched_papers: [],
+      unmatched_papers: [],
+      matched_count: 0,
+      unmatched_count: 0,
+      total_available: 0,
+      ingested_count: 0,
+    };
+  },
+
+  /**
+   * Ingest a crawled PYQ paper
+   */
+  async ingestCrawledPYQ(subjectId: string, data: IngestPYQRequest): Promise<{ message: string; status: string }> {
+    const response = await apiClient.post<ApiResponse<{ message: string; status: string }>>(
+      `/api/v1/subjects/${subjectId}/pyqs/ingest`,
+      data
+    );
+    return response.data.data || { message: 'Ingestion initiated', status: 'pending' };
+  },
+
+  /**
+   * Get available crawler sources
+   */
+  async getCrawlerSources(): Promise<CrawlerSourcesResponse> {
+    const response = await apiClient.get<ApiResponse<CrawlerSourcesResponse>>(
+      `/api/v1/pyqs/crawler-sources`
+    );
+    return response.data.data || { sources: [], count: 0 };
   },
 };

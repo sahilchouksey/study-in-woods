@@ -1,13 +1,15 @@
-.PHONY: help dev dev-docker stop build test test-integration clean db-migrate db-rollback docker-logs
+.PHONY: help dev dev-docker stop build test test-integration clean db-migrate db-rollback docker-logs ocr-dev ocr-install ocr-stop
 
 # Default target
 help:
 	@echo "Study in Woods - Backend v2 - Available Commands"
 	@echo "=================================================="
 	@echo "Development:"
-	@echo "  make dev              - Start development server with hot reload (local)"
+	@echo "  make dev              - Start API + OCR service with hot reload"
+	@echo "  make api-dev          - Start only API server (without OCR)"
+	@echo "  make ocr-dev          - Start only OCR service"
 	@echo "  make dev-docker       - Start all services with Docker Compose"
-	@echo "  make stop             - Stop all Docker services"
+	@echo "  make stop             - Stop all services"
 	@echo ""
 	@echo "Build:"
 	@echo "  make build            - Build production binary"
@@ -32,6 +34,11 @@ help:
 	@echo "  make docker-ps        - Show Docker container status"
 	@echo "  make docker-clean     - Clean Docker volumes and containers"
 	@echo ""
+	@echo "OCR Service:"
+	@echo "  make ocr-install      - Install OCR service dependencies"
+	@echo "  make ocr-dev          - Start OCR service only"
+	@echo "  make ocr-stop         - Stop OCR service"
+	@echo ""
 	@echo "Utilities:"
 	@echo "  make clean            - Clean build artifacts"
 	@echo "  make fmt              - Format Go code"
@@ -40,8 +47,35 @@ help:
 
 # Development
 dev:
-	@echo "Starting development server with hot reload..."
+	@echo "Starting API + OCR service..."
+	@make -j2 api-dev ocr-dev
+
+api-dev:
+	@echo "Starting API development server with hot reload..."
 	air -c .air.toml
+
+ocr-dev:
+	@echo "Starting OCR service..."
+	@lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+	@cd ../ocr-service && \
+		(test -d venv || python3 -m venv venv) && \
+		. venv/bin/activate && \
+		pip install -q -r requirements.txt && \
+		python main.py
+
+ocr-install:
+	@echo "Installing OCR service dependencies..."
+	@cd ../ocr-service && \
+		python3 -m venv venv && \
+		. venv/bin/activate && \
+		pip install -r requirements.txt
+	@echo "OCR service dependencies installed!"
+
+ocr-stop:
+	@echo "Stopping OCR service..."
+	@lsof -ti:8081 | xargs kill -9 2>/dev/null || true
+	@pkill -f "python main.py" || true
+	@echo "OCR service stopped"
 
 dev-docker:
 	@echo "Starting all services with Docker Compose..."
@@ -49,14 +83,17 @@ dev-docker:
 	@echo "Services started. Check status with: make docker-ps"
 
 stop:
-	@echo "Stopping all Docker services..."
+	@echo "Stopping all services..."
+	@make ocr-stop
 	docker-compose down
 
 # Build
 build:
 	@echo "Building production binary..."
+	@make ocr-install
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o bin/server .
 	@echo "Binary created: bin/server"
+	@echo "OCR service ready at: ../ocr-service/"
 
 build-docker:
 	@echo "Building Docker image..."

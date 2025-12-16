@@ -28,13 +28,14 @@ const (
 	IndexingStatusPartial    IndexingStatus = "partially_completed"
 )
 
-// Document represents an uploaded file associated with a subject
+// Document represents an uploaded file associated with a subject or semester
 type Document struct {
 	ID               uint           `gorm:"primaryKey" json:"id"`
 	CreatedAt        time.Time      `json:"created_at"`
 	UpdatedAt        time.Time      `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	SubjectID        uint           `gorm:"not null;index" json:"subject_id"`
+	SubjectID        *uint          `gorm:"index" json:"subject_id,omitempty"`  // Optional - for subject-specific documents
+	SemesterID       *uint          `gorm:"index" json:"semester_id,omitempty"` // Optional - for semester-level documents (e.g., syllabus PDFs)
 	Type             DocumentType   `gorm:"type:varchar(20);not null" json:"type"`
 	Filename         string         `gorm:"not null" json:"filename"`
 	OriginalURL      string         `gorm:"type:text" json:"original_url"`            // URL from where it was crawled (if applicable)
@@ -48,7 +49,12 @@ type Document struct {
 	PageCount        int            `gorm:"default:0" json:"page_count"` // Number of pages (for PDFs)
 	UploadedByUserID uint           `gorm:"index" json:"uploaded_by_user_id"`
 
+	// OCR fields (simple approach - just store the extracted text)
+	OCRText      string `gorm:"type:text" json:"ocr_text,omitempty"`               // Extracted text from OCR
+	OCRSpacesKey string `gorm:"type:varchar(500)" json:"ocr_spaces_key,omitempty"` // Spaces key for OCR text file (used for KB indexing)
+
 	// Relationships
-	Subject    Subject `gorm:"foreignKey:SubjectID;constraint:OnDelete:CASCADE" json:"subject,omitempty"`
-	UploadedBy User    `gorm:"foreignKey:UploadedByUserID;constraint:OnDelete:SET NULL" json:"uploaded_by,omitempty"`
+	Subject    *Subject  `gorm:"foreignKey:SubjectID;constraint:OnDelete:CASCADE" json:"subject,omitempty"`
+	Semester   *Semester `gorm:"foreignKey:SemesterID;constraint:OnDelete:CASCADE" json:"semester,omitempty"`
+	UploadedBy User      `gorm:"foreignKey:UploadedByUserID;constraint:OnDelete:SET NULL" json:"uploaded_by,omitempty"`
 }

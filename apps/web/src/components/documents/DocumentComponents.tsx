@@ -186,9 +186,10 @@ function DocumentCard({
 interface DocumentUploadFormProps {
   subjectId: string;
   onSuccess?: () => void;
+  excludeTypes?: DocumentType[];
 }
 
-function DocumentUploadForm({ subjectId, onSuccess }: DocumentUploadFormProps) {
+function DocumentUploadForm({ subjectId, onSuccess, excludeTypes = [] }: DocumentUploadFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState<DocumentType>('notes');
   const [dragActive, setDragActive] = useState(false);
@@ -296,11 +297,13 @@ function DocumentUploadForm({ subjectId, onSuccess }: DocumentUploadFormProps) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {(Object.entries(DOCUMENT_TYPE_LABELS) as [DocumentType, string][]).map(([value, label]) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
+            {(Object.entries(DOCUMENT_TYPE_LABELS) as [DocumentType, string][])
+              .filter(([value]) => !excludeTypes.includes(value))
+              .map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

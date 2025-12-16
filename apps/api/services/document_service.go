@@ -23,8 +23,10 @@ type DocumentService struct {
 	db           *gorm.DB
 	doClient     *digitalocean.Client
 	spacesClient *digitalocean.SpacesClient
+	ocrClient    *OCRClient
 	enableAI     bool
 	enableSpaces bool
+	enableOCR    bool
 }
 
 // NewDocumentService creates a new document service
@@ -55,12 +57,26 @@ func NewDocumentService(db *gorm.DB) *DocumentService {
 		service.enableSpaces = true
 	}
 
+	// Initialize OCR client
+	ocrServiceURL := os.Getenv("OCR_SERVICE_URL")
+	if ocrServiceURL != "" {
+		service.ocrClient = NewOCRClient()
+		service.enableOCR = true
+		log.Println("OCR service enabled at:", ocrServiceURL)
+	} else {
+		log.Println("Warning: OCR_SERVICE_URL not set. OCR processing will be disabled.")
+	}
+
 	return service
 }
 
 // UploadDocumentRequest represents a request to upload a document
+// Either SubjectID or SemesterID should be provided (not both)
+// - SubjectID: for subject-specific documents (PYQs, notes, etc.)
+// - SemesterID: for semester-level documents (syllabus PDFs that contain multiple subjects)
 type UploadDocumentRequest struct {
-	SubjectID  uint
+	SubjectID  uint // Optional - for subject-specific documents
+	SemesterID uint // Optional - for semester-level documents (e.g., syllabus PDFs)
 	UserID     uint
 	Type       model.DocumentType
 	File       multipart.File
@@ -101,12 +117,20 @@ func ValidateFileType(filename string) (bool, string) {
 }
 
 // UploadDocument handles the complete document upload flow
+// Supports two modes:
+// 1. Subject-based upload (SubjectID provided): for subject-specific documents
+// 2. Semester-based upload (SemesterID provided): for semester-level documents like syllabus PDFs
 func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocumentRequest) (*UploadDocumentResult, error) {
 	result := &UploadDocumentResult{}
 
+	// Validate that either SubjectID or SemesterID is provided (but not both required)
+	if req.SubjectID == 0 && req.SemesterID == 0 {
+		return nil, fmt.Errorf("either SubjectID or SemesterID must be provided")
+	}
+
 	// Validate file type
 	if valid, errMsg := ValidateFileType(req.FileHeader.Filename); !valid {
-		return nil, fmt.Errorf(errMsg)
+		return nil, fmt.Errorf("%s", errMsg)
 	}
 
 	// Start database transaction
@@ -122,14 +146,35 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 		}
 	}()
 
-	// 1. Verify subject exists and get knowledge base UUID
-	var subject model.Subject
-	if err := tx.First(&subject, req.SubjectID).Error; err != nil {
-		tx.Rollback()
-		if err == gorm.ErrRecordNotFound {
-			return nil, fmt.Errorf("subject not found")
+	// Variables for optional relationships
+	var subject *model.Subject
+	var spacesKeyPrefix string
+
+	// 1. Verify subject or semester exists
+	if req.SubjectID > 0 {
+		// Subject-based upload
+		var subj model.Subject
+		if err := tx.First(&subj, req.SubjectID).Error; err != nil {
+			tx.Rollback()
+			if err == gorm.ErrRecordNotFound {
+				return nil, fmt.Errorf("subject not found")
+			}
+			return nil, fmt.Errorf("failed to fetch subject: %w", err)
 		}
-		return nil, fmt.Errorf("failed to fetch subject: %w", err)
+		subject = &subj
+		spacesKeyPrefix = fmt.Sprintf("subjects/%d", req.SubjectID)
+	} else {
+		// Semester-based upload (for syllabus PDFs)
+		var semester model.Semester
+		if err := tx.First(&semester, req.SemesterID).Error; err != nil {
+			tx.Rollback()
+			if err == gorm.ErrRecordNotFound {
+				return nil, fmt.Errorf("semester not found")
+			}
+			return nil, fmt.Errorf("failed to fetch semester: %w", err)
+		}
+		log.Printf("DocumentService: Semester-based upload for semester ID=%d", semester.ID)
+		spacesKeyPrefix = fmt.Sprintf("semesters/%d/syllabus", req.SemesterID)
 	}
 
 	// 2. Read file content
@@ -141,12 +186,19 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 
 	// 3. Create document record in database
 	document := model.Document{
-		SubjectID:        req.SubjectID,
 		Type:             req.Type,
 		Filename:         req.FileHeader.Filename,
 		FileSize:         req.FileHeader.Size,
 		IndexingStatus:   model.IndexingStatusPending,
 		UploadedByUserID: req.UserID,
+	}
+
+	// Set the appropriate foreign key based on upload mode
+	if req.SubjectID > 0 {
+		document.SubjectID = &req.SubjectID
+	}
+	if req.SemesterID > 0 {
+		document.SemesterID = &req.SemesterID
 	}
 
 	// If Spaces is not enabled, we'll still create the record but mark it appropriately
@@ -164,11 +216,8 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 
 	// 4. Upload to Spaces (if enabled)
 	if s.enableSpaces {
-		// Generate unique key: subjects/{subject_id}/{timestamp}_{filename}
-		key := digitalocean.GenerateKey(
-			fmt.Sprintf("subjects/%d", req.SubjectID),
-			req.FileHeader.Filename,
-		)
+		// Generate unique key based on upload mode
+		key := digitalocean.GenerateKey(spacesKeyPrefix, req.FileHeader.Filename)
 		contentType := digitalocean.GetContentType(req.FileHeader.Filename)
 
 		spacesURL, err := s.spacesClient.UploadBytes(ctx, key, fileContent, contentType)
@@ -182,15 +231,27 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 		result.UploadedToSpaces = true
 	}
 
-	// 5. Upload to Knowledge Base for AI indexing (if enabled)
-	if s.enableAI && subject.KnowledgeBaseUUID != "" && s.enableSpaces {
-		// Create data source in knowledge base
-		dsReq := digitalocean.CreateDataSourceRequest{
-			Name: req.FileHeader.Filename,
-			Type: "file",
+	// 5. Upload to Knowledge Base for AI indexing (if enabled and subject-based)
+	// Note: Semester-based uploads (syllabus PDFs) don't need KB indexing as they're processed differently
+	if s.enableAI && subject != nil && subject.KnowledgeBaseUUID != "" && s.enableSpaces && document.SpacesKey != "" {
+		// Get Spaces config for the data source
+		spacesName := os.Getenv("DO_SPACES_NAME")
+		spacesRegion := os.Getenv("DO_SPACES_REGION")
+		if spacesRegion == "" {
+			spacesRegion = "blr1"
 		}
 
-		dataSource, presignedURL, err := s.doClient.CreateDataSource(ctx, subject.KnowledgeBaseUUID, dsReq)
+		// Create data source in knowledge base using Spaces path
+		dsReq := digitalocean.CreateDataSourceRequest{
+			KnowledgeBaseUUID: subject.KnowledgeBaseUUID,
+			SpacesDataSource: &digitalocean.SpacesDataSourceInput{
+				BucketName: spacesName,
+				Region:     spacesRegion,
+				ItemPath:   document.SpacesKey, // Path to the file we already uploaded
+			},
+		}
+
+		dataSource, _, err := s.doClient.CreateDataSource(ctx, subject.KnowledgeBaseUUID, dsReq)
 		if err != nil {
 			// Don't fail the entire upload if KB indexing fails
 			log.Printf("Warning: Failed to create data source in KB: %v", err)
@@ -198,15 +259,17 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 			document.IndexingError = err.Error()
 		} else {
 			document.DataSourceID = dataSource.UUID
+			document.IndexingStatus = model.IndexingStatusInProgress
+			result.IndexedInKB = true
+			log.Printf("Created data source %s for document %s in KB %s", dataSource.UUID, document.Filename, subject.KnowledgeBaseUUID)
 
-			// Upload file to presigned URL
-			if err := s.uploadToPresignedURL(ctx, presignedURL, fileContent, req.FileHeader.Filename); err != nil {
-				log.Printf("Warning: Failed to upload to presigned URL: %v", err)
-				document.IndexingStatus = model.IndexingStatusFailed
-				document.IndexingError = err.Error()
-			} else {
-				document.IndexingStatus = model.IndexingStatusInProgress
-				result.IndexedInKB = true
+			// Trigger indexing job to start processing the document
+			if _, err := s.doClient.StartIndexingJob(ctx, digitalocean.StartIndexingJobRequest{
+				KnowledgeBaseUUID: subject.KnowledgeBaseUUID,
+				DataSourceUUIDs:   []string{dataSource.UUID},
+			}); err != nil {
+				log.Printf("Warning: Failed to trigger indexing job: %v", err)
+				// Don't fail - the document is still in KB, just not indexed yet
 			}
 		}
 	}
@@ -228,6 +291,14 @@ func (s *DocumentService) UploadDocument(ctx context.Context, req UploadDocument
 			s.spacesClient.DeleteFile(ctx, document.SpacesKey)
 		}
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	// 8. Process OCR for PDF files (synchronous - waits for completion)
+	if s.enableOCR && s.enableSpaces && strings.HasSuffix(strings.ToLower(document.Filename), ".pdf") {
+		if err := s.processDocumentOCR(ctx, &document); err != nil {
+			log.Printf("Warning: OCR processing failed for document %d: %v", document.ID, err)
+			// Don't fail the upload if OCR fails, just log the error
+		}
 	}
 
 	return result, nil
@@ -284,14 +355,14 @@ func (s *DocumentService) uploadToPresignedURL(ctx context.Context, presignedURL
 
 // DeleteDocumentWithCleanup deletes a document and cleans up associated resources
 func (s *DocumentService) DeleteDocumentWithCleanup(ctx context.Context, documentID uint) error {
-	// Get document with subject relationship
+	// Get document with subject relationship (if exists)
 	var document model.Document
 	if err := s.db.Preload("Subject").First(&document, documentID).Error; err != nil {
 		return fmt.Errorf("failed to fetch document: %w", err)
 	}
 
-	// Clean up Knowledge Base data source if it exists
-	if s.enableAI && document.Subject.KnowledgeBaseUUID != "" && document.DataSourceID != "" {
+	// Clean up Knowledge Base data source if it exists (only for subject-based documents)
+	if s.enableAI && document.Subject != nil && document.Subject.KnowledgeBaseUUID != "" && document.DataSourceID != "" {
 		if err := s.doClient.DeleteDataSource(ctx, document.Subject.KnowledgeBaseUUID, document.DataSourceID); err != nil {
 			log.Printf("Warning: Failed to delete data source %s: %v", document.DataSourceID, err)
 		}
@@ -319,7 +390,8 @@ func (s *DocumentService) UpdateIndexingStatus(ctx context.Context, documentID u
 		return fmt.Errorf("failed to fetch document: %w", err)
 	}
 
-	if !s.enableAI || document.Subject.KnowledgeBaseUUID == "" || document.DataSourceID == "" {
+	// Only update for subject-based documents with KB integration
+	if !s.enableAI || document.Subject == nil || document.Subject.KnowledgeBaseUUID == "" || document.DataSourceID == "" {
 		return nil // Nothing to update
 	}
 
@@ -329,19 +401,23 @@ func (s *DocumentService) UpdateIndexingStatus(ctx context.Context, documentID u
 		return fmt.Errorf("failed to get data source status: %w", err)
 	}
 
-	// Update indexing status based on data source status
-	switch dataSource.Status {
-	case "indexed":
-		document.IndexingStatus = model.IndexingStatusCompleted
-		document.PageCount = dataSource.ChunkCount // Use chunk count as approximate page count
-	case "processing":
-		document.IndexingStatus = model.IndexingStatusInProgress
-	case "failed":
-		document.IndexingStatus = model.IndexingStatusFailed
-		document.IndexingError = "Indexing failed in knowledge base"
-	case "pending":
-		document.IndexingStatus = model.IndexingStatusPending
-	default:
+	// Update indexing status based on last indexing job status
+	if dataSource.LastIndexingJob != nil {
+		switch dataSource.LastIndexingJob.Status {
+		case "INDEX_JOB_STATUS_COMPLETED":
+			document.IndexingStatus = model.IndexingStatusCompleted
+		case "INDEX_JOB_STATUS_IN_PROGRESS":
+			document.IndexingStatus = model.IndexingStatusInProgress
+		case "INDEX_JOB_STATUS_FAILED":
+			document.IndexingStatus = model.IndexingStatusFailed
+			document.IndexingError = "Indexing failed in knowledge base"
+		case "INDEX_JOB_STATUS_PENDING":
+			document.IndexingStatus = model.IndexingStatusPending
+		default:
+			document.IndexingStatus = model.IndexingStatusPending
+		}
+	} else {
+		// No indexing job yet - still pending
 		document.IndexingStatus = model.IndexingStatusPending
 	}
 
@@ -371,4 +447,39 @@ func (s *DocumentService) GetDocumentDownloadURL(ctx context.Context, documentID
 	}
 
 	return url, nil
+}
+
+// processDocumentOCR processes a PDF document with OCR (synchronous)
+func (s *DocumentService) processDocumentOCR(ctx context.Context, document *model.Document) error {
+	log.Printf("Starting OCR processing for document ID=%d, file=%s", document.ID, document.Filename)
+
+	// Get presigned URL for the PDF
+	presignedURL, err := s.spacesClient.GetPresignedURL(document.SpacesKey, 10*time.Minute)
+	if err != nil {
+		log.Printf("Failed to generate presigned URL for OCR: %v", err)
+		return fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	// Process PDF from URL (OCR service will download it)
+	ocrResp, err := s.ocrClient.ProcessPDFFromURL(ctx, presignedURL)
+	if err != nil {
+		log.Printf("OCR processing failed for document %d: %v", document.ID, err)
+		return fmt.Errorf("OCR processing failed: %w", err)
+	}
+
+	// Update document with OCR text and page count
+	updates := map[string]interface{}{
+		"ocr_text":   ocrResp.Text,
+		"page_count": ocrResp.PageCount,
+	}
+
+	if err := s.db.Model(document).Updates(updates).Error; err != nil {
+		log.Printf("Failed to update document with OCR results: %v", err)
+		return fmt.Errorf("failed to update document: %w", err)
+	}
+
+	log.Printf("OCR completed successfully for document %d: %d pages, %d characters",
+		document.ID, ocrResp.PageCount, len(ocrResp.Text))
+
+	return nil
 }

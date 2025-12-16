@@ -53,6 +53,11 @@ type Subject struct {
 	KnowledgeBaseUUID string         `gorm:"type:varchar(100)" json:"knowledge_base_uuid"`
 	AgentUUID         string         `gorm:"type:varchar(100)" json:"agent_uuid"`
 
+	// Encrypted Agent API Key storage (AES-256-GCM)
+	// The API key is encrypted before storage and never exposed in JSON responses
+	AgentAPIKeyEncrypted string `gorm:"type:text" json:"-"`         // Base64 encoded: nonce + ciphertext
+	AgentDeploymentURL   string `gorm:"type:varchar(500)" json:"-"` // Cached deployment URL
+
 	// Relationships
 	Semester     Semester      `gorm:"foreignKey:SemesterID;constraint:OnDelete:CASCADE" json:"semester,omitempty"`
 	Documents    []Document    `gorm:"foreignKey:SubjectID;constraint:OnDelete:CASCADE" json:"documents,omitempty"`

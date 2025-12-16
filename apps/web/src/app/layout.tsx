@@ -5,6 +5,7 @@ import { ConditionalSidebar } from "@/components/ConditionalSidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ReactQueryProvider } from "@/providers/react-query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
+import { NotificationProvider } from "@/providers/notification-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
@@ -36,17 +37,19 @@ export default function RootLayout({
         <NuqsAdapter>
           <ReactQueryProvider>
             <AuthProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="light"
-                enableSystem
-                disableTransitionOnChange
-              >
-                <ConditionalSidebar>
-                  {children}
-                </ConditionalSidebar>
-                <Toaster />
-              </ThemeProvider>
+              <NotificationProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="light"
+                  enableSystem
+                  disableTransitionOnChange
+                >
+                  <ConditionalSidebar>
+                    {children}
+                  </ConditionalSidebar>
+                  <Toaster />
+                </ThemeProvider>
+              </NotificationProvider>
             </AuthProvider>
           </ReactQueryProvider>
         </NuqsAdapter>

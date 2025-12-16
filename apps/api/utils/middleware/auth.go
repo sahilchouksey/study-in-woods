@@ -29,19 +29,26 @@ func NewAuthMiddleware(jwtManager *auth.JWTManager, db *gorm.DB) *AuthMiddleware
 // Required is middleware that requires a valid JWT token
 func (m *AuthMiddleware) Required() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Get token from Authorization header
+		var tokenString string
+
+		// Get token from Authorization header first
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
+		if authHeader != "" {
+			// Extract token from "Bearer <token>"
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = parts[1]
+			}
+		}
+
+		// If no token in header, check query parameter (for SSE/EventSource which can't set headers)
+		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		if tokenString == "" {
 			return response.Unauthorized(c, "Missing authorization token")
 		}
-
-		// Extract token from "Bearer <token>"
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return response.Unauthorized(c, "Invalid authorization format")
-		}
-
-		tokenString := parts[1]
 
 		// Validate token
 		claims, err := m.jwtManager.ValidateToken(tokenString)

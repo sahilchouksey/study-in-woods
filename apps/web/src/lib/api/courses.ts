@@ -2,6 +2,24 @@ import { apiClient } from './client';
 import type { ApiResponse } from '@/types/api';
 
 /**
+ * Pagination metadata type
+ */
+export interface PaginationMeta {
+  current_page: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
+
+/**
+ * Paginated response type
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: PaginationMeta;
+}
+
+/**
  * University type
  */
 export interface University {
@@ -268,17 +286,39 @@ export const semesterService = {
 };
 
 /**
+ * Subject query parameters
+ */
+export interface SubjectQueryParams {
+  page?: number;
+  per_page?: number;
+  search?: string;
+}
+
+/**
  * Subject service
  */
 export const subjectService = {
   /**
-   * Get subjects for a semester
+   * Get subjects for a semester with pagination and search
    */
-  async getSubjects(semesterId: string): Promise<Subject[]> {
-    const response = await apiClient.get<ApiResponse<Subject[]>>(
-      `/api/v1/semesters/${semesterId}/subjects`
-    );
-    return response.data.data || [];
+  async getSubjects(
+    semesterId: string,
+    params?: SubjectQueryParams
+  ): Promise<PaginatedResponse<Subject>> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: Subject[];
+      pagination: PaginationMeta;
+    }>(`/api/v1/semesters/${semesterId}/subjects`, { params });
+    return {
+      data: response.data.data || [],
+      pagination: response.data.pagination || {
+        current_page: 1,
+        per_page: 10,
+        total: response.data.data?.length || 0,
+        total_pages: 1,
+      },
+    };
   },
 
   /**
@@ -333,6 +373,22 @@ export const subjectService = {
    */
   async deleteSubject(semesterId: string, subjectId: string): Promise<void> {
     await apiClient.delete(`/api/v1/semesters/${semesterId}/subjects/${subjectId}`);
+  },
+
+  /**
+   * Delete all subjects for a semester (admin only)
+   */
+  async deleteAllSubjects(semesterId: string): Promise<{
+    deleted_count: number;
+    failed_count: number;
+    message: string;
+  }> {
+    const response = await apiClient.delete<ApiResponse<{
+      deleted_count: number;
+      failed_count: number;
+      message: string;
+    }>>(`/api/v1/semesters/${semesterId}/subjects`);
+    return response.data.data!;
   },
 
   /**

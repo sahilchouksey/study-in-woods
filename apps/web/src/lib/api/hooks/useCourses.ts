@@ -4,6 +4,7 @@ import {
   courseService,
   semesterService,
   subjectService,
+  type SubjectQueryParams,
 } from '@/lib/api/courses';
 
 /**
@@ -89,12 +90,15 @@ export function useSemester(courseId: string | null, number: number | null) {
 }
 
 /**
- * Hook to get subjects for a semester
+ * Hook to get subjects for a semester with pagination and search
  */
-export function useSubjects(semesterId: string | null) {
+export function useSubjects(
+  semesterId: string | null,
+  params?: SubjectQueryParams
+) {
   return useQuery({
-    queryKey: ['subjects', semesterId],
-    queryFn: () => subjectService.getSubjects(semesterId!),
+    queryKey: ['subjects', semesterId, params],
+    queryFn: () => subjectService.getSubjects(semesterId!, params),
     enabled: !!semesterId,
     staleTime: 5 * 60 * 1000,
   });

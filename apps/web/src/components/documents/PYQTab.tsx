@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   FileQuestion,
   ChevronRight,
@@ -33,32 +33,63 @@ import { useDocuments } from '@/lib/api/hooks/useDocuments';
 import {
   type PYQPaperSummary,
   type PYQQuestion,
+  type AvailablePYQPaper,
   PYQ_EXTRACTION_STATUS_CONFIG,
   formatPaperTitle,
 } from '@/lib/api/pyq';
+import { AvailablePYQPapersSection } from './AvailablePYQPapersSection';
+import { PYQBatchUploadDialog } from './PYQBatchUploadDialog';
 
 interface PYQTabProps {
   subjectId: string;
+  subjectCode?: string;
+  subjectName?: string;
   isAdmin?: boolean;
 }
 
-export function PYQTab({ subjectId }: PYQTabProps) {
+export function PYQTab({ subjectId, subjectCode, subjectName, isAdmin = false }: PYQTabProps) {
   const { data: pyqsData, isLoading, refetch } = usePYQs(subjectId);
   const { data: documentsData } = useDocuments(subjectId);
   const extractMutation = useExtractPYQ();
   
   const [selectedPaperId, setSelectedPaperId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Batch upload dialog state
+  const [batchUploadOpen, setBatchUploadOpen] = useState(false);
+  const [selectedExternalPapers, setSelectedExternalPapers] = useState<AvailablePYQPaper[]>([]);
 
   // Find PYQ documents that can be used for extraction
-  const pyqDocuments = documentsData?.data?.filter(
-    (doc) => doc.type === 'pyq' && doc.indexing_status === 'completed'
-  ) || [];
+  const pyqDocuments = useMemo(
+    () =>
+      documentsData?.data?.filter(
+        (doc) => doc.type === 'pyq' && doc.indexing_status === 'completed'
+      ) || [],
+    [documentsData]
+  );
 
   const papers = pyqsData?.papers || [];
 
+  // Calculate ingested paper IDs for deduplication
+  const ingestedPaperIds = useMemo(() => {
+    return new Set(papers.map(p => `${p.year}-${p.month || ''}`));
+  }, [papers]);
+
   const handleExtract = (documentId: number) => {
     extractMutation.mutate({ documentId: String(documentId), subjectId, async: true });
+  };
+
+  // Handle proceeding to batch upload
+  const handleProceedToUpload = (papers: AvailablePYQPaper[]) => {
+    setSelectedExternalPapers(papers);
+    setBatchUploadOpen(true);
+  };
+
+  // Handle batch upload complete
+  const handleBatchUploadComplete = () => {
+    setBatchUploadOpen(false);
+    setSelectedExternalPapers([]);
+    refetch();
   };
 
   if (isLoading) {
@@ -73,35 +104,78 @@ export function PYQTab({ subjectId }: PYQTabProps) {
   // No PYQ papers exist yet
   if (papers.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[350px] text-center">
-        <FileQuestion className="h-12 w-12 mb-3 text-muted-foreground opacity-50" />
-        <p className="font-medium text-muted-foreground">No Question Papers Extracted</p>
-        <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-          Upload a PYQ document and extract it to see questions organized by year.
-        </p>
-        
-        {pyqDocuments.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm text-muted-foreground">Available PYQ documents:</p>
-            {pyqDocuments.map((doc) => (
-              <Button
-                key={doc.id}
-                variant="outline"
-                size="sm"
-                onClick={() => handleExtract(doc.id)}
-                disabled={extractMutation.isPending}
-              >
-                {extractMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <FileQuestion className="h-4 w-4 mr-2" />
-                )}
-                Extract from {doc.filename}
-              </Button>
-            ))}
+      <ScrollArea className="h-[350px] pr-4">
+        <div className="space-y-6">
+          {/* Empty state message */}
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <FileQuestion className="h-12 w-12 mb-3 text-muted-foreground opacity-50" />
+            <p className="font-medium text-muted-foreground">No Question Papers Extracted</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              Upload a PYQ document and extract it, or search for external papers below.
+            </p>
+            
+            {isAdmin && pyqDocuments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm text-muted-foreground">Available PYQ documents:</p>
+                {pyqDocuments.map((doc) => (
+                  <Button
+                    key={doc.id}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExtract(doc.id)}
+                    disabled={extractMutation.isPending}
+                  >
+                    {extractMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <FileQuestion className="h-4 w-4 mr-2" />
+                    )}
+                    Extract from {doc.filename}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
+
+          {/* Admin-only: Search External Papers */}
+          {isAdmin && (
+            <>
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Search External Papers
+                  </span>
+                </div>
+              </div>
+
+              {/* Available PYQ Papers Section - show even when no papers exist */}
+              <AvailablePYQPapersSection
+                subjectId={subjectId}
+                subjectCode={subjectCode || 'MCA'}
+                subjectName={subjectName || 'Subject'}
+                ingestedPaperIds={ingestedPaperIds}
+                onProceedToUpload={handleProceedToUpload}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Batch Upload Dialog - Admin only */}
+        {isAdmin && (
+          <PYQBatchUploadDialog
+            open={batchUploadOpen}
+            onOpenChange={setBatchUploadOpen}
+            selectedPapers={selectedExternalPapers}
+            subjectId={subjectId}
+            subjectName={subjectName || 'Subject'}
+            onComplete={handleBatchUploadComplete}
+          />
         )}
-      </div>
+      </ScrollArea>
     );
   }
 
@@ -161,8 +235,8 @@ export function PYQTab({ subjectId }: PYQTabProps) {
             ))}
         </div>
 
-        {/* Extract more button if there are unextracted documents */}
-        {pyqDocuments.length > 0 && (
+        {/* Extract more button - hidden for now (auto-extraction handles this) */}
+        {/* {pyqDocuments.length > 0 && (
           <Card className="border-dashed">
             <CardContent className="py-3">
               <p className="text-sm text-muted-foreground mb-2">
@@ -188,8 +262,46 @@ export function PYQTab({ subjectId }: PYQTabProps) {
               </div>
             </CardContent>
           </Card>
+        )} */}
+
+        {/* Admin-only: Search External Papers */}
+        {isAdmin && (
+          <>
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Search External Papers
+                </span>
+              </div>
+            </div>
+
+            {/* Available PYQ Papers Section */}
+            <AvailablePYQPapersSection
+              subjectId={subjectId}
+              subjectCode={subjectCode || 'MCA'}
+              subjectName={subjectName || 'Subject'}
+              ingestedPaperIds={ingestedPaperIds}
+              onProceedToUpload={handleProceedToUpload}
+            />
+          </>
         )}
       </div>
+
+      {/* Batch Upload Dialog - Admin only */}
+      {isAdmin && (
+        <PYQBatchUploadDialog
+          open={batchUploadOpen}
+          onOpenChange={setBatchUploadOpen}
+          selectedPapers={selectedExternalPapers}
+          subjectId={subjectId}
+          subjectName={subjectName || 'Subject'}
+          onComplete={handleBatchUploadComplete}
+        />
+      )}
     </ScrollArea>
   );
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -14,9 +15,12 @@ const (
 	// InferenceBaseURL is the DigitalOcean AI Inference API base URL
 	InferenceBaseURL = "https://inference.do-ai.run"
 	// DefaultInferenceTimeout is longer for LLM inference requests
-	DefaultInferenceTimeout = 120 * time.Second
+	// Increased to 5 minutes for heavy extraction tasks like multi-subject syllabuses
+	DefaultInferenceTimeout = 300 * time.Second
 	// DefaultInferenceModel is the default model for inference
-	DefaultInferenceModel = "openai-gpt-oss-120b"
+	// Using Llama 3.3 70B for reliable structured JSON output
+	// Model IDs from: https://docs.digitalocean.com/products/gradient-ai-platform/details/models/
+	DefaultInferenceModel = "llama3.3-70b-instruct"
 )
 
 // InferenceClient handles direct LLM inference API calls (not agent-based)
@@ -52,6 +56,14 @@ func NewInferenceClient(config InferenceConfig) *InferenceClient {
 		baseURL: config.BaseURL,
 		httpClient: &http.Client{
 			Timeout: config.Timeout,
+			Transport: &http.Transport{
+				MaxIdleConns:        100,              // Total max idle connections
+				MaxIdleConnsPerHost: 20,               // Up from default 2 - critical for parallel requests
+				MaxConnsPerHost:     0,                // 0 = unlimited
+				IdleConnTimeout:     90 * time.Second, // Keep connections alive
+				DisableKeepAlives:   false,            // Enable connection reuse
+				ForceAttemptHTTP2:   true,             // Use HTTP/2 if available
+			},
 		},
 		model: config.Model,
 	}
@@ -228,6 +240,14 @@ func (c *InferenceClient) sendChatCompletion(ctx context.Context, req InferenceR
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
+	// Log the raw response for debugging
+	log.Printf("[Inference API] Response status: %d, body length: %d", resp.StatusCode, len(respBody))
+	if len(respBody) > 500 {
+		log.Printf("[Inference API] Response preview (first 500 chars): %s", string(respBody[:500]))
+	} else {
+		log.Printf("[Inference API] Full response: %s", string(respBody))
+	}
+
 	// Check for errors
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("inference API error (status %d): %s", resp.StatusCode, string(respBody))
@@ -236,6 +256,8 @@ func (c *InferenceClient) sendChatCompletion(ctx context.Context, req InferenceR
 	// Parse response
 	var result InferenceResponse
 	if err := json.Unmarshal(respBody, &result); err != nil {
+		log.Printf("[Inference API] Failed to parse response as JSON: %v", err)
+		log.Printf("[Inference API] Raw response bytes (first 200): %v", respBody[:minInt(200, len(respBody))])
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
@@ -262,10 +284,21 @@ func (c *InferenceClient) SimpleCompletion(ctx context.Context, systemPrompt, us
 }
 
 // JSONCompletion is a convenience method for getting JSON responses
-// It sets up the system prompt to request JSON output
+// It uses the response_format parameter to enforce JSON output at the API level
 func (c *InferenceClient) JSONCompletion(ctx context.Context, systemPrompt, userPrompt string, options ...InferenceOption) (string, error) {
-	// Enhance system prompt to request JSON
-	enhancedSystemPrompt := systemPrompt + "\n\nYou MUST respond with valid JSON only. Do not include any markdown formatting, code blocks, or explanatory text. Output raw JSON only."
+	// Enhance system prompt to strongly enforce JSON output
+	enhancedSystemPrompt := systemPrompt + `
+
+CRITICAL OUTPUT RULES:
+- You MUST respond with ONLY valid JSON
+- Do NOT use markdown formatting (no **, no ###, no code blocks)
+- Do NOT include any explanatory text before or after the JSON
+- Start your response with { and end with }
+- Output raw JSON only - nothing else`
+
+	// IMPORTANT: Add response_format=json_object to enforce JSON output at API level
+	// This is in addition to prompt instructions for maximum reliability
+	options = append(options, WithResponseFormatJSON())
 
 	return c.SimpleCompletion(ctx, enhancedSystemPrompt, userPrompt, options...)
 }
@@ -328,4 +361,12 @@ func (r *InferenceResponse) ExtractContent() string {
 // GetUsage returns the token usage from the response
 func (r *InferenceResponse) GetUsage() (prompt, completion, total int) {
 	return r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens
+}
+
+// minInt returns the minimum of two integers
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

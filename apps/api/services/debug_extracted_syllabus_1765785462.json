@@ -1,0 +1,2315 @@
+{
+  "extracted_at": "2025-12-15T13:27:42+05:30",
+  "semester_id": 3,
+  "total_subjects": 5,
+  "total_syllabuses": 11,
+  "subjects": [
+    {
+      "id": 468,
+      "name": "Data Mining",
+      "code": "MCA 301",
+      "semester_id": 3
+    },
+    {
+      "id": 469,
+      "name": "PYTHON PROGRAMMING",
+      "code": "MCA 303",
+      "semester_id": 3
+    },
+    {
+      "id": 470,
+      "name": "Elective –II Machine Learning",
+      "code": "MCA 304",
+      "semester_id": 3
+    },
+    {
+      "id": 471,
+      "name": "Elective –III Advanced DBMS",
+      "code": "MCA 305",
+      "semester_id": 3
+    },
+    {
+      "id": 472,
+      "name": "Artificial Intelligence",
+      "code": "MCA 302",
+      "semester_id": 3
+    }
+  ],
+  "syllabuses": [
+    {
+      "id": 527,
+      "subject_id": 468,
+      "subject_name": "Data Mining",
+      "subject_code": "MCA 301",
+      "credits": 0,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit 1: Motivation, importance, Data type for Data Mining : relation Databases, Data Warehouses, Transactional databases, advanced database system and its applications, Data mining Functionalities: Concept/Class description, Association Analysis classification \u0026 Prediction, Cluster Analysis, Outlier Analysis, Evolution Analysis, Classification of Data Mining Systems, Major Issues in Data Mining.",
+          "raw_text": "UNIT – I  Motivation, importance, Data type for Data Mining : relation Databases, Data Warehouses, Transactional databases, advanced database system and its applications, Data mining Functionalities: Concept/Class description, Association Analysis classification \u0026 Prediction, Cluster Analysis, Outlier Analysis, Evolution Analysis, Classification of Data Mining Systems, Major Issues in Data Mining.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Motivation"
+            },
+            {
+              "topic_number": 2,
+              "title": "Importance"
+            },
+            {
+              "topic_number": 3,
+              "title": "Data type for Data Mining"
+            },
+            {
+              "topic_number": 4,
+              "title": "Relation Databases"
+            },
+            {
+              "topic_number": 5,
+              "title": "Data Warehouses"
+            },
+            {
+              "topic_number": 6,
+              "title": "Transactional databases"
+            },
+            {
+              "topic_number": 7,
+              "title": "Advanced database system and its applications"
+            },
+            {
+              "topic_number": 8,
+              "title": "Data mining Functionalities"
+            },
+            {
+              "topic_number": 9,
+              "title": "Concept/Class description"
+            },
+            {
+              "topic_number": 10,
+              "title": "Association Analysis"
+            },
+            {
+              "topic_number": 11,
+              "title": "Classification"
+            },
+            {
+              "topic_number": 12,
+              "title": "Prediction"
+            },
+            {
+              "topic_number": 13,
+              "title": "Cluster Analysis"
+            },
+            {
+              "topic_number": 14,
+              "title": "Outlier Analysis"
+            },
+            {
+              "topic_number": 15,
+              "title": "Evolution Analysis"
+            },
+            {
+              "topic_number": 16,
+              "title": "Classification of Data Mining Systems"
+            },
+            {
+              "topic_number": 17,
+              "title": "Major Issues in Data Mining"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit 2: Data Warehouse and OLAP Technology for Data Mining: Differences between Operational Database Systems and Data Warehouses, a multidimensional Data Model, Data Warehouse Architecture, Data Warehouse Architecture, Data Warehouse Implementation, Data Cube Technology.",
+          "raw_text": "UNIT – II  Data Warehouse and OLAP Technology for Data Mining: Differences between Operational Database Systems and Data Warehouses, a multidimensional Data Model, Data Warehouse Architecture, Data Warehouse Architecture, Data Warehouse Implementation, Data Cube Technology.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Data Warehouse and OLAP Technology for Data Mining"
+            },
+            {
+              "topic_number": 2,
+              "title": "Differences between Operational Database Systems and Data Warehouses"
+            },
+            {
+              "topic_number": 3,
+              "title": "Multidimensional Data Model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Data Warehouse Architecture"
+            },
+            {
+              "topic_number": 5,
+              "title": "Data Warehouse Implementation"
+            },
+            {
+              "topic_number": 6,
+              "title": "Data Cube Technology"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit 3: Data Preprocessing: Data Cleaning, Data Integration and Transformation, Data Reduction, Discretization and Concept Hierarchy Generation. Data Mining Primitives, Languages, and System Architectures, Concept Description: Characterization and Comparison, Analytical Characterization.",
+          "raw_text": "UNIT- III  Data Preprocessing: Data Cleaning, Data Integration and Transformation, Data Reduction, Discretization and Concept Hierarchy Generation. Data Mining Primitives, Languages, and System Architectures, Concept Description: Characterization and Comparison, Analytical Characterization.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Data Preprocessing"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data Cleaning"
+            },
+            {
+              "topic_number": 3,
+              "title": "Data Integration and Transformation"
+            },
+            {
+              "topic_number": 4,
+              "title": "Data Reduction"
+            },
+            {
+              "topic_number": 5,
+              "title": "Discretization and Concept Hierarchy Generation"
+            },
+            {
+              "topic_number": 6,
+              "title": "Data Mining Primitives"
+            },
+            {
+              "topic_number": 7,
+              "title": "Languages, and System Architectures"
+            },
+            {
+              "topic_number": 8,
+              "title": "Concept Description"
+            },
+            {
+              "topic_number": 9,
+              "title": "Characterization and Comparison"
+            },
+            {
+              "topic_number": 10,
+              "title": "Analytical Characterization"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit 4: Mining Association Rules in Large Databases: Association Rule Mining: Market Basket Analysis, Basic Concepts, Mining Single-Dimensional Boolean Association Rules from Transactional Databases: the Apriori algorithm, Generating Association rules from Frequent items, Improving the efficiency of Apriory, Mining Multilevel Association Rules, Multidimensional Association Rules, Constraint-Based Association Mining.",
+          "raw_text": "UNIT – IV Mining Association Rules in Large Databases: Association Rule Mining: Market Basket Analysis, Basic Concepts, Mining Single-Dimensional Boolean Association Rules from Transactional Databases: the Apriori algorithm, Generating Association rules from Frequent items, Improving the efficiency of Apriory, Mining Multilevel Association Rules, Multidimensional Association Rules, Constraint-Based Association Mining.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Mining Association Rules in Large Databases"
+            },
+            {
+              "topic_number": 2,
+              "title": "Association Rule Mining"
+            },
+            {
+              "topic_number": 3,
+              "title": "Market Basket Analysis"
+            },
+            {
+              "topic_number": 4,
+              "title": "Basic Concepts"
+            },
+            {
+              "topic_number": 5,
+              "title": "Mining Single-Dimensional Boolean Association Rules from Transactional Databases"
+            },
+            {
+              "topic_number": 6,
+              "title": "Apriori algorithm"
+            },
+            {
+              "topic_number": 7,
+              "title": "Generating Association rules from Frequent items"
+            },
+            {
+              "topic_number": 8,
+              "title": "Improving the efficiency of Apriory"
+            },
+            {
+              "topic_number": 9,
+              "title": "Mining Multilevel Association Rules"
+            },
+            {
+              "topic_number": 10,
+              "title": "Multidimensional Association Rules"
+            },
+            {
+              "topic_number": 11,
+              "title": "Constraint-Based Association Mining"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit 5: Classification \u0026 Prediction and Cluster Analysis: Issues regarding classification \u0026 prediction, Different Classification Methods, Prediction, Cluster Analysis, Major Clustering Methods, Applications \u0026 Trends in Data Mining: Data Mining Applications, currently available tools.",
+          "raw_text": "UNIT – V Classification \u0026 Prediction and Cluster Analysis: Issues regarding classification \u0026 prediction, Different Classification Methods, Prediction, Cluster Analysis, Major Clustering Methods, Applications \u0026 Trends in Data Mining: Data Mining Applications, currently available tools.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Classification \u0026 Prediction"
+            },
+            {
+              "topic_number": 2,
+              "title": "Cluster Analysis"
+            },
+            {
+              "topic_number": 3,
+              "title": "Issues regarding classification \u0026 prediction"
+            },
+            {
+              "topic_number": 4,
+              "title": "Different Classification Methods"
+            },
+            {
+              "topic_number": 5,
+              "title": "Prediction"
+            },
+            {
+              "topic_number": 6,
+              "title": "Major Clustering Methods"
+            },
+            {
+              "topic_number": 7,
+              "title": "Applications \u0026 Trends in Data Mining"
+            },
+            {
+              "topic_number": 8,
+              "title": "Data Mining Applications"
+            },
+            {
+              "topic_number": 9,
+              "title": "Currently available tools"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Data Mining: Concepts and Techniques",
+          "authors": "J. Han and M. Kamber",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Dataware housing, Data Mining \u0026 DLAP",
+          "authors": "Berson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Building the Datawarehouse",
+          "authors": "W.H. Inmon",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Data Warehousing in Real World",
+          "authors": "Anahory",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Data Mining",
+          "authors": "Adriaans",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Data Mining Techniques",
+          "authors": "S.K. Pujari",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 528,
+      "subject_id": 469,
+      "subject_name": "Introduction to Data Science and Big Data",
+      "subject_code": "MCA 303",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction to Data Science and Big Data",
+          "raw_text": "Introduction to Data Science – Data Science Process – Exploratory Data analysis – Big data: Definition, Risks of Big Data, Structure of Big Data – Web Data: The Original Big Data – Evolution Of Analytic Scalability – Analytic Processes and Tools – Analysis versus Reporting – Core Analytics versus Advanced Analytics– Modern Data Analytic Tools – Statistical Concepts: Sampling Distributions – Re-Sampling – Statistical Inference – Introduction to Data Visualization.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Data Science"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data Science Process"
+            },
+            {
+              "topic_number": 3,
+              "title": "Exploratory Data analysis"
+            },
+            {
+              "topic_number": 4,
+              "title": "Big data"
+            },
+            {
+              "topic_number": 5,
+              "title": "Statistical Concepts"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Data Analysis Using R",
+          "raw_text": "Univariate Analysis: Frequency, Mean, Median, Mode, Variance, Standard Deviation, Skewness and Kurtosis – Bivariate Analysis: Correlation – Regression Modeling: Linear and Logistic Regression – Multivariate Analysis – Graphical representation of Univariate, Bivariate and Multivariate Analysis in R: Bar Plot, Histogram, Box Plot, Line Plot, Scatter Plot, Lattice Plot, Regression Line, Two-Way cross Tabulation.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Univariate Analysis"
+            },
+            {
+              "topic_number": 2,
+              "title": "Bivariate Analysis"
+            },
+            {
+              "topic_number": 3,
+              "title": "Regression Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Multivariate Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Data Modeling",
+          "raw_text": "Bayesian Modeling – Support Vector and Kernel Methods – Neuro – Fuzzy Modeling – Principal Component Analysis – Introduction to NoSQL: CAP Theorem, MongoDB: RDBMS VsMongoDB, Mongo DB Database Model, Data Types and Sharding – Data Modeling in HBase: Defining Schema – CRUD Operations",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Bayesian Modeling"
+            },
+            {
+              "topic_number": 2,
+              "title": "Support Vector and Kernel Methods"
+            },
+            {
+              "topic_number": 3,
+              "title": "Neuro – Fuzzy Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Principal Component Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Data Analytical Frameworks",
+          "raw_text": "Introduction to Hadoop: Hadoop Overview – RDBMS versus Hadoop – HDFS (Hadoop Distributed File System): Components and Block Replication – Introduction to MapReduce – Running Algorithms Using MapReduce – Introduction to HBase: HBase Architecture, HLog and HFile, Data Replication – Introduction to Hive, Spark and Apache Sqoop.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Hadoop"
+            },
+            {
+              "topic_number": 2,
+              "title": "RDBMS versus Hadoop"
+            },
+            {
+              "topic_number": 3,
+              "title": "Introduction to MapReduce"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to HBase"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: Stream Analytics",
+          "raw_text": "Introduction To Streams Concepts – Stream Data Model and Architecture – Stream Computing – Sampling Data in a Stream – Filtering Streams – Counting Distinct Elements in a Stream – Estimating Moments – Counting Oneness in a Window – Decaying Window.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction To Streams Concepts"
+            },
+            {
+              "topic_number": 2,
+              "title": "Stream Data Model and Architecture"
+            },
+            {
+              "topic_number": 3,
+              "title": "Stream Computing"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Taming the Big Data Tidal Wave: Finding Opportunities in Huge Data Streams with Advanced Analytics",
+          "authors": "Bill Franks",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Doing Data Science",
+          "authors": "Rachel Schutt, Cathy O'Neil",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 529,
+      "subject_id": 470,
+      "subject_name": "Elective –II Internet of Things",
+      "subject_code": "MCA 304",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction",
+          "raw_text": "Introduction: Definition, Characteristics of IOT, IOT Conceptual framework, IOT Architectural view, Physical design of IOT, Logical design of IOT, Application of IOT.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Definition"
+            },
+            {
+              "topic_number": 2,
+              "title": "Characteristics of IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "IOT Conceptual framework"
+            },
+            {
+              "topic_number": 4,
+              "title": "IOT Architectural view"
+            },
+            {
+              "topic_number": 5,
+              "title": "Physical design of IOT"
+            },
+            {
+              "topic_number": 6,
+              "title": "Logical design of IOT"
+            },
+            {
+              "topic_number": 7,
+              "title": "Application of IOT"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Machine-to-machine (M2M), SDN and NFV for IOT",
+          "raw_text": "Machine-to-machine (M2M), SDN (software defined networking) and NFV (network function virtualization) for IOT, data storage in IOT, IOT Cloud Based Services.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Machine-to-machine (M2M)"
+            },
+            {
+              "topic_number": 2,
+              "title": "SDN (software defined networking) for IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "NFV (network function virtualization) for IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Data storage in IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "IOT Cloud Based Services"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Design Principles for Web Connectivity",
+          "raw_text": "Design Principles for Web Connectivity: Web Communication Protocols for connected devices, Message Communication Protocols for connected devices, SOAP, REST, HTTP Restful and Web Sockets. Internet Connectivity Principles: Internet Connectivity, Internet based communication, IP addressing in IOT, Media Accesscontrol.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Web Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 2,
+              "title": "Message Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 3,
+              "title": "SOAP"
+            },
+            {
+              "topic_number": 4,
+              "title": "REST"
+            },
+            {
+              "topic_number": 5,
+              "title": "HTTP Restful"
+            },
+            {
+              "topic_number": 6,
+              "title": "Web Sockets"
+            },
+            {
+              "topic_number": 7,
+              "title": "Internet Connectivity"
+            },
+            {
+              "topic_number": 8,
+              "title": "Internet based communication"
+            },
+            {
+              "topic_number": 9,
+              "title": "IP addressing in IOT"
+            },
+            {
+              "topic_number": 10,
+              "title": "Media Accesscontrol"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Sensor Technology",
+          "raw_text": "Sensor Technology , Participatory Sensing, Industrial IOT and Automotive IOT , Actuator, Sensor data Communication Protocols ,Radio Frequency Identification Technology, Wireless Sensor NetworkTechnology.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Sensor Technology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Participatory Sensing"
+            },
+            {
+              "topic_number": 3,
+              "title": "Industrial IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Automotive IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "Actuator"
+            },
+            {
+              "topic_number": 6,
+              "title": "Sensor data Communication Protocols"
+            },
+            {
+              "topic_number": 7,
+              "title": "Radio Frequency Identification Technology"
+            },
+            {
+              "topic_number": 8,
+              "title": "Wireless Sensor NetworkTechnology"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: IOT Design methodology",
+          "raw_text": "IOT Design methodology: Specification -Requirement, process, model, service, functional \u0026 operational view.IOT Privacy and security solutions, Raspberry Pi \u0026arduino devices. IOT Case studies: smart city streetlights control \u0026 monitoring.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "IOT Design methodology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Specification -Requirement"
+            },
+            {
+              "topic_number": 3,
+              "title": "Process"
+            },
+            {
+              "topic_number": 4,
+              "title": "Model"
+            },
+            {
+              "topic_number": 5,
+              "title": "Service"
+            },
+            {
+              "topic_number": 6,
+              "title": "Functional \u0026 operational view"
+            },
+            {
+              "topic_number": 7,
+              "title": "IOT Privacy and security solutions"
+            },
+            {
+              "topic_number": 8,
+              "title": "Raspberry Pi \u0026arduino devices"
+            },
+            {
+              "topic_number": 9,
+              "title": "IOT Case studies"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Internet of Things",
+          "authors": "Rajkamal",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Internet of things(A-Hand-on-Approach)",
+          "authors": "Vijay Madisetti and ArshdeepBahga",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Connecting Objects",
+          "authors": "HakimaChaouchi",
+          "book_type": "textbook"
+        },
+        {
+          "title": "MySQL for the Internet of things",
+          "authors": "Charless Bell",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Rethinking the Internet of things:A scalable Approach to connecting everything",
+          "authors": "Francis dacosta",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Do-It-Yourself at Home Projects for Arduino, Raspberry Pi and BeagleBone Black",
+          "authors": "Donald Norris",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 530,
+      "subject_id": 471,
+      "subject_name": "Elective –III Distributed Systems",
+      "subject_code": "MCA 305",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit 1: Introduction to Distributed Systems",
+          "raw_text": "Introduction to Distributed Systems : Goals of Distributed Systems, Hardware and Software concepts, the client server model, Remote procedure call, remote object invocation, message and stream oriented communications.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Goals of Distributed Systems"
+            },
+            {
+              "topic_number": 2,
+              "title": "Hardware and Software concepts"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client server model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Remote procedure call"
+            },
+            {
+              "topic_number": 5,
+              "title": "Remote object invocation"
+            },
+            {
+              "topic_number": 6,
+              "title": "Message and stream oriented communications"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit 2: Process and synchronization in Distributed Systems",
+          "raw_text": "Process and synchronization in Distributed Systems : Threads, clients, servers, code migration, clock synchronization, mutual exclusion, Bully and Ring Algorithm, Distributed transactions.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Threads"
+            },
+            {
+              "topic_number": 2,
+              "title": "Clients"
+            },
+            {
+              "topic_number": 3,
+              "title": "Servers"
+            },
+            {
+              "topic_number": 4,
+              "title": "Code migration"
+            },
+            {
+              "topic_number": 5,
+              "title": "Clock synchronization"
+            },
+            {
+              "topic_number": 6,
+              "title": "Mutual exclusion"
+            },
+            {
+              "topic_number": 7,
+              "title": "Bully and Ring Algorithm"
+            },
+            {
+              "topic_number": 8,
+              "title": "Distributed transactions"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit 3: Consistency, Replication, fault tolerance and security",
+          "raw_text": "Consistency, Replication, fault tolerance and security: Object replication, Data centric consistency model, client-centric consistency models, Introduction to fault tolerence, process resilience, recovery, distributed security architecture, security management, KERBEROS, secure socket layer, cryptography.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Object replication"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data centric consistency model"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client-centric consistency models"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to fault tolerence"
+            },
+            {
+              "topic_number": 5,
+              "title": "Process resilience"
+            },
+            {
+              "topic_number": 6,
+              "title": "Recovery"
+            },
+            {
+              "topic_number": 7,
+              "title": "Distributed security architecture"
+            },
+            {
+              "topic_number": 8,
+              "title": "Security management"
+            },
+            {
+              "topic_number": 9,
+              "title": "KERBEROS"
+            },
+            {
+              "topic_number": 10,
+              "title": "Secure socket layer"
+            },
+            {
+              "topic_number": 11,
+              "title": "Cryptography"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit 4: Distributed Object Based and File Systems",
+          "raw_text": "Distributed Object Based and File Systems : CORBA, Distributed COM, Goals and Design Issues of Distributed file system, types of distributed file system, sun network file system,.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "CORBA"
+            },
+            {
+              "topic_number": 2,
+              "title": "Distributed COM"
+            },
+            {
+              "topic_number": 3,
+              "title": "Goals and Design Issues of Distributed file system"
+            },
+            {
+              "topic_number": 4,
+              "title": "Types of distributed file system"
+            },
+            {
+              "topic_number": 5,
+              "title": "Sun network file system"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit 5: Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems",
+          "raw_text": "Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems : the world wide web, distributed co-ordination based systems: JINI Implementation: JAVA RMI, OLE, ActiveX, Orbix, Visbrokes, Object oriented programming with SOM",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Distributed shared memory"
+            },
+            {
+              "topic_number": 2,
+              "title": "DSM servers"
+            },
+            {
+              "topic_number": 3,
+              "title": "Shared memory consistency model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Distributed document based systems"
+            },
+            {
+              "topic_number": 5,
+              "title": "The world wide web"
+            },
+            {
+              "topic_number": 6,
+              "title": "Distributed co-ordination based systems"
+            },
+            {
+              "topic_number": 7,
+              "title": "JINI Implementation"
+            },
+            {
+              "topic_number": 8,
+              "title": "JAVA RMI"
+            },
+            {
+              "topic_number": 9,
+              "title": "OLE"
+            },
+            {
+              "topic_number": 10,
+              "title": "ActiveX"
+            },
+            {
+              "topic_number": 11,
+              "title": "Orbix"
+            },
+            {
+              "topic_number": 12,
+              "title": "Visbrokes"
+            },
+            {
+              "topic_number": 13,
+              "title": "Object oriented programming with SOM"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Distributed Systems Principles and Paradigms",
+          "authors": "Andrew S. Tanenbaum, Maarten Van Steen",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Computing Principles and Applications",
+          "authors": "Lui",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Progressing to Distributed Multiprocessing",
+          "authors": "Harry Singh",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Systems Architecture Design \u0026 Implementation",
+          "authors": "B.W. Lampson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed computing Systems, Synchronization, control \u0026 Communications",
+          "authors": "Parker Y. Verjies J. P.",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Processing Systems",
+          "authors": "Robert J. \u0026 Thieranf",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distribute System: Design and Concepts",
+          "authors": "George Coulios",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 531,
+      "subject_id": 472,
+      "subject_name": "Artificial Intelligence",
+      "subject_code": "MCA 302",
+      "credits": 0,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: General Issues and Overview of AI",
+          "raw_text": "The AI problems, what is an AI technique, Characteristics of AI applications. Introduction to LISP programming: Syntax and numeric functions, Basic list manipulation functions, predicates and conditionals, input output and local variables, iteraction and recursion, property lists and arrays.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "AI problems"
+            },
+            {
+              "topic_number": 2,
+              "title": "Introduction to LISP programming"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Problem Solving, Search and Control Strategies",
+          "raw_text": "General problem solving, production systems, control strategies forward and backward chaining, exhausive searches depth first breadth first search. Heuristic Search Techniques  Hill climbing, branch and bound technique, best first search \u0026 A* algorithm, AND / OR graphs, problem reduction \u0026 AO* algorithm, constraint satisfaction problems.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "General problem solving"
+            },
+            {
+              "topic_number": 2,
+              "title": "Heuristic Search Techniques"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Knowledge Representations",
+          "raw_text": "First order predicate calculus, skolemization, resolution principle \u0026 unification, interface mechanisms, horn's clauses, semantic networks, frame systems and value inheritance, scripts, conceptual dependency.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "First order predicate calculus"
+            },
+            {
+              "topic_number": 2,
+              "title": "Semantic networks"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Natural Language processing",
+          "raw_text": "Parsing techniques, context free grammer, recursive transitions nets (RNT), augmented transition nets (ATN), case and logic grammers, symantic analysis. Game playing Minimax search procedure, alpha-beta cutoffs, additional refinments. Planning  Overview an example domain the block word, component of planning systems, goal stack planning, non linear planning.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Natural Language processing"
+            },
+            {
+              "topic_number": 2,
+              "title": "Game playing"
+            },
+            {
+              "topic_number": 3,
+              "title": "Planning"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: Probabilistic Reasoning and Uncertainty",
+          "raw_text": "Probability theory, bayes theorem and bayesian networks, certainty factor. Expert Systems  Introduction to expert system and application of expert systems, various expert system shells, vidwan frame work, knowledge acquisition, case studies, MYCIN. Learning   Rote learning, learning by induction, explanation based learning",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Probability theory"
+            },
+            {
+              "topic_number": 2,
+              "title": "Expert Systems"
+            },
+            {
+              "topic_number": 3,
+              "title": "Learning"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Artifical Intelligence",
+          "authors": "Elaine Rich and Kevin Knight",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Artifical Intelligence",
+          "authors": "",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Introduction to Artifical Intelligence and Expert Systems",
+          "authors": "Dan W. Patterson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Principles of Artifical Intelligence",
+          "authors": "Nils J. Nilson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Programming in PROLOG",
+          "authors": "Clocksin \u0026 C.S.Melish",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Rule based Expert System",
+          "authors": "M.Sasikumar,S.Ramani",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 528,
+      "subject_id": 469,
+      "subject_name": "Introduction to Data Science and Big Data",
+      "subject_code": "MCA 303",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction to Data Science and Big Data",
+          "raw_text": "Introduction to Data Science – Data Science Process – Exploratory Data analysis – Big data: Definition, Risks of Big Data, Structure of Big Data – Web Data: The Original Big Data – Evolution Of Analytic Scalability – Analytic Processes and Tools – Analysis versus Reporting – Core Analytics versus Advanced Analytics– Modern Data Analytic Tools – Statistical Concepts: Sampling Distributions – Re-Sampling – Statistical Inference – Introduction to Data Visualization.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Data Science"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data Science Process"
+            },
+            {
+              "topic_number": 3,
+              "title": "Exploratory Data analysis"
+            },
+            {
+              "topic_number": 4,
+              "title": "Big data"
+            },
+            {
+              "topic_number": 5,
+              "title": "Statistical Concepts"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Data Analysis Using R",
+          "raw_text": "Univariate Analysis: Frequency, Mean, Median, Mode, Variance, Standard Deviation, Skewness and Kurtosis – Bivariate Analysis: Correlation – Regression Modeling: Linear and Logistic Regression – Multivariate Analysis – Graphical representation of Univariate, Bivariate and Multivariate Analysis in R: Bar Plot, Histogram, Box Plot, Line Plot, Scatter Plot, Lattice Plot, Regression Line, Two-Way cross Tabulation.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Univariate Analysis"
+            },
+            {
+              "topic_number": 2,
+              "title": "Bivariate Analysis"
+            },
+            {
+              "topic_number": 3,
+              "title": "Regression Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Multivariate Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Data Modeling",
+          "raw_text": "Bayesian Modeling – Support Vector and Kernel Methods – Neuro – Fuzzy Modeling – Principal Component Analysis – Introduction to NoSQL: CAP Theorem, MongoDB: RDBMS VsMongoDB, Mongo DB Database Model, Data Types and Sharding – Data Modeling in HBase: Defining Schema – CRUD Operations",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Bayesian Modeling"
+            },
+            {
+              "topic_number": 2,
+              "title": "Support Vector and Kernel Methods"
+            },
+            {
+              "topic_number": 3,
+              "title": "Neuro – Fuzzy Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Principal Component Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Data Analytical Frameworks",
+          "raw_text": "Introduction to Hadoop: Hadoop Overview – RDBMS versus Hadoop – HDFS (Hadoop Distributed File System): Components and Block Replication – Introduction to MapReduce – Running Algorithms Using MapReduce – Introduction to HBase: HBase Architecture, HLog and HFile, Data Replication – Introduction to Hive, Spark and Apache Sqoop.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Hadoop"
+            },
+            {
+              "topic_number": 2,
+              "title": "RDBMS versus Hadoop"
+            },
+            {
+              "topic_number": 3,
+              "title": "Introduction to MapReduce"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to HBase"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: Stream Analytics",
+          "raw_text": "Introduction To Streams Concepts – Stream Data Model and Architecture – Stream Computing – Sampling Data in a Stream – Filtering Streams – Counting Distinct Elements in a Stream – Estimating Moments – Counting Oneness in a Window – Decaying Window.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction To Streams Concepts"
+            },
+            {
+              "topic_number": 2,
+              "title": "Stream Data Model and Architecture"
+            },
+            {
+              "topic_number": 3,
+              "title": "Stream Computing"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Taming the Big Data Tidal Wave: Finding Opportunities in Huge Data Streams with Advanced Analytics",
+          "authors": "Bill Franks",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Doing Data Science",
+          "authors": "Rachel Schutt, Cathy O'Neil",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 528,
+      "subject_id": 469,
+      "subject_name": "Introduction to Data Science and Big Data",
+      "subject_code": "MCA 303",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction to Data Science and Big Data",
+          "raw_text": "Introduction to Data Science – Data Science Process – Exploratory Data analysis – Big data: Definition, Risks of Big Data, Structure of Big Data – Web Data: The Original Big Data – Evolution Of Analytic Scalability – Analytic Processes and Tools – Analysis versus Reporting – Core Analytics versus Advanced Analytics– Modern Data Analytic Tools – Statistical Concepts: Sampling Distributions – Re-Sampling – Statistical Inference – Introduction to Data Visualization.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Data Science"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data Science Process"
+            },
+            {
+              "topic_number": 3,
+              "title": "Exploratory Data analysis"
+            },
+            {
+              "topic_number": 4,
+              "title": "Big data"
+            },
+            {
+              "topic_number": 5,
+              "title": "Statistical Concepts"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Data Analysis Using R",
+          "raw_text": "Univariate Analysis: Frequency, Mean, Median, Mode, Variance, Standard Deviation, Skewness and Kurtosis – Bivariate Analysis: Correlation – Regression Modeling: Linear and Logistic Regression – Multivariate Analysis – Graphical representation of Univariate, Bivariate and Multivariate Analysis in R: Bar Plot, Histogram, Box Plot, Line Plot, Scatter Plot, Lattice Plot, Regression Line, Two-Way cross Tabulation.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Univariate Analysis"
+            },
+            {
+              "topic_number": 2,
+              "title": "Bivariate Analysis"
+            },
+            {
+              "topic_number": 3,
+              "title": "Regression Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Multivariate Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Data Modeling",
+          "raw_text": "Bayesian Modeling – Support Vector and Kernel Methods – Neuro – Fuzzy Modeling – Principal Component Analysis – Introduction to NoSQL: CAP Theorem, MongoDB: RDBMS VsMongoDB, Mongo DB Database Model, Data Types and Sharding – Data Modeling in HBase: Defining Schema – CRUD Operations",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Bayesian Modeling"
+            },
+            {
+              "topic_number": 2,
+              "title": "Support Vector and Kernel Methods"
+            },
+            {
+              "topic_number": 3,
+              "title": "Neuro – Fuzzy Modeling"
+            },
+            {
+              "topic_number": 4,
+              "title": "Principal Component Analysis"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Data Analytical Frameworks",
+          "raw_text": "Introduction to Hadoop: Hadoop Overview – RDBMS versus Hadoop – HDFS (Hadoop Distributed File System): Components and Block Replication – Introduction to MapReduce – Running Algorithms Using MapReduce – Introduction to HBase: HBase Architecture, HLog and HFile, Data Replication – Introduction to Hive, Spark and Apache Sqoop.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction to Hadoop"
+            },
+            {
+              "topic_number": 2,
+              "title": "RDBMS versus Hadoop"
+            },
+            {
+              "topic_number": 3,
+              "title": "Introduction to MapReduce"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to HBase"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: Stream Analytics",
+          "raw_text": "Introduction To Streams Concepts – Stream Data Model and Architecture – Stream Computing – Sampling Data in a Stream – Filtering Streams – Counting Distinct Elements in a Stream – Estimating Moments – Counting Oneness in a Window – Decaying Window.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Introduction To Streams Concepts"
+            },
+            {
+              "topic_number": 2,
+              "title": "Stream Data Model and Architecture"
+            },
+            {
+              "topic_number": 3,
+              "title": "Stream Computing"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Taming the Big Data Tidal Wave: Finding Opportunities in Huge Data Streams with Advanced Analytics",
+          "authors": "Bill Franks",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Doing Data Science",
+          "authors": "Rachel Schutt, Cathy O'Neil",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 529,
+      "subject_id": 470,
+      "subject_name": "Elective –II Internet of Things",
+      "subject_code": "MCA 304",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction",
+          "raw_text": "Introduction: Definition, Characteristics of IOT, IOT Conceptual framework, IOT Architectural view, Physical design of IOT, Logical design of IOT, Application of IOT.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Definition"
+            },
+            {
+              "topic_number": 2,
+              "title": "Characteristics of IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "IOT Conceptual framework"
+            },
+            {
+              "topic_number": 4,
+              "title": "IOT Architectural view"
+            },
+            {
+              "topic_number": 5,
+              "title": "Physical design of IOT"
+            },
+            {
+              "topic_number": 6,
+              "title": "Logical design of IOT"
+            },
+            {
+              "topic_number": 7,
+              "title": "Application of IOT"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Machine-to-machine (M2M), SDN and NFV for IOT",
+          "raw_text": "Machine-to-machine (M2M), SDN (software defined networking) and NFV (network function virtualization) for IOT, data storage in IOT, IOT Cloud Based Services.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Machine-to-machine (M2M)"
+            },
+            {
+              "topic_number": 2,
+              "title": "SDN (software defined networking) for IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "NFV (network function virtualization) for IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Data storage in IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "IOT Cloud Based Services"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Design Principles for Web Connectivity",
+          "raw_text": "Design Principles for Web Connectivity: Web Communication Protocols for connected devices, Message Communication Protocols for connected devices, SOAP, REST, HTTP Restful and Web Sockets. Internet Connectivity Principles: Internet Connectivity, Internet based communication, IP addressing in IOT, Media Accesscontrol.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Web Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 2,
+              "title": "Message Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 3,
+              "title": "SOAP"
+            },
+            {
+              "topic_number": 4,
+              "title": "REST"
+            },
+            {
+              "topic_number": 5,
+              "title": "HTTP Restful"
+            },
+            {
+              "topic_number": 6,
+              "title": "Web Sockets"
+            },
+            {
+              "topic_number": 7,
+              "title": "Internet Connectivity"
+            },
+            {
+              "topic_number": 8,
+              "title": "Internet based communication"
+            },
+            {
+              "topic_number": 9,
+              "title": "IP addressing in IOT"
+            },
+            {
+              "topic_number": 10,
+              "title": "Media Accesscontrol"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Sensor Technology",
+          "raw_text": "Sensor Technology , Participatory Sensing, Industrial IOT and Automotive IOT , Actuator, Sensor data Communication Protocols ,Radio Frequency Identification Technology, Wireless Sensor NetworkTechnology.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Sensor Technology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Participatory Sensing"
+            },
+            {
+              "topic_number": 3,
+              "title": "Industrial IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Automotive IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "Actuator"
+            },
+            {
+              "topic_number": 6,
+              "title": "Sensor data Communication Protocols"
+            },
+            {
+              "topic_number": 7,
+              "title": "Radio Frequency Identification Technology"
+            },
+            {
+              "topic_number": 8,
+              "title": "Wireless Sensor NetworkTechnology"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: IOT Design methodology",
+          "raw_text": "IOT Design methodology: Specification -Requirement, process, model, service, functional \u0026 operational view.IOT Privacy and security solutions, Raspberry Pi \u0026arduino devices. IOT Case studies: smart city streetlights control \u0026 monitoring.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "IOT Design methodology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Specification -Requirement"
+            },
+            {
+              "topic_number": 3,
+              "title": "Process"
+            },
+            {
+              "topic_number": 4,
+              "title": "Model"
+            },
+            {
+              "topic_number": 5,
+              "title": "Service"
+            },
+            {
+              "topic_number": 6,
+              "title": "Functional \u0026 operational view"
+            },
+            {
+              "topic_number": 7,
+              "title": "IOT Privacy and security solutions"
+            },
+            {
+              "topic_number": 8,
+              "title": "Raspberry Pi \u0026arduino devices"
+            },
+            {
+              "topic_number": 9,
+              "title": "IOT Case studies"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Internet of Things",
+          "authors": "Rajkamal",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Internet of things(A-Hand-on-Approach)",
+          "authors": "Vijay Madisetti and ArshdeepBahga",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Connecting Objects",
+          "authors": "HakimaChaouchi",
+          "book_type": "textbook"
+        },
+        {
+          "title": "MySQL for the Internet of things",
+          "authors": "Charless Bell",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Rethinking the Internet of things:A scalable Approach to connecting everything",
+          "authors": "Francis dacosta",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Do-It-Yourself at Home Projects for Arduino, Raspberry Pi and BeagleBone Black",
+          "authors": "Donald Norris",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 529,
+      "subject_id": 470,
+      "subject_name": "Elective –II Internet of Things",
+      "subject_code": "MCA 304",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit I: Introduction",
+          "raw_text": "Introduction: Definition, Characteristics of IOT, IOT Conceptual framework, IOT Architectural view, Physical design of IOT, Logical design of IOT, Application of IOT.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Definition"
+            },
+            {
+              "topic_number": 2,
+              "title": "Characteristics of IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "IOT Conceptual framework"
+            },
+            {
+              "topic_number": 4,
+              "title": "IOT Architectural view"
+            },
+            {
+              "topic_number": 5,
+              "title": "Physical design of IOT"
+            },
+            {
+              "topic_number": 6,
+              "title": "Logical design of IOT"
+            },
+            {
+              "topic_number": 7,
+              "title": "Application of IOT"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit II: Machine-to-machine (M2M), SDN and NFV for IOT",
+          "raw_text": "Machine-to-machine (M2M), SDN (software defined networking) and NFV (network function virtualization) for IOT, data storage in IOT, IOT Cloud Based Services.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Machine-to-machine (M2M)"
+            },
+            {
+              "topic_number": 2,
+              "title": "SDN (software defined networking) for IOT"
+            },
+            {
+              "topic_number": 3,
+              "title": "NFV (network function virtualization) for IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Data storage in IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "IOT Cloud Based Services"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit III: Design Principles for Web Connectivity",
+          "raw_text": "Design Principles for Web Connectivity: Web Communication Protocols for connected devices, Message Communication Protocols for connected devices, SOAP, REST, HTTP Restful and Web Sockets. Internet Connectivity Principles: Internet Connectivity, Internet based communication, IP addressing in IOT, Media Accesscontrol.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Web Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 2,
+              "title": "Message Communication Protocols for connected devices"
+            },
+            {
+              "topic_number": 3,
+              "title": "SOAP"
+            },
+            {
+              "topic_number": 4,
+              "title": "REST"
+            },
+            {
+              "topic_number": 5,
+              "title": "HTTP Restful"
+            },
+            {
+              "topic_number": 6,
+              "title": "Web Sockets"
+            },
+            {
+              "topic_number": 7,
+              "title": "Internet Connectivity"
+            },
+            {
+              "topic_number": 8,
+              "title": "Internet based communication"
+            },
+            {
+              "topic_number": 9,
+              "title": "IP addressing in IOT"
+            },
+            {
+              "topic_number": 10,
+              "title": "Media Accesscontrol"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit IV: Sensor Technology",
+          "raw_text": "Sensor Technology , Participatory Sensing, Industrial IOT and Automotive IOT , Actuator, Sensor data Communication Protocols ,Radio Frequency Identification Technology, Wireless Sensor NetworkTechnology.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Sensor Technology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Participatory Sensing"
+            },
+            {
+              "topic_number": 3,
+              "title": "Industrial IOT"
+            },
+            {
+              "topic_number": 4,
+              "title": "Automotive IOT"
+            },
+            {
+              "topic_number": 5,
+              "title": "Actuator"
+            },
+            {
+              "topic_number": 6,
+              "title": "Sensor data Communication Protocols"
+            },
+            {
+              "topic_number": 7,
+              "title": "Radio Frequency Identification Technology"
+            },
+            {
+              "topic_number": 8,
+              "title": "Wireless Sensor NetworkTechnology"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit V: IOT Design methodology",
+          "raw_text": "IOT Design methodology: Specification -Requirement, process, model, service, functional \u0026 operational view.IOT Privacy and security solutions, Raspberry Pi \u0026arduino devices. IOT Case studies: smart city streetlights control \u0026 monitoring.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "IOT Design methodology"
+            },
+            {
+              "topic_number": 2,
+              "title": "Specification -Requirement"
+            },
+            {
+              "topic_number": 3,
+              "title": "Process"
+            },
+            {
+              "topic_number": 4,
+              "title": "Model"
+            },
+            {
+              "topic_number": 5,
+              "title": "Service"
+            },
+            {
+              "topic_number": 6,
+              "title": "Functional \u0026 operational view"
+            },
+            {
+              "topic_number": 7,
+              "title": "IOT Privacy and security solutions"
+            },
+            {
+              "topic_number": 8,
+              "title": "Raspberry Pi \u0026arduino devices"
+            },
+            {
+              "topic_number": 9,
+              "title": "IOT Case studies"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Internet of Things",
+          "authors": "Rajkamal",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Internet of things(A-Hand-on-Approach)",
+          "authors": "Vijay Madisetti and ArshdeepBahga",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Connecting Objects",
+          "authors": "HakimaChaouchi",
+          "book_type": "textbook"
+        },
+        {
+          "title": "MySQL for the Internet of things",
+          "authors": "Charless Bell",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Rethinking the Internet of things:A scalable Approach to connecting everything",
+          "authors": "Francis dacosta",
+          "book_type": "textbook"
+        },
+        {
+          "title": "The Internet of Things: Do-It-Yourself at Home Projects for Arduino, Raspberry Pi and BeagleBone Black",
+          "authors": "Donald Norris",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 530,
+      "subject_id": 471,
+      "subject_name": "Elective –III Distributed Systems",
+      "subject_code": "MCA 305",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit 1: Introduction to Distributed Systems",
+          "raw_text": "Introduction to Distributed Systems : Goals of Distributed Systems, Hardware and Software concepts, the client server model, Remote procedure call, remote object invocation, message and stream oriented communications.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Goals of Distributed Systems"
+            },
+            {
+              "topic_number": 2,
+              "title": "Hardware and Software concepts"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client server model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Remote procedure call"
+            },
+            {
+              "topic_number": 5,
+              "title": "Remote object invocation"
+            },
+            {
+              "topic_number": 6,
+              "title": "Message and stream oriented communications"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit 2: Process and synchronization in Distributed Systems",
+          "raw_text": "Process and synchronization in Distributed Systems : Threads, clients, servers, code migration, clock synchronization, mutual exclusion, Bully and Ring Algorithm, Distributed transactions.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Threads"
+            },
+            {
+              "topic_number": 2,
+              "title": "Clients"
+            },
+            {
+              "topic_number": 3,
+              "title": "Servers"
+            },
+            {
+              "topic_number": 4,
+              "title": "Code migration"
+            },
+            {
+              "topic_number": 5,
+              "title": "Clock synchronization"
+            },
+            {
+              "topic_number": 6,
+              "title": "Mutual exclusion"
+            },
+            {
+              "topic_number": 7,
+              "title": "Bully and Ring Algorithm"
+            },
+            {
+              "topic_number": 8,
+              "title": "Distributed transactions"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit 3: Consistency, Replication, fault tolerance and security",
+          "raw_text": "Consistency, Replication, fault tolerance and security: Object replication, Data centric consistency model, client-centric consistency models, Introduction to fault tolerence, process resilience, recovery, distributed security architecture, security management, KERBEROS, secure socket layer, cryptography.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Object replication"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data centric consistency model"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client-centric consistency models"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to fault tolerence"
+            },
+            {
+              "topic_number": 5,
+              "title": "Process resilience"
+            },
+            {
+              "topic_number": 6,
+              "title": "Recovery"
+            },
+            {
+              "topic_number": 7,
+              "title": "Distributed security architecture"
+            },
+            {
+              "topic_number": 8,
+              "title": "Security management"
+            },
+            {
+              "topic_number": 9,
+              "title": "KERBEROS"
+            },
+            {
+              "topic_number": 10,
+              "title": "Secure socket layer"
+            },
+            {
+              "topic_number": 11,
+              "title": "Cryptography"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit 4: Distributed Object Based and File Systems",
+          "raw_text": "Distributed Object Based and File Systems : CORBA, Distributed COM, Goals and Design Issues of Distributed file system, types of distributed file system, sun network file system,.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "CORBA"
+            },
+            {
+              "topic_number": 2,
+              "title": "Distributed COM"
+            },
+            {
+              "topic_number": 3,
+              "title": "Goals and Design Issues of Distributed file system"
+            },
+            {
+              "topic_number": 4,
+              "title": "Types of distributed file system"
+            },
+            {
+              "topic_number": 5,
+              "title": "Sun network file system"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit 5: Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems",
+          "raw_text": "Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems : the world wide web, distributed co-ordination based systems: JINI Implementation: JAVA RMI, OLE, ActiveX, Orbix, Visbrokes, Object oriented programming with SOM",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Distributed shared memory"
+            },
+            {
+              "topic_number": 2,
+              "title": "DSM servers"
+            },
+            {
+              "topic_number": 3,
+              "title": "Shared memory consistency model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Distributed document based systems"
+            },
+            {
+              "topic_number": 5,
+              "title": "The world wide web"
+            },
+            {
+              "topic_number": 6,
+              "title": "Distributed co-ordination based systems"
+            },
+            {
+              "topic_number": 7,
+              "title": "JINI Implementation"
+            },
+            {
+              "topic_number": 8,
+              "title": "JAVA RMI"
+            },
+            {
+              "topic_number": 9,
+              "title": "OLE"
+            },
+            {
+              "topic_number": 10,
+              "title": "ActiveX"
+            },
+            {
+              "topic_number": 11,
+              "title": "Orbix"
+            },
+            {
+              "topic_number": 12,
+              "title": "Visbrokes"
+            },
+            {
+              "topic_number": 13,
+              "title": "Object oriented programming with SOM"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Distributed Systems Principles and Paradigms",
+          "authors": "Andrew S. Tanenbaum, Maarten Van Steen",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Computing Principles and Applications",
+          "authors": "Lui",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Progressing to Distributed Multiprocessing",
+          "authors": "Harry Singh",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Systems Architecture Design \u0026 Implementation",
+          "authors": "B.W. Lampson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed computing Systems, Synchronization, control \u0026 Communications",
+          "authors": "Parker Y. Verjies J. P.",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Processing Systems",
+          "authors": "Robert J. \u0026 Thieranf",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distribute System: Design and Concepts",
+          "authors": "George Coulios",
+          "book_type": "textbook"
+        }
+      ]
+    },
+    {
+      "id": 530,
+      "subject_id": 471,
+      "subject_name": "Elective –III Distributed Systems",
+      "subject_code": "MCA 305",
+      "credits": 3,
+      "units": [
+        {
+          "unit_number": 1,
+          "title": "Unit 1: Introduction to Distributed Systems",
+          "raw_text": "Introduction to Distributed Systems : Goals of Distributed Systems, Hardware and Software concepts, the client server model, Remote procedure call, remote object invocation, message and stream oriented communications.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Goals of Distributed Systems"
+            },
+            {
+              "topic_number": 2,
+              "title": "Hardware and Software concepts"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client server model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Remote procedure call"
+            },
+            {
+              "topic_number": 5,
+              "title": "Remote object invocation"
+            },
+            {
+              "topic_number": 6,
+              "title": "Message and stream oriented communications"
+            }
+          ]
+        },
+        {
+          "unit_number": 2,
+          "title": "Unit 2: Process and synchronization in Distributed Systems",
+          "raw_text": "Process and synchronization in Distributed Systems : Threads, clients, servers, code migration, clock synchronization, mutual exclusion, Bully and Ring Algorithm, Distributed transactions.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Threads"
+            },
+            {
+              "topic_number": 2,
+              "title": "Clients"
+            },
+            {
+              "topic_number": 3,
+              "title": "Servers"
+            },
+            {
+              "topic_number": 4,
+              "title": "Code migration"
+            },
+            {
+              "topic_number": 5,
+              "title": "Clock synchronization"
+            },
+            {
+              "topic_number": 6,
+              "title": "Mutual exclusion"
+            },
+            {
+              "topic_number": 7,
+              "title": "Bully and Ring Algorithm"
+            },
+            {
+              "topic_number": 8,
+              "title": "Distributed transactions"
+            }
+          ]
+        },
+        {
+          "unit_number": 3,
+          "title": "Unit 3: Consistency, Replication, fault tolerance and security",
+          "raw_text": "Consistency, Replication, fault tolerance and security: Object replication, Data centric consistency model, client-centric consistency models, Introduction to fault tolerence, process resilience, recovery, distributed security architecture, security management, KERBEROS, secure socket layer, cryptography.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Object replication"
+            },
+            {
+              "topic_number": 2,
+              "title": "Data centric consistency model"
+            },
+            {
+              "topic_number": 3,
+              "title": "Client-centric consistency models"
+            },
+            {
+              "topic_number": 4,
+              "title": "Introduction to fault tolerence"
+            },
+            {
+              "topic_number": 5,
+              "title": "Process resilience"
+            },
+            {
+              "topic_number": 6,
+              "title": "Recovery"
+            },
+            {
+              "topic_number": 7,
+              "title": "Distributed security architecture"
+            },
+            {
+              "topic_number": 8,
+              "title": "Security management"
+            },
+            {
+              "topic_number": 9,
+              "title": "KERBEROS"
+            },
+            {
+              "topic_number": 10,
+              "title": "Secure socket layer"
+            },
+            {
+              "topic_number": 11,
+              "title": "Cryptography"
+            }
+          ]
+        },
+        {
+          "unit_number": 4,
+          "title": "Unit 4: Distributed Object Based and File Systems",
+          "raw_text": "Distributed Object Based and File Systems : CORBA, Distributed COM, Goals and Design Issues of Distributed file system, types of distributed file system, sun network file system,.",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "CORBA"
+            },
+            {
+              "topic_number": 2,
+              "title": "Distributed COM"
+            },
+            {
+              "topic_number": 3,
+              "title": "Goals and Design Issues of Distributed file system"
+            },
+            {
+              "topic_number": 4,
+              "title": "Types of distributed file system"
+            },
+            {
+              "topic_number": 5,
+              "title": "Sun network file system"
+            }
+          ]
+        },
+        {
+          "unit_number": 5,
+          "title": "Unit 5: Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems",
+          "raw_text": "Distributed shared memory, DSM servers, shared memory consistency model, distributed document based systems : the world wide web, distributed co-ordination based systems: JINI Implementation: JAVA RMI, OLE, ActiveX, Orbix, Visbrokes, Object oriented programming with SOM",
+          "topics": [
+            {
+              "topic_number": 1,
+              "title": "Distributed shared memory"
+            },
+            {
+              "topic_number": 2,
+              "title": "DSM servers"
+            },
+            {
+              "topic_number": 3,
+              "title": "Shared memory consistency model"
+            },
+            {
+              "topic_number": 4,
+              "title": "Distributed document based systems"
+            },
+            {
+              "topic_number": 5,
+              "title": "The world wide web"
+            },
+            {
+              "topic_number": 6,
+              "title": "Distributed co-ordination based systems"
+            },
+            {
+              "topic_number": 7,
+              "title": "JINI Implementation"
+            },
+            {
+              "topic_number": 8,
+              "title": "JAVA RMI"
+            },
+            {
+              "topic_number": 9,
+              "title": "OLE"
+            },
+            {
+              "topic_number": 10,
+              "title": "ActiveX"
+            },
+            {
+              "topic_number": 11,
+              "title": "Orbix"
+            },
+            {
+              "topic_number": 12,
+              "title": "Visbrokes"
+            },
+            {
+              "topic_number": 13,
+              "title": "Object oriented programming with SOM"
+            }
+          ]
+        }
+      ],
+      "books": [
+        {
+          "title": "Distributed Systems Principles and Paradigms",
+          "authors": "Andrew S. Tanenbaum, Maarten Van Steen",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Computing Principles and Applications",
+          "authors": "Lui",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Progressing to Distributed Multiprocessing",
+          "authors": "Harry Singh",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Systems Architecture Design \u0026 Implementation",
+          "authors": "B.W. Lampson",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed computing Systems, Synchronization, control \u0026 Communications",
+          "authors": "Parker Y. Verjies J. P.",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distributed Processing Systems",
+          "authors": "Robert J. \u0026 Thieranf",
+          "book_type": "textbook"
+        },
+        {
+          "title": "Distribute System: Design and Concepts",
+          "authors": "George Coulios",
+          "book_type": "textbook"
+        }
+      ]
+    }
+  ]
+}

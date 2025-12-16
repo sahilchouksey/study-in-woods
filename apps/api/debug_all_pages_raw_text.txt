@@ -1,0 +1,554 @@
+=== RUN   TestExtractAllPagesForDebug
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+PDF has 12 pages
+
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 1-1 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2189 characters from pages 1-1
+
+
+================================================================================
+                              PAGE 1
+                         (length: 2189 chars)
+================================================================================
+
+RAJIV GANDHI PROUDYOGIKI VISHWAVIDYALAYA, BHOPAL
+MCA, Third -Semester
+MCA 301 Data Mining
+UNIT – I  Motivation, importance, Data type for Data Mining : relation Databases, Data
+Warehouses, Transactional databases, advanced database system and its applications, Data
+mining Functionalities: Concept/Class description, Association Analysis classification &
+Prediction, Cluster Analysis, Outlier Analysis, Evolution Analysis, Classification of Data Mining
+Systems, Major Issues in Data Mining.
+UNIT – II  Data Warehouse and OLAP Technology for Data Mining: Differences between
+Operational Database Systems and Data Warehouses, a multidimensional Data Model, Data
+Warehouse Architecture, Data Warehouse Architecture, Data Warehouse Implementation, Data
+Cube Technology.
+UNIT- III  Data Preprocessing: Data Cleaning, Data Integration and Transformation, Data
+Reduction, Discretization and Concept Hierarchy Generation. Data Mining Primitives,
+Languages, and System Architectures, Concept Description: Characterization and Comparison,
+Analytical Characterization.
+UNIT – IV Mining Association Rules in Large Databases: Association Rule Mining: Market
+Basket Analysis, Basic Concepts, Mining Single-Dimensional Boolean Association Rules from
+Transactional Databases: the Apriori algorithm, Generating Association rules from Frequent
+items, Improving the efficiency of Apriory, Mining Multilevel Association Rules,
+Multidimensional Association Rules, Constraint-Based Association Mining.
+UNIT – V Classification & Prediction and Cluster Analysis: Issues regarding classification &
+prediction, Different Classification Methods, Prediction, Cluster Analysis, Major Clustering
+Methods, Applications & Trends in Data Mining: Data Mining Applications, currently available
+tools.
+BOOKS
+1. J. Han and M. Kamber, “Data Mining: Concepts and Techniques”, Morgan Kaufmann Pub. 2.
+Berson “Dataware housing, Data Mining & DLAP, @004, TMH. 3. W.H. Inmon “ Building the
+Datawarehouse, 3ed, Wiley India. 4. Anahory, “Data Warehousing in Real World”, Pearson
+Education. 5. Adriaans, “Data Mining”, Pearson Education. 6. S.K. Pujari, “Data Mining
+Techniques”, University Press, Hyderabad
+
+================================================================================
+                           END PAGE 1
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 2-2 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2267 characters from pages 2-2
+
+
+================================================================================
+                              PAGE 2
+                         (length: 2267 chars)
+================================================================================
+
+MCA 302 Artificial Intelligence
+UNIT I General Issues and Overview of AI  The AI problems, what is an AI technique,
+Characteristics of AI applications. Introduction to LISP programming: Syntax and numeric
+functions, Basic list manipulation functions, predicates and conditionals, input output and local
+variables, iteraction and recursion, property lists and arrays.
+UNIT II Problem Solving, Search and Control Strategies  General problem solving, production
+systems, control strategies forward and backward chaining, exhausive searches depth first
+breadth first search. Heuristic Search Techniques  Hill climbing, branch and bound technique,
+best first search & A* algorithm, AND / OR graphs, problem reduction & AO* algorithm,
+constraint satisfaction problems.
+UNIT III  Knowledge Representations  First order predicate calculus, skolemization, resolution
+principle & unification, interface mechanisms, horn's clauses, semantic networks, frame systems
+and value inheritance, scripts, conceptual dependency.
+UNIT IV Natural Language processing  Parsing techniques, context free grammer, recursive
+transitions nets (RNT), augmented transition nets (ATN), case and logic grammers, symantic
+analysis. Game playing Minimax search procedure, alpha-beta cutoffs, additional refinments.
+Planning  Overview an example domain the block word, component of planning systems, goal
+stack planning, non linear planning.
+UNIT V  Probabilistic Reasoning and Uncertainty  Probability theory, bayes theorem and
+bayesian networks, certainty factor.
+Expert Systems  Introduction to expert system and application of expert systems, various
+expert system shells, vidwan frame work, knowledge acquisition, case studies, MYCIN.
+Learning   Rote learning, learning by induction, explanation based learning
+BOOKS
+1. Elaine Rich and Kevin Knight “Artifical Intelligence” - Tata McGraw Hill.
+2. “Artifical Intelligence” 4 ed. Pearson
+. 3. Dan W. Patterson “Introduction to Artifical Intelligence and Expert Systems”, Prentice India.
+4. Nils J. Nilson “Principles of Artifical Intelligence”, Narosa Publishing House.
+5. Clocksin & C.S.Melish “Programming in PROLOG”, Narosa Publishing House.
+6. M.Sasikumar,S.Ramani etc. “Rule based Expert System”, Narosa Publishing House
+
+================================================================================
+                           END PAGE 2
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 3-3 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2270 characters from pages 3-3
+
+
+================================================================================
+                              PAGE 3
+                         (length: 2270 chars)
+================================================================================
+
+Elective –I  MCA 303 (1) PYTHON PROGRAMMING
+UNIT I  INTRODUCTION TO PYTHON:
+Python interpreter and interactive mode; values and types: int, float, boolean, string, and list;
+variables, expressions, statements, tuple assignment, precedence of operators, comments;
+modules and functions, function definition and use, flow of execution, parameters and
+arguments; Illustrative programs: exchange the values of two variables, circulate the values of n
+variables, distance between two points.
+UNIT II CONTROL FLOW, FUNCTIONS
+Conditionals: Boolean values and operators, conditional (if), alternative (if-else), chained
+conditional (if-elif-else); Iteration: state, while, for, break, continue, pass; Fruitful functions:
+return values, parameters, local and global scope, function composition, recursion; Strings:
+string slices,
+immutability, string functions and methods, string module; Lists as arrays. Illustrative
+programs: square root, gcd, exponentiation, sum an array of numbers, linear search, binary
+search.
+UNIT III LISTS, TUPLES, DICTIONARIES
+Lists: list operations, list slices, list methods, list loop, mutability, aliasing, cloning lists, list
+parameters; Tuples: tuple assignment, tuple as return value; Dictionaries: operations and
+methods; advanced list processing – list comprehension; Illustrative programs: Sorting and
+Searching
+.
+UNIT IV
+Classes and Inheritance: Object Oriented Programming, Class Instances, Methods Classes
+Examples, Why OOP, Hierarchies, Your Own Types – An Extended Example: Building a Class,
+Visualizing the Hierarchy, Adding another Class, Using Inherited Methods
+UNIT V FILES, MODULES, PACKAGES
+Files and exception: text files, reading and writing files, format operator; command line
+arguments, errors and exceptions, handling exceptions, modules, packages; Illustrative
+programs: word count, copy file.
+BOOKS
+1. ReemaThareja, “Python Programming using Problem Solving Approach”, Oxford
+University Press, 2017
+2. Allen B. Downey, “Think Python: How to Think Like a Computer Scientist”,
+SecondEdition, Shroff O‘Reilly Publishers, 2016
+(http://greenteapress.com/wp/thinkpython/)
+3. Guido van Rossum, Fred L. Drake Jr., “An Introduction to Python – Revised
+andUpdated forPython 3.2, Network Theory Ltd.,  Edition2011
+
+================================================================================
+                           END PAGE 3
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 4-4 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 1814 characters from pages 4-4
+
+
+================================================================================
+                              PAGE 4
+                         (length: 1814 chars)
+================================================================================
+
+Elective –I MCA 303 (2) Web Technology
+UNIT I
+Concept of Internet : Client/Server model,Internet and WWW, IP, URL, ISP, DNS; Web Design :
+Principals of effective Web Design, Page layout and linking, designing effective navigation for
+your website, planning and publishing websites, Responsive web design : Responsive vs
+adaptive web design
+UNIT II
+HTML and Style Sheets : Working with HTML - Formatting and Fonts, Basic Tags, Hyperlinks,
+Tables, Images, Forms, XHTML, Meta tags. Style Sheets (CSS): Introduction, Need, basic syntax
+and structure, class, id, background Images, Colors and Properties, Manipulating Texts,
+Margins, Positioning.
+UNIT III
+Javascript : Client side scripting with JavaScript, Data Types and Variables, Expressions,
+Operators and Statements, Objects and Arrays, Functions, loops, Classes, Modules, DOM,
+Forms and Validations.
+UNIT IV
+XML : Introduction, Features, Anatomy, Declaration, Uses, Key Components, DTD and Schema,
+Markup Elements and Attributes, XML Objects, XML Scripting, Using XML with application,
+Transforming XML using XSL and XSLT, XPATH - Template Based Transformations.
+UNIT V
+Introduction to AJAX:  AJAX Components, The XMLHttpRequest Object, Using XSLT with
+AJAX; Webservices : Web Service architecture, introduction to webservices, Web Services VS
+other technologies, Web Services Benefits
+Books
+1.Jeffrey C. Jackson, "Web Technologies--A Computer Science Perspective", Pearson Education,
+2006.
+2.Developing Web Applications, Ralph Moseley and M. T. Savaliya, Wiley-India
+3.Web Technologies, Black Book, dreamtech Press
+4.Web Design, Joel Sklar, Cengage Learning
+5.Internet and World Wide Web How to program, P.J. Deitel & H.M. Deitel Pearson.
+6.Steven Holzner,”HTML Black Book”, Dremtech press.
+7.Kogent Learning Web Technologies: HTML, Javascript Wiley India
+
+================================================================================
+                           END PAGE 4
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 5-5 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2253 characters from pages 5-5
+
+
+================================================================================
+                              PAGE 5
+                         (length: 2253 chars)
+================================================================================
+
+Elective –I MCA 303 (3) Introduction to Data Science and Big Data
+UNIT I  INTRODUCTION TO DATA SCIENCE AND BIG DATA
+Introduction to Data Science – Data Science Process – Exploratory Data analysis – Big data:
+Definition, Risks of Big Data, Structure of Big Data – Web Data: The Original Big Data –
+Evolution Of Analytic Scalability – Analytic Processes and Tools – Analysis versus Reporting –
+Core Analytics versus Advanced Analytics– Modern Data Analytic Tools – Statistical Concepts:
+Sampling Distributions – Re-Sampling – Statistical Inference – Introduction to Data
+Visualization.
+UNIT II  DATA ANALYSIS USING R
+Univariate Analysis: Frequency, Mean, Median, Mode, Variance, Standard Deviation, Skewness
+and Kurtosis – Bivariate Analysis: Correlation – Regression Modeling: Linear and Logistic
+Regression – Multivariate Analysis – Graphical representation of Univariate, Bivariate and
+Multivariate Analysis in R: Bar Plot, Histogram, Box Plot, Line Plot, Scatter Plot, Lattice Plot,
+Regression Line, Two-Way cross Tabulation.
+UNIT III DATA MODELING
+Bayesian Modeling – Support Vector and Kernel Methods – Neuro – Fuzzy Modeling –
+Principal Component Analysis – Introduction to NoSQL: CAP Theorem, MongoDB: RDBMS
+VsMongoDB, Mongo DB Database Model, Data Types and Sharding – Data Modeling in HBase:
+Defining Schema – CRUD Operations
+UNIT IV DATA ANALYTICAL FRAMEWORKS
+Introduction to Hadoop: Hadoop Overview – RDBMS versus Hadoop – HDFS (Hadoop
+Distributed File System): Components and Block Replication – Introduction to MapReduce –
+Running Algorithms Using MapReduce – Introduction to HBase: HBase Architecture, HLog
+and HFile, Data Replication – Introduction to Hive, Spark and Apache Sqoop.
+UNIT V STREAM ANALYTICS
+Introduction To Streams Concepts – Stream Data Model and Architecture – Stream Computing
+– Sampling Data in a Stream – Filtering Streams – Counting Distinct Elements in a Stream –
+Estimating Moments – Counting Oneness in a Window – Decaying Window.
+1. Bill Franks, “Taming the Big Data Tidal Wave: Finding Opportunities in Huge Data
+Streams with Advanced Analytics”, John Wiley & sons
+2. Rachel Schutt, Cathy O'Neil, “Doing Data Science”, O'Reilly
+
+================================================================================
+                           END PAGE 5
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 6-6 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2442 characters from pages 6-6
+
+
+================================================================================
+                              PAGE 6
+                         (length: 2442 chars)
+================================================================================
+
+Elective –II  MCA 304(1) Elective –II Machine Learning
+UNIT I Introduction to machine learning, scope and limitations, regression, probability,
+statistics and linear algebra for machine learning, convex optimization, data visualization,
+hypothesis function and testing, data distributions, data preprocessing, data augmentation,
+normalizing data sets, machine learning models, supervised and unsupervised learning.
+UNIT II Linearity vs non linearity, activation functions like sigmoid, ReLU, etc., weights and
+bias, loss function, gradient descent, multilayer network, backpropagation, weight initialization,
+training, testing, unstable gradient problem, auto encoders, batch normalization, dropout, L1
+and L2 regularization, momentum, tuning hyper parameters.
+UNIT III Convolutional neural network, flattening, subsampling, padding, stride, convolution
+layer, pooling layer, loss layer, dance layer 1x1 convolution, inception network, input channels,
+transfer learning, one shot learning, dimension reductions, implementation of CNN like tensor
+flow, keras etc.
+UNIT IV Recurrent neural network, Long short-term memory, gated recurrent unit, translation,
+beam search and width, Bleu score, attention model, Reinforcement Learning, RL-framework,
+MDP, Bellman equations, Value Iteration and Policy Iteration, , Actor-critic model, Q-learning,
+SARSA
+UNIT V Support Vector Machines, Bayesian learning, application of machine learning in
+computer vision, speech processing, natural language processing etc, Case Study: ImageNet
+Competition
+TEXT BOOKS RECOMMENDED:
+1. Christopher M. Bishop, “Pattern Recognition and Machine Learning”, Springer-Verlag New
+York Inc., 2nd Edition, 2011.
+2. Tom M. Mitchell, “Machine Learning”, McGraw Hill Education, First edition, 2017. 3. Ian
+Goodfellow and Yoshua Bengio and Aaron Courville, “Deep Learning”, MIT Press, 2016
+REFERENCE BOOKS:
+1. Aurelien Geon, “Hands-On Machine Learning with Scikit-Learn and Tensorflow: Concepts,
+Tools, and Techniques to Build Intelligent Systems”, Shroff/O'Reilly; First edition (2017).
+2. Francois Chollet, "Deep Learning with Python", Manning Publications, 1 edition (10 January
+2018).
+3. Andreas Muller, "Introduction to Machine Learning with Python: A Guide for Data
+Scientists", Shroff/O'Reilly; First edition (2016).
+4. Russell, S. and Norvig, N. “Artificial Intelligence: A Modern Approach”, Prentice Hall Series
+in Artificial Intelligence. 2003.
+
+================================================================================
+                           END PAGE 6
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 7-7 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 1915 characters from pages 7-7
+
+
+================================================================================
+                              PAGE 7
+                         (length: 1915 chars)
+================================================================================
+
+Elective –II MCA 304(2) SOFT COMPUTING
+UNIT I  Overview of Soft Computing, Difference between Soft and Hard computing, Brief
+descriptions of different components of soft computing including Artificial intelligence systems
+Neural networks, fuzzy logic, genetic algorithms. Artificial neural networks Vs Biological
+neural networks, ANN architecture, Basic building block of an artificial neuron, Activation
+functions, Introduction to Early ANN architectures (basics only)-McCulloch & Pitts model,
+Perceptron, ADALINE, MADALINE
+UNIT II Artificial Neural Networks: Supervised Learning: Introduction and how brain works,
+Neuron as a simple computing element, The perceptron, Backpropagation networks:
+architecture, multilayer perceptron, backpropagation learning-input layer, accelerated learning
+in multilayer perceptron, The Hopfield network, Bidirectional associative memories (BAM),
+RBF Neural Network.
+UNIT III Artificial Neural Networks: Unsupervised Learning: Hebbian Learning, Generalized
+Hebbian learning algorithm, Competitive learning, Self- Organizing Computational Maps:
+Kohonen Network.
+UNIT IV  Fuzzy Logic Crisp & fuzzy sets fuzzy relations fuzzy conditional statements fuzzy
+rules fuzzy algorithm. Fuzzy logic controller.
+UNIT V  Genetic algorithms basic concepts, encoding, fitness function, reproduction-Roulette
+wheel, Boltzmann, tournament, rank, and steady state selections, Convergence of GA,
+Applications of GA case studies. Introduction to genetic programming- basic concepts.
+BOOK
+1. R. Rajasekaran and G. A and Vijayalakshmi Pa, Neural Networks, Fuzzy Logic, and Genetic
+Algorithms: Synthesis and Applications, Prentice Hall of India
+2. D. E. Goldberg, Genetic Algorithms in Search, Optimisation, and Machine Learning,
+Addison-Wesley
+SUPPLEMENTARY READING
+1. . L. Fausett, Fundamentals of Neural Networks, Prentice Hall
+2. T. Ross, Fuzzy Logic with Engineering Applications, Tata McGraw Hill
+
+================================================================================
+                           END PAGE 7
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 8-8 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 1820 characters from pages 8-8
+
+
+================================================================================
+                              PAGE 8
+                         (length: 1820 chars)
+================================================================================
+
+Elective –II MCA 304(3) Internet of Things
+UNIT I
+Introduction: Definition, Characteristics of IOT, IOT Conceptual framework, IOT
+Architectural view, Physical design of IOT, Logical design of IOT, Application of IOT.
+UNIT II
+Machine-to-machine (M2M), SDN (software defined networking) and NFV (network
+function virtualization) for IOT, data storage in IOT, IOT Cloud Based Services.
+UNIT III
+Design Principles for Web Connectivity: Web Communication Protocols for connected
+devices, Message Communication Protocols for connected devices, SOAP, REST, HTTP
+Restful and Web Sockets. Internet Connectivity Principles: Internet Connectivity, Internet
+based communication, IP addressing in IOT, Media Accesscontrol.
+UNIT IV
+Sensor Technology , Participatory Sensing, Industrial IOT and Automotive IOT , Actuator,
+Sensor data Communication Protocols ,Radio Frequency Identification Technology,
+Wireless Sensor NetworkTechnology.
+UNIT V
+IOT Design methodology: Specification -Requirement, process, model, service, functional
+& operational view.IOT Privacy and security solutions, Raspberry Pi &arduino devices.
+IOT Case studies: smart city streetlights control & monitoring.
+Reference Book:
+1. Rajkamal,”Internet of Things”, Tata McGraw Hill publication
+2. Vijay Madisetti and ArshdeepBahga, “Internet of things(A-
+Hand-on-Approach)” 1st Edition ,UniversalPress
+3. HakimaChaouchi “The Internet of Things: Connecting
+Objects”, Wiley publication.
+4. Charless Bell “MySQL for the Internet of things”, Apresspublications.
+5. Francis dacosta “Rethinking the Internet of things:A
+scalable Approach to connecting everything”, 1st edition, Apress
+publications2013.
+6. Donald Norris“The Internet of Things: Do-It-Yourself at
+Home Projects for Arduino, Raspberry Pi and BeagleBone Black”, McGraw
+Hillpublication.
+
+================================================================================
+                           END PAGE 8
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 9-9 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 3260 characters from pages 9-9
+
+
+================================================================================
+                              PAGE 9
+                         (length: 3260 chars)
+================================================================================
+
+Elective –III MCA 305(1) Computer Ethics
+UNIT-1  An Overview of Ethics: Ethics: Definition of Ethics, The Importance of Integrity, The
+Difference between Morals, Ethics, and Laws. Ethics in the Business World: Why Fostering
+Good Business Ethics Is Important, Improving Corporate Ethics, Creating an Ethical Work
+Environment, Including Ethical Considerations in Decision Making. Ethics in Information
+Technology Ethics for IT Workers and IT Users: IT Technicians, IT Professionals: Are IT
+Workers Professionals, The Changing Professional Services Industry, Professional Relationships
+That Must Be Managed, Professional Codes of Ethics, Professional Organizations, Certification,
+Government Licensing, IT Professional Malpractice. IT Users, Common Ethical Issues for IT
+Users, Supporting the Ethical Practices of IT Users.
+UNIT II Computer and Internet Crime, IT Security Incidents: A Major Concern, Why
+Computer Incidents Are So Prevalent, Types of Exploits, Types of Perpetrators, Federal Laws
+for Prosecuting Computer Attacks, Implementing Trustworthy Computing: Risk Assessment,
+Establishing a Security Policy, Educating Employees, Contractors, and Part-Time Workers,
+Prevention, Detection, Response. Privacy: Privacy Concerns Abound with New IRS Systems,
+Privacy Protection and the Law: Information Privacy, Privacy Laws, Applications, and Court
+Rulings. Key Privacy and Anonymity Issues: Identity Theft, Consumer Profiling, Treating
+Consumer Data Responsibly, Workplace Monitoring, Advanced Surveillance Technology.
+UNIT III Freedom of Expression: First Amendment Rights, Obscene Speech, Defamation,
+Freedom of Expression: Key Issues, Controlling Access to Information on the Internet,
+Anonymity on the Internet, Defamation and Hate Speech, Corporate Blogging, Pornography.
+Intellectual Property: What Is Intellectual Property? Copyrights: Copyright Term, Eligible
+Works, Fair Use Doctrine, Software Copyright Protection, The Prioritizing Resources and
+Organization for Intellectual Property (PRO-IP) Act of 2008, General Agreement on Tariffs and
+Trade (GATT), The WTO and the WTO TRIPS Agreement (1994), The World Intellectual
+Property Organization (WIPO) Copyright Treaty (1996), The Digital Millennium Copyright Act
+(1998), Patents: Software Patents, Software Cross-Licensing Agreements, Defensive Publishing
+and Patent Trolls, Submarine Patents and Patent Farming. Trade Secrets: Trade Secret Laws,
+Employees and Trade Secrets, Key Intellectual Property Issues: Plagiarism, Reverse
+Engineering, Open Source Code, Competitive Intelligence, Cybersquatting
+UNIT IV Software Development: Strategies for Engineering Quality Software,:The Importance
+of Software Quality, Software Product Liability, Software Development Process, Capability
+Maturity Model Integration. Key Issues in Software Development, Development of Safety-
+Critical Systems, Quality Management Standards The Impact of Information Technology on
+Productivity and Quality of Life: The Impact of IT on the Standard of Living and Worker
+Productivity, IT Investment and Productivity, The Digital Divide, The Impact of IT on
+Healthcare Costs, Electronic Health Records, Use of Mobile and Wireless Technology in the
+Healthcare Industry, Telemedicine, Medical Information Web Sites for Laypeople
+
+================================================================================
+                           END PAGE 9
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 10-10 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 1266 characters from pages 10-10
+
+
+================================================================================
+                              PAGE 10
+                         (length: 1266 chars)
+================================================================================
+
+UNIT V Social Networking: What Is a Social Networking Web Site? Business Applications of
+Online Social Networking, Social Network Advertising, The Use of Social Networks in the
+Hiring Process, Social Shopping Web Sites, Social Networking Ethical Issues, Cyberbullying,
+Cyberstalking, Encounters with Sexual Predators, Uploading of Inappropriate Material, Online
+Virtual Worlds, Crime in Virtual Worlds, Educational and Business Uses of Virtual Worlds.
+Ethics of IT Organizations: Key Ethical Issues for Organizations, The Need for Nontraditional
+Workers, Contingent Workers, Advantages of Using Contingent Workers, Disadvantages of
+Using Contingent Workers, Deciding When to Use Contingent, Outsourcing, Offshore
+Outsourcing, Pros and Cons of Offshore Outsourcing, Strategies for Successful Offshore
+Outsourcing, Whistle-Blowing, Protection for Whistle-Blowers, Whistle-Blowing Protection for
+Private-Sector Workers, Dealing with a Whistle-Blowing Situation, Green Computing, ICT
+Industry Code of Conduct.
+Books :
+1. George W. Reynolds, ETHICS IN INFORMATION TECHNOLOGY, Third Edition, Course
+Technology, ISBN-13: 978-0-538-74622-9, Cengage Learning.
+2. Deborah Johnson, Computer Ethics, Fourth Edition
+3. Richard Spinello and Herman Tavani, CyberEthics, 2nd Edition
+
+================================================================================
+                           END PAGE 10
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 11-11 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 2752 characters from pages 11-11
+
+
+================================================================================
+                              PAGE 11
+                         (length: 2752 chars)
+================================================================================
+
+Elective –III MCA 305(2) Advanced DBMS
+UNIT-I  Objected Oriented and Object Relational Databases Modeling Complex Data
+Semantics, Specialization, Generalization, Aggregation and Association, Objects, Object Identity
+and its implementation, Clustering, Equality and Object Reference, Architecture of Object
+Oriented and Object Relational databases, Persistent Programming Languages, Cache
+Coherence. Case Studies: Gemstone, O2, Object Store, SQL3, Oracle xxi, DB2.
+UNIT-II Deductive Databases Data log and Recursion, Evaluation of Data log program,
+Recursive queries with negation. Parallel and Distributed Databases Parallel architectures,
+shared nothing/shared disk/shared memory based architectures, Data partitioning, Intra-
+operator parallelism, pipelining.
+Distributed Data Storage – Fragmentation & Replication, Location and Fragment Transparency
+Distributed Query Processing and Optimization, Distributed Transaction Modeling and
+concurrency Control, Distributed Deadlock, Commit Protocols, Design of Parallel Databases,
+and Parallel Query Evaluation.
+UNIT-III Advanced Transaction Processing Advanced transaction models: Savepoints, Nested
+and Multilevel Transactions, Compensating Transactions and Saga, Long Duration
+Transactions, Weak Levels of Consistency, Transaction Work Flows, Transaction Processing
+Monitors, Shared disk systems.
+UNIT-IV Active Database and Real Time Databases Triggers in SQL, Event Constraint and
+Action: ECA Rules, Query Processing and Concurrency Control, Recursive query processing,
+Compensation and Databases Recovery, multi-level recovery.
+UNIT-V Image and Multimedia Databases Modeling and Storage of Image and Multimedia
+Data, Data Structures – R-tree, k-d tree, Quad trees, Content Based Retrieval: Color Histograms,
+Textures, etc., Image Features, Spatial and Topological Relationships, Multimedia Data Formats,
+Video Data Model, Audio & Handwritten Data, Geographic Information Systems (GIS). WEB
+Database Accessing Databases through WEB, WEB Servers, XML Databases, Commercial
+Systems – Oracle xxi, DB2.
+BOOKS
+1. Elmarsi, “Fundamentals of Database Systems”, 4 th Edition, Pearson Education
+2. R. Ramakrishnan, “Database Management Systems”, 1998, McGraw Hill International
+Editions
+3. Elmagarmid.A.K. “Database transaction models for advanced applications”, Morgan
+Kaufman.
+4. Transaction Processing, Concepts and Techniques, J. Gray and A. Reuter, Morgan Kauffman..
+5. S. Abiteboul, R. hull and V. Vianu, “Foundations of Databases”, 1995, Addison – Wesley
+Publishing Co., Reading Massachusetts.
+6. W. Kim, “Modern Database Systems”, 1995, ACM Press, Addison – Wesley.
+7. D. Maier, “The Theory of Relational Databases”, 1993, Computer Science Press, Rockville,
+Maryland
+
+================================================================================
+                           END PAGE 11
+================================================================================
+2025/12/15 12:00:48 PDF Sanitizer: Removing 2658 bytes of trailing garbage after %EOF
+2025/12/15 12:00:48 PDF Extractor: Extracting pages 12-12 of 12
+2025/12/15 12:00:48 PDF Extractor: Extracted 1903 characters from pages 12-12
+
+
+================================================================================
+                              PAGE 12
+                         (length: 1903 chars)
+================================================================================
+
+Elective –III MCA 305(3) Distributed Systems
+UNIT-I Introduction to Distributed Systems : Goals of Distributed Systems, Hardware and
+Software concepts, the client server model, Remote procedure call, remote object invocation,
+message and stream oriented communications.
+UNIT-II Process and synchronization in Distributed Systems : Threads, clients, servers, code
+migration, clock synchronization, mutual exclusion, Bully and Ring Algorithm, Distributed
+transactions.
+UNIT-III Consistency, Replication, fault tolerance and security: Object replication, Data centric
+consistency model, client-centric consistency models, Introduction to fault tolerence, process
+resilience, recovery, distributed security architecture, security management, KERBEROS, secure
+socket layer, cryptography.
+UNIT-IV Distributed Object Based and File Systems : CORBA, Distributed COM, Goals and
+Design Issues of Distributed file system, types of distributed file system, sun network file
+system,.
+UNIT-V Distributed shared memory, DSM servers, shared memory consistency model,
+distributed document based systems : the world wide web, distributed co-ordination based
+systems: JINI Implementation: JAVA RMI, OLE, ActiveX, Orbix, Visbrokes, Object oriented
+programming with SOM
+BOOKS
+1. Andrew S. Tanenbaum, Maarten Van Steen “Distributed Systems Principles and Paradigms”
+Pearson Education Inc. 2002.
+2. Lui “Distributed Computing Principles and Applications”.
+3. Harry Singh “Progressing to Distributed Multiprocessing” Prentice-Hall Inc.
+4. B.W. Lampson “Distributed Systems Architecture Design & Implementation”, 1985 Springer
+Varlag.
+5. Parker Y. Verjies J. P. “Distributed computing Systems, Synchronization, control &
+Communications” PHI.
+6. Robert J. & Thieranf “Distributed Processing Systems” 1978, Prentice Hall.
+7. George Coulios, “Distribute System: Design and Concepts”, Pearson Education
+
+================================================================================
+                           END PAGE 12
+================================================================================
+--- PASS: TestExtractAllPagesForDebug (0.01s)
+PASS
+ok  	github.com/sahilchouksey/go-init-setup/services	0.848s

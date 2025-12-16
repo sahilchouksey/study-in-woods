@@ -166,3 +166,140 @@ func (r *ChatCompletionResponse) ExtractContent() string {
 func (r *ChatCompletionResponse) GetUsage() (prompt, completion, total int) {
 	return r.Usage.PromptTokens, r.Usage.CompletionTokens, r.Usage.TotalTokens
 }
+
+// AgentChatRequest represents a request for chat completion via agent deployment
+type AgentChatRequest struct {
+	DeploymentURL string        `json:"-"` // Agent deployment URL (e.g., https://xxx.agents.do-ai.run)
+	APIKey        string        `json:"-"` // Agent-specific API key
+	Messages      []ChatMessage `json:"messages"`
+	MaxTokens     int           `json:"max_tokens,omitempty"`
+	Temperature   float64       `json:"temperature,omitempty"`
+	TopP          float64       `json:"top_p,omitempty"`
+	Stream        bool          `json:"stream,omitempty"`
+}
+
+// CreateAgentChatCompletion creates a chat completion using the agent deployment URL and API key
+// This is the REQUIRED method for querying agents - the standard API endpoint returns "not routed" errors
+func (c *Client) CreateAgentChatCompletion(ctx context.Context, req AgentChatRequest) (*ChatCompletionResponse, error) {
+	// Build the full endpoint URL
+	endpoint := fmt.Sprintf("%s/api/v1/chat/completions", strings.TrimSuffix(req.DeploymentURL, "/"))
+
+	// Don't include stream in request body for non-streaming
+	req.Stream = false
+
+	// Build request body
+	jsonBody, err := json.Marshal(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers - use agent API key, not account token
+	httpReq.Header.Set("Authorization", "Bearer "+req.APIKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	// Make request
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("chat completion failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var result ChatCompletionResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// StreamAgentChatCompletion creates a streaming chat completion using the agent deployment URL and API key
+func (c *Client) StreamAgentChatCompletion(ctx context.Context, req AgentChatRequest, callback func(StreamChunk) error) error {
+	// Build the full endpoint URL
+	endpoint := fmt.Sprintf("%s/api/v1/chat/completions", strings.TrimSuffix(req.DeploymentURL, "/"))
+
+	// Force stream to true
+	req.Stream = true
+
+	// Build request body
+	jsonBody, err := json.Marshal(req)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", endpoint, bytes.NewReader(jsonBody))
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Set headers - use agent API key, not account token
+	httpReq.Header.Set("Authorization", "Bearer "+req.APIKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("Accept", "text/event-stream")
+
+	// Make request
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("streaming failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	// Read SSE stream
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Skip empty lines and comments
+		if line == "" || strings.HasPrefix(line, ":") {
+			continue
+		}
+
+		// Parse SSE data
+		if strings.HasPrefix(line, "data: ") {
+			data := strings.TrimPrefix(line, "data: ")
+
+			// Check for stream end
+			if data == "[DONE]" {
+				break
+			}
+
+			// Parse JSON chunk
+			var chunk StreamChunk
+			if err := json.Unmarshal([]byte(data), &chunk); err != nil {
+				// Log error but continue streaming
+				continue
+			}
+
+			// Call callback with chunk
+			if err := callback(chunk); err != nil {
+				return fmt.Errorf("callback error: %w", err)
+			}
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("stream reading error: %w", err)
+	}
+
+	return nil
+}

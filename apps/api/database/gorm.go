@@ -113,6 +113,13 @@ func (s *GORMStore) Init() error {
 		&model.PYQPaper{},
 		&model.PYQQuestion{},
 		&model.PYQQuestionChoice{},
+
+		// Indexing job models (for batch operations)
+		&model.IndexingJob{},
+		&model.IndexingJobItem{},
+
+		// User notification models
+		&model.UserNotification{},
 	)
 
 	if err != nil {

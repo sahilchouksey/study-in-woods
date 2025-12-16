@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { authService } from '@/lib/api/auth';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -37,7 +38,10 @@ export function Sidebar() {
           <h1 className="text-foreground flex items-center gap-2">
             Study in Woods 🪵
           </h1>
-          <ThemeToggle />
+          <div className="flex items-center gap-1">
+            <NotificationsPanel />
+            <ThemeToggle />
+          </div>
         </div>
       </div>
 

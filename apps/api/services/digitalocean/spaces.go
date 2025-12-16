@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -36,6 +37,12 @@ type SpacesConfig struct {
 
 // NewSpacesClient creates a new Spaces client
 func NewSpacesClient(config SpacesConfig) (*SpacesClient, error) {
+	// Ensure endpoint has https:// prefix for AWS SDK
+	awsEndpoint := config.Endpoint
+	if !strings.HasPrefix(awsEndpoint, "https://") && !strings.HasPrefix(awsEndpoint, "http://") {
+		awsEndpoint = "https://" + config.Endpoint
+	}
+
 	// Create AWS session with DigitalOcean Spaces endpoint
 	sess, err := session.NewSession(&aws.Config{
 		Credentials: credentials.NewStaticCredentials(
@@ -43,7 +50,7 @@ func NewSpacesClient(config SpacesConfig) (*SpacesClient, error) {
 			config.SecretKey,
 			"",
 		),
-		Endpoint:         aws.String(config.Endpoint),
+		Endpoint:         aws.String(awsEndpoint),
 		Region:           aws.String(config.Region),
 		S3ForcePathStyle: aws.Bool(false),
 	})
@@ -51,11 +58,14 @@ func NewSpacesClient(config SpacesConfig) (*SpacesClient, error) {
 		return nil, fmt.Errorf("failed to create Spaces session: %w", err)
 	}
 
+	// Store endpoint without https:// prefix for URL construction
+	endpoint := strings.TrimPrefix(strings.TrimPrefix(config.Endpoint, "https://"), "http://")
+
 	return &SpacesClient{
 		s3Client: s3.New(sess),
 		bucket:   config.Bucket,
 		region:   config.Region,
-		endpoint: config.Endpoint,
+		endpoint: endpoint,
 		cdnURL:   config.CDNURL,
 	}, nil
 }

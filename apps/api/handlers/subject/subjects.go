@@ -283,3 +283,82 @@ func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 		"message": "Subject and all related data deleted successfully",
 	})
 }
+
+// DeleteAllSubjects handles DELETE /api/v1/semesters/:semester_id/subjects
+// Deletes all subjects for a semester (Admin only)
+func (h *SubjectHandler) DeleteAllSubjects(c *fiber.Ctx) error {
+	semesterID := c.Params("semester_id")
+
+	// Get user from context
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+
+	// Authorization: Admin only
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can delete all subjects")
+	}
+
+	// Verify semester exists
+	var semester model.Semester
+	if err := h.db.First(&semester, semesterID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return response.NotFound(c, "Semester not found")
+		}
+		return response.InternalServerError(c, "Failed to fetch semester")
+	}
+
+	// Get all subjects for this semester
+	var subjects []model.Subject
+	if err := h.db.Where("semester_id = ?", semesterID).Find(&subjects).Error; err != nil {
+		return response.InternalServerError(c, "Failed to fetch subjects")
+	}
+
+	if len(subjects) == 0 {
+		return response.Success(c, fiber.Map{
+			"message":       "No subjects to delete",
+			"deleted_count": 0,
+		})
+	}
+
+	deletedCount := 0
+	failedCount := 0
+	var lastError error
+
+	// Delete each subject with cleanup
+	for _, subject := range subjects {
+		// Delete all documents for this subject first
+		if err := h.db.Where("subject_id = ?", subject.ID).Delete(&model.Document{}).Error; err != nil {
+			failedCount++
+			lastError = err
+			continue
+		}
+
+		// Use SubjectService for cleanup (deletes AI resources)
+		if err := h.subjectService.DeleteSubjectWithCleanup(c.Context(), subject.ID); err != nil {
+			failedCount++
+			lastError = err
+			continue
+		}
+
+		deletedCount++
+	}
+
+	// Construct response message
+	responseMsg := fiber.Map{
+		"deleted_count": deletedCount,
+		"failed_count":  failedCount,
+	}
+
+	if failedCount > 0 {
+		responseMsg["message"] = "Some subjects failed to delete"
+		if lastError != nil {
+			responseMsg["last_error"] = lastError.Error()
+		}
+		return c.Status(fiber.StatusPartialContent).JSON(responseMsg)
+	}
+
+	responseMsg["message"] = "All subjects deleted successfully"
+	return response.Success(c, responseMsg)
+}

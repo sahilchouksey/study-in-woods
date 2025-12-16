@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requirements - Study in Woods</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: A4;
+            margin: 1in;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 16pt;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 20px 0 30px 0;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            text-decoration: underline;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        p {
+            text-align: justify;
+            margin-bottom: 12px;
+            text-indent: 0.5in;
+        }
+        
+        p.no-indent {
+            text-indent: 0;
+        }
+        
+        ul, ol {
+            margin-left: 0.75in;
+            margin-bottom: 12px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+            text-align: justify;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .page-number {
+            text-align: center;
+            font-size: 11pt;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>3. REQUIREMENTS</h1>
+    
+    <h2>3.1 Functional Requirements</h2>
+    
+    <p>Functional requirements define the specific behaviors, functions, and capabilities that the Study in Woods system must provide to its users. These requirements encompass all user-facing features, data processing capabilities, and system operations necessary for the platform to fulfill its educational objectives.</p>
+    
+    <h3>3.1.1 User Management and Authentication</h3>
+    
+    <p class="no-indent"><strong>FR-1: User Registration</strong></p>
+    <p>The system shall allow new users to register by providing their full name, email address, and password. The registration process must validate email format, enforce password strength requirements (minimum 8 characters with uppercase, lowercase, numbers, and special characters), and prevent duplicate email registrations.</p>
+    
+    <p class="no-indent"><strong>FR-2: User Authentication</strong></p>
+    <p>The system shall authenticate users using JWT (JSON Web Token) based authentication. Upon successful login, the system must generate a secure access token with configurable expiration time and maintain session state using Redis cache for improved performance and security.</p>
+    
+    <p class="no-indent"><strong>FR-3: Password Management</strong></p>
+    <p>The system shall provide password reset functionality through email verification. Users must be able to request password reset links, which shall expire after 24 hours. All passwords must be hashed using bcrypt algorithm with a cost factor of 10 or higher before storage.</p>
+    
+    <p class="no-indent"><strong>FR-4: Role-Based Access Control</strong></p>
+    <p>The system shall implement role-based access control with two primary roles: Student and Admin. Admin users must have elevated privileges including user management, system configuration, and access to audit logs, while Student users have access limited to their own academic content.</p>
+    
+    <h3>3.1.2 Academic Hierarchy Management</h3>
+    
+    <p class="no-indent"><strong>FR-5: University Management</strong></p>
+    <p>The system shall enable administrators to create, read, update, and delete university records. Each university must store metadata including name, location, website URL, and status (active/inactive). The system must support multiple universities within a single instance.</p>
+    
+    <p class="no-indent"><strong>FR-6: Course Management</strong></p>
+    <p>The system shall allow creation and management of academic courses associated with universities. Each course must specify program name, duration, total semesters, and course code. The system must maintain parent-child relationships between universities and courses.</p>
+    
+    <p class="no-indent"><strong>FR-7: Semester Management</strong></p>
+    <p>The system shall automatically generate semester records based on course duration. Each semester must be numbered sequentially and associated with a specific course. The system must support dynamic semester creation when course details are modified.</p>
+    
+    <p class="no-indent"><strong>FR-8: Subject Management</strong></p>
+    <p>The system shall enable creation and management of subjects within semesters. Each subject must store subject code, name, credits, description, and syllabus content. The system must maintain hierarchical relationships: University → Course → Semester → Subject.</p>
+    
+    <h3>3.1.3 Document Management and Processing</h3>
+    
+    <p class="no-indent"><strong>FR-9: Document Upload</strong></p>
+    <p>The system shall allow users to upload study materials in PDF format with maximum file size of 10MB. The upload process must validate file type, size, and integrity before accepting documents. Files shall be stored in DigitalOcean Spaces cloud storage with unique identifiers.</p>
+    
+    <p class="no-indent"><strong>FR-10: Syllabus Extraction</strong></p>
+    <p>The system shall automatically extract structured information from uploaded syllabus PDFs using AI-powered natural language processing. The extraction must identify course units, topics, subtopics, teaching hours, and learning outcomes with a minimum accuracy of 85%.</p>
+    
+    <p class="no-indent"><strong>FR-11: Document Indexing</strong></p>
+    <p>The system shall automatically index uploaded documents into subject-specific AI knowledge bases. The indexing process must parse document content, create embeddings, and make content searchable through the AI chat interface within 2 minutes of upload completion.</p>
+    
+    <p class="no-indent"><strong>FR-12: Document Retrieval</strong></p>
+    <p>The system shall provide document download functionality with pre-signed URLs that expire after 1 hour. Users must be able to view document metadata, download status, and access their uploaded files securely without exposing permanent storage URLs.</p>
+    
+    <h3>3.1.4 AI-Powered Features</h3>
+    
+    <p class="no-indent"><strong>FR-13: AI Chat Interface</strong></p>
+    <p>The system shall provide an intelligent conversational interface powered by Llama 3.3 70B language model through DigitalOcean's GradientAI platform. The chat interface must support multi-turn conversations, maintain context across messages, and provide responses within 5 seconds for 90% of queries.</p>
+    
+    <p class="no-indent"><strong>FR-14: Knowledge Base Integration</strong></p>
+    <p>The system shall create and maintain subject-specific AI knowledge bases that store indexed documents. Each subject must have a dedicated knowledge base that enables contextual responses based on uploaded course materials. The system must support up to 100 documents per knowledge base.</p>
+    
+    <p class="no-indent"><strong>FR-15: Context-Aware Responses</strong></p>
+    <p>The AI chat system shall generate responses using both the language model's general knowledge and specific content from indexed documents. Responses must cite relevant documents when answering questions about course materials and clearly indicate when information is not available in the knowledge base.</p>
+    
+    <p class="no-indent"><strong>FR-16: Session Management</strong></p>
+    <p>The system shall maintain chat sessions with persistent conversation history. Each session must store all messages, timestamps, token usage, and response times. Users must be able to create new sessions, view previous sessions, and delete unwanted conversations.</p>
+    
+    <div class="page-break"></div>
+    
+    <h3>3.1.5 Past Year Questions (PYQ) Management</h3>
+    
+    <p class="no-indent"><strong>FR-17: PYQ Extraction</strong></p>
+    <p>The system shall extract questions from uploaded examination paper PDFs using AI-powered text analysis. The extraction process must identify individual questions, categorize them by subject topics, and assign difficulty levels (Easy, Medium, Hard) based on complexity analysis.</p>
+    
+    <p class="no-indent"><strong>FR-18: Question Categorization</strong></p>
+    <p>The system shall automatically categorize extracted questions by linking them to relevant syllabus units and topics. The categorization must achieve minimum 80% accuracy and allow manual correction by users. Questions must be tagged with exam year, semester, and question type.</p>
+    
+    <h3>3.1.6 Analytics and Monitoring</h3>
+    
+    <p class="no-indent"><strong>FR-19: Activity Tracking</strong></p>
+    <p>The system shall track all user activities including document uploads, chat interactions, subject accesses, and system feature usage. Activity logs must record timestamps, user identifiers, resource IDs, and action types for comprehensive analytics and audit purposes.</p>
+    
+    <p class="no-indent"><strong>FR-20: Usage Statistics</strong></p>
+    <p>The system shall generate real-time usage statistics including total users, active sessions, document count, chat message volume, and API call frequency. Statistics must be aggregated hourly and stored for historical trend analysis spanning at least 90 days.</p>
+    
+    <h3>3.1.7 API Access and Integration</h3>
+    
+    <p class="no-indent"><strong>FR-21: API Key Management</strong></p>
+    <p>The system shall enable users to generate encrypted API keys for programmatic access to system resources. API keys must support scope-based permissions (read, write, admin), IP whitelisting, rate limiting, and automatic expiration. All API keys must be encrypted using AES-256 encryption before database storage.</p>
+    
+    <p class="no-indent"><strong>FR-22: RESTful API</strong></p>
+    <p>The system shall provide a comprehensive RESTful API with 96 documented endpoints covering all major functionalities. The API must follow REST conventions, return appropriate HTTP status codes, and provide detailed error messages with error codes for debugging.</p>
+    
+    <h2>3.2 Non-Functional Requirements</h2>
+    
+    <h3>3.2.1 Performance Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-1: Response Time</strong></p>
+    <p>The system shall respond to 95% of user requests within 2 seconds under normal load conditions. Database queries must execute within 500 milliseconds, and API endpoints must return responses within 1 second for read operations. AI chat responses must stream within 5 seconds of request initiation.</p>
+    
+    <p class="no-indent"><strong>NFR-2: Throughput</strong></p>
+    <p>The system shall support minimum 1000 concurrent users without performance degradation. The backend API must handle at least 10,000 requests per minute across all endpoints. Document upload processing must support parallel uploads of up to 50 files simultaneously.</p>
+    
+    <p class="no-indent"><strong>NFR-3: Resource Utilization</strong></p>
+    <p>The application shall maintain CPU usage below 70% under normal load conditions and memory consumption below 2GB per instance. Database connection pooling must limit concurrent connections to 100 to prevent resource exhaustion. Redis cache hit ratio must exceed 80% for frequently accessed data.</p>
+    
+    <h3>3.2.2 Security Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-4: Authentication Security</strong></p>
+    <p>The system shall implement secure authentication using industry-standard JWT tokens with RS256 signing algorithm. Tokens must expire after configurable periods (default: 24 hours for access tokens, 7 days for refresh tokens). The system must enforce HTTPS for all client-server communications.</p>
+    
+    <p class="no-indent"><strong>NFR-5: Data Encryption</strong></p>
+    <p>All sensitive data including passwords and API keys must be encrypted at rest using AES-256 encryption. Password hashing must use bcrypt with minimum cost factor of 10. Database connections must use SSL/TLS encryption for data in transit.</p>
+    
+    <p class="no-indent"><strong>NFR-6: Access Control</strong></p>
+    <p>The system shall implement role-based access control (RBAC) with principle of least privilege. Administrative functions must require elevated permissions verified on every request. The system must prevent privilege escalation attacks through proper authorization checks.</p>
+    
+    <p class="no-indent"><strong>NFR-7: Protection Against Attacks</strong></p>
+    <p>The system shall implement rate limiting to prevent brute force attacks (maximum 5 failed login attempts per 15 minutes). CORS policies must restrict API access to whitelisted domains. Input validation must prevent SQL injection, XSS, and CSRF attacks. The system must log all security-related events for audit purposes.</p>
+    
+    <h3>3.2.3 Usability Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-8: User Interface</strong></p>
+    <p>The web interface shall be intuitive and require minimal training for users with basic computer literacy. Navigation must follow consistent patterns across all pages. The system must provide contextual help and error messages that clearly explain issues and suggest corrective actions.</p>
+    
+    <p class="no-indent"><strong>NFR-9: Responsive Design</strong></p>
+    <p>The user interface shall be fully responsive and functional across desktop (1920x1080), tablet (1024x768), and mobile (375x667) screen sizes. The system must maintain readability and usability on all supported devices without horizontal scrolling or layout breaks.</p>
+    
+    <p class="no-indent"><strong>NFR-10: Accessibility</strong></p>
+    <p>The system shall comply with WCAG 2.1 Level AA accessibility guidelines. The interface must support keyboard navigation, screen readers, and provide sufficient color contrast (minimum 4.5:1 ratio). Form inputs must have proper labels and error states must be clearly indicated.</p>
+    
+    <div class="page-break"></div>
+    
+    <h3>3.2.4 Reliability Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-11: Availability</strong></p>
+    <p>The system shall maintain 99.5% uptime excluding planned maintenance windows. Planned maintenance must be scheduled during low-usage periods (2:00 AM - 5:00 AM IST) with minimum 48-hour advance notice to users. The system must implement health check endpoints that respond within 100 milliseconds.</p>
+    
+    <p class="no-indent"><strong>NFR-12: Fault Tolerance</strong></p>
+    <p>The system shall gracefully handle failures in external services (AI API, cloud storage) without complete system failure. When DigitalOcean services are unavailable, the system must queue requests and retry with exponential backoff. Database connection failures must trigger automatic reconnection attempts.</p>
+    
+    <p class="no-indent"><strong>NFR-13: Data Integrity</strong></p>
+    <p>The system shall maintain ACID compliance for all database transactions. Data consistency must be verified through foreign key constraints and validation rules. Automated daily backups must be performed with point-in-time recovery capability up to 30 days.</p>
+    
+    <h3>3.2.5 Scalability Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-14: Horizontal Scaling</strong></p>
+    <p>The application architecture shall support horizontal scaling by adding multiple backend instances behind a load balancer. The system must maintain stateless API design to enable seamless distribution of requests across multiple servers. Session state must be externalized to Redis for shared access.</p>
+    
+    <p class="no-indent"><strong>NFR-15: Database Scalability</strong></p>
+    <p>The PostgreSQL database shall support read replicas for query distribution. The system must implement connection pooling with configurable pool sizes (default: 25-100 connections). Database indexes must be optimized for common query patterns to maintain performance as data volume grows.</p>
+    
+    <p class="no-indent"><strong>NFR-16: Storage Scalability</strong></p>
+    <p>The DigitalOcean Spaces storage shall scale automatically to accommodate growing document volumes. The system must support storage of up to 10,000 documents initially with capability to expand to 100,000 documents without architectural changes. CDN integration must ensure fast document delivery globally.</p>
+    
+    <h3>3.2.6 Maintainability Requirements</h3>
+    
+    <p class="no-indent"><strong>NFR-17: Code Quality</strong></p>
+    <p>The codebase shall maintain clean architecture with clear separation of concerns across layers (handlers, services, repositories). Code must follow language-specific style guides (Go: gofmt, TypeScript: ESLint) and maintain minimum 70% test coverage for critical business logic.</p>
+    
+    <p class="no-indent"><strong>NFR-18: Documentation</strong></p>
+    <p>All API endpoints must be documented with request/response examples, parameter descriptions, and error codes. Code must include inline comments for complex logic and business rules. System architecture and deployment procedures must be documented in markdown format.</p>
+    
+    <p class="no-indent"><strong>NFR-19: Logging and Monitoring</strong></p>
+    <p>The system shall implement comprehensive logging with configurable log levels (DEBUG, INFO, WARN, ERROR). All errors must be logged with stack traces and contextual information. The system must expose Prometheus-compatible metrics for monitoring CPU, memory, request rates, and response times.</p>
+    
+    <h2>3.3 Hardware Requirements</h2>
+    
+    <h3>3.3.1 Client-Side Requirements</h3>
+    
+    <p>Users accessing the Study in Woods platform must have computing devices that meet the following minimum specifications to ensure optimal performance and user experience.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>Minimum Requirement</th>
+                <th>Recommended Requirement</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Processor</td>
+                <td>Dual-core 1.6 GHz or equivalent</td>
+                <td>Quad-core 2.4 GHz or higher</td>
+            </tr>
+            <tr>
+                <td>RAM</td>
+                <td>2 GB</td>
+                <td>4 GB or higher</td>
+            </tr>
+            <tr>
+                <td>Storage</td>
+                <td>500 MB available space</td>
+                <td>1 GB available space</td>
+            </tr>
+            <tr>
+                <td>Display</td>
+                <td>1024 x 768 resolution</td>
+                <td>1920 x 1080 resolution</td>
+            </tr>
+            <tr>
+                <td>Network</td>
+                <td>1 Mbps internet connection</td>
+                <td>5 Mbps or higher broadband</td>
+            </tr>
+            <tr>
+                <td>Browser</td>
+                <td>Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</td>
+                <td>Latest version of supported browsers</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>3.3.2 Server-Side Requirements</h3>
+    
+    <p>The Study in Woods backend infrastructure requires the following hardware specifications for production deployment. These specifications support 1000+ concurrent users with optimal performance.</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>Production Server</th>
+                <th>Database Server</th>
+                <th>Redis Cache Server</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Processor</td>
+                <td>4 vCPU (Intel Xeon or AMD EPYC)</td>
+                <td>4 vCPU (Intel Xeon or AMD EPYC)</td>
+                <td>2 vCPU</td>
+            </tr>
+            <tr>
+                <td>RAM</td>
+                <td>8 GB DDR4</td>
+                <td>8 GB DDR4</td>
+                <td>4 GB DDR4</td>
+            </tr>
+            <tr>
+                <td>Storage</td>
+                <td>80 GB SSD (NVMe preferred)</td>
+                <td>200 GB SSD (NVMe preferred)</td>
+                <td>40 GB SSD</td>
+            </tr>
+            <tr>
+                <td>Network</td>
+                <td>1 Gbps bandwidth</td>
+                <td>1 Gbps bandwidth</td>
+                <td>1 Gbps bandwidth</td>
+            </tr>
+            <tr>
+                <td>Operating System</td>
+                <td>Ubuntu 22.04 LTS or Docker-compatible Linux</td>
+                <td>Ubuntu 22.04 LTS</td>
+                <td>Ubuntu 22.04 LTS</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p class="no-indent"><strong>Cloud Infrastructure Specifications:</strong></p>
+    <ul>
+        <li><strong>DigitalOcean Droplet:</strong> Premium Intel (4 vCPU, 8 GB RAM) or comparable instance type</li>
+        <li><strong>DigitalOcean Spaces:</strong> Minimum 100 GB storage capacity with CDN enabled for Bangalore (BLR1) region</li>
+        <li><strong>Load Balancer:</strong> DigitalOcean Load Balancer or equivalent with SSL termination and health checks</li>
+        <li><strong>Backup Storage:</strong> Minimum 50 GB for database backups with 30-day retention</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <h2>3.4 Software Requirements</h2>
+    
+    <h3>3.4.1 Frontend Software Stack</h3>
+    
+    <p class="no-indent"><strong>Core Framework and Libraries:</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Technology</th>
+                <th>Version</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Next.js</td>
+                <td>15.5.6</td>
+                <td>React framework with server-side rendering, routing, and optimization</td>
+            </tr>
+            <tr>
+                <td>React</td>
+                <td>19.1.0</td>
+                <td>UI library for building interactive user interfaces</td>
+            </tr>
+            <tr>
+                <td>TypeScript</td>
+                <td>5.x</td>
+                <td>Type-safe JavaScript for better development experience</td>
+            </tr>
+            <tr>
+                <td>Tailwind CSS</td>
+                <td>4.0</td>
+                <td>Utility-first CSS framework for responsive design</td>
+            </tr>
+            <tr>
+                <td>shadcn/ui</td>
+                <td>Latest</td>
+                <td>Accessible UI component library built on Radix UI</td>
+            </tr>
+            <tr>
+                <td>Framer Motion</td>
+                <td>12.23.24</td>
+                <td>Animation library for smooth UI transitions</td>
+            </tr>
+            <tr>
+                <td>TanStack Query</td>
+                <td>5.90.9</td>
+                <td>Data fetching, caching, and state management</td>
+            </tr>
+            <tr>
+                <td>Axios</td>
+                <td>1.13.2</td>
+                <td>HTTP client for API communication</td>
+            </tr>
+            <tr>
+                <td>React Hook Form</td>
+                <td>7.66.0</td>
+                <td>Form validation and state management</td>
+            </tr>
+            <tr>
+                <td>Zod</td>
+                <td>4.1.12</td>
+                <td>Schema validation for forms and API responses</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>3.4.2 Backend Software Stack</h3>
+    
+    <p class="no-indent"><strong>Core Technologies:</strong></p>
+    <table>
+        <thead>
+            <tr>
+                <th>Technology</th>
+                <th>Version</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Go (Golang)</td>
+                <td>1.24.1</td>
+                <td>Primary backend programming language</td>
+            </tr>
+            <tr>
+                <td>Fiber</td>
+                <td>2.52.5</td>
+                <td>High-performance web framework for Go</td>
+            </tr>
+            <tr>
+                <td>GORM</td>
+                <td>1.31.0</td>
+                <td>ORM library for database operations</td>
+            </tr>
+            <tr>
+                <td>PostgreSQL Driver</td>
+                <td>1.6.0</td>
+                <td>GORM PostgreSQL driver</td>
+            </tr>
+            <tr>
+                <td>JWT</td>
+                <td>5.3.0</td>
+                <td>JSON Web Token authentication</td>
+            </tr>
+            <tr>
+                <td>bcrypt</td>
+                <td>0.43.0</td>
+                <td>Password hashing and verification</td>
+            </tr>
+            <tr>
+                <td>go-redis</td>
+                <td>9.16.0</td>
+                <td>Redis client for caching and session management</td>
+            </tr>
+            <tr>
+                <td>AWS SDK</td>
+                <td>1.55.8</td>
+                <td>S3-compatible client for DigitalOcean Spaces</td>
+            </tr>
+            <tr>
+                <td>Validator</td>
+                <td>10.28.0</td>
+                <td>Struct and field validation</td>
+            </tr>
+            <tr>
+                <td>Cron</td>
+                <td>3.0.1</td>
+                <td>Background job scheduling</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>3.4.3 Database and Storage</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>Version</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>PostgreSQL</td>
+                <td>15.x</td>
+                <td>Primary relational database for structured data</td>
+            </tr>
+            <tr>
+                <td>Redis</td>
+                <td>7.x</td>
+                <td>In-memory cache for sessions, rate limiting, and temporary data</td>
+            </tr>
+            <tr>
+                <td>DigitalOcean Spaces</td>
+                <td>Latest</td>
+                <td>S3-compatible object storage for PDF documents</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>3.4.4 Development and Deployment Tools</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Tool</th>
+                <th>Version</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Docker</td>
+                <td>24.0+</td>
+                <td>Containerization platform for consistent deployments</td>
+            </tr>
+            <tr>
+                <td>Docker Compose</td>
+                <td>2.x</td>
+                <td>Multi-container orchestration for local development</td>
+            </tr>
+            <tr>
+                <td>Air</td>
+                <td>Latest</td>
+                <td>Live reload for Go development</td>
+            </tr>
+            <tr>
+                <td>Turbopack</td>
+                <td>Integrated</td>
+                <td>Fast bundler for Next.js development</td>
+            </tr>
+            <tr>
+                <td>GitHub Actions</td>
+                <td>Latest</td>
+                <td>CI/CD pipeline for automated testing and deployment</td>
+            </tr>
+            <tr>
+                <td>Git</td>
+                <td>2.x</td>
+                <td>Version control system</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h3>3.4.5 Cloud Services and APIs</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Service</th>
+                <th>Provider</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Compute (Droplets)</td>
+                <td>DigitalOcean</td>
+                <td>Virtual private servers for application hosting</td>
+            </tr>
+            <tr>
+                <td>Object Storage (Spaces)</td>
+                <td>DigitalOcean</td>
+                <td>Scalable storage for PDF documents with CDN</td>
+            </tr>
+            <tr>
+                <td>GradientAI Platform</td>
+                <td>DigitalOcean</td>
+                <td>AI model hosting and inference (Llama 3.3 70B)</td>
+            </tr>
+            <tr>
+                <td>Knowledge Bases</td>
+                <td>DigitalOcean AI</td>
+                <td>Vector database for document indexing and retrieval</td>
+            </tr>
+            <tr>
+                <td>Load Balancer</td>
+                <td>DigitalOcean</td>
+                <td>Traffic distribution and SSL termination</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <h2>3.5 External Interface Requirements</h2>
+    
+    <h3>3.5.1 User Interface Requirements</h3>
+    
+    <p class="no-indent"><strong>UI-1: Login Interface</strong></p>
+    <p>The login page shall present a centered form containing email and password input fields with appropriate labels. The form must include a "Remember Me" checkbox, "Forgot Password" link, and a prominent "Sign In" button. Input validation errors must be displayed inline below each field with red text. The interface must be responsive and centered on all screen sizes.</p>
+    
+    <p class="no-indent"><strong>UI-2: Dashboard Interface</strong></p>
+    <p>The main dashboard shall display a sidebar navigation menu with icons and labels for Universities, Courses, Subjects, Documents, Chat, and Analytics sections. The content area must show relevant cards and statistics based on the selected section. The interface must include a header with user profile dropdown, notifications icon, and theme toggle button.</p>
+    
+    <p class="no-indent"><strong>UI-3: Document Upload Interface</strong></p>
+    <p>The document upload interface shall provide a drag-and-drop zone with clear visual feedback for file selection. The interface must display upload progress with percentage completion and estimated time remaining. Uploaded files must appear in a list showing filename, size, upload date, and status (Processing, Indexed, Failed) with appropriate icons.</p>
+    
+    <p class="no-indent"><strong>UI-4: Chat Interface</strong></p>
+    <p>The chat interface shall display a conversation view with distinct visual styling for user messages (right-aligned, blue background) and AI responses (left-aligned, gray background). The interface must include a text input area with send button, session selector dropdown, and new session button. AI responses must support markdown rendering including code blocks, lists, and emphasis.</p>
+    
+    <p class="no-indent"><strong>UI-5: Admin Interface</strong></p>
+    <p>The admin panel shall provide tabbed sections for Users, Analytics, Settings, and Audit Logs. User management must display a searchable table with columns for Name, Email, Role, Status, and Actions (Edit, Delete, Reset Password). Each action must trigger a confirmation modal before execution. The interface must show comprehensive system statistics with interactive charts using Recharts library.</p>
+    
+    <h3>3.5.2 API Interface Requirements</h3>
+    
+    <p class="no-indent"><strong>API-1: RESTful Architecture</strong></p>
+    <p>All API endpoints shall follow RESTful conventions using appropriate HTTP methods (GET for retrieval, POST for creation, PUT for updates, DELETE for removal). URLs must follow the pattern /api/v1/{resource}/{id}/{sub-resource} for hierarchical resources. All endpoints must accept and return JSON-formatted data with Content-Type: application/json headers.</p>
+    
+    <p class="no-indent"><strong>API-2: Authentication Header</strong></p>
+    <p>Protected API endpoints shall require a Bearer token in the Authorization header with format "Bearer {jwt_token}". The system must validate token signature, expiration, and user permissions before processing requests. Invalid or expired tokens must return HTTP 401 Unauthorized with error details in JSON format.</p>
+    
+    <p class="no-indent"><strong>API-3: Request Validation</strong></p>
+    <p>All API requests shall validate input parameters for type correctness, required fields, format constraints, and business rules. Validation failures must return HTTP 400 Bad Request with a structured error response containing field-specific error messages. The response format must include error code, message, and failed field names.</p>
+    
+    <p class="no-indent"><strong>API-4: Response Format</strong></p>
+    <p>Successful API responses shall return HTTP 200-299 status codes with a consistent JSON structure containing "success" boolean, "data" object, and optional "message" string. Error responses must include "success: false", "error" object with code and message, and HTTP 400-599 status codes based on error type. Paginated responses must include metadata for total count, page number, and page size.</p>
+    
+    <p class="no-indent"><strong>API-5: Rate Limiting Headers</strong></p>
+    <p>All API responses shall include rate limiting headers: X-RateLimit-Limit (total allowed requests), X-RateLimit-Remaining (requests remaining), and X-RateLimit-Reset (timestamp for limit reset). When rate limit is exceeded, the API must return HTTP 429 Too Many Requests with Retry-After header indicating wait time in seconds.</p>
+    
+    <h3>3.5.3 DigitalOcean AI Platform Interface</h3>
+    
+    <p class="no-indent"><strong>AI-1: Knowledge Base API</strong></p>
+    <p>The system shall interface with DigitalOcean Knowledge Base API to create subject-specific knowledge bases, upload and index documents, and manage knowledge base lifecycle. API calls must include authentication via DigitalOcean API token in X-Auth-Token header. The system must handle asynchronous indexing operations with polling for completion status.</p>
+    
+    <p class="no-indent"><strong>AI-2: Chat Completion API</strong></p>
+    <p>The system shall interface with DigitalOcean GradientAI Chat Completion API using the OpenAI-compatible format. Requests must specify model name (llama-3.3-70b-instruct), messages array with role and content, and knowledge base ID for context. The system must handle streaming responses using Server-Sent Events (SSE) for real-time message delivery.</p>
+    
+    <p class="no-indent"><strong>AI-3: Model Configuration</strong></p>
+    <p>AI API requests shall include configuration parameters: temperature (0.7 default for balanced creativity), max_tokens (4096 default), top_p (0.9 for nucleus sampling), and frequency_penalty (0.0 default). The system must respect token limits and split large requests when necessary. Response metadata must be captured including token usage, model version, and processing time.</p>
+    
+    <h3>3.5.4 Storage Interface Requirements</h3>
+    
+    <p class="no-indent"><strong>STORAGE-1: DigitalOcean Spaces Interface</strong></p>
+    <p>The system shall interface with DigitalOcean Spaces using S3-compatible API through AWS SDK for Go. Upload operations must use multipart upload for files larger than 5MB with 5MB chunk size. All objects must be stored with private ACL and accessed through pre-signed URLs with 1-hour expiration. The system must set appropriate Content-Type headers based on file extensions.</p>
+    
+    <p class="no-indent"><strong>STORAGE-2: CDN Integration</strong></p>
+    <p>Uploaded documents shall be accessible through DigitalOcean Spaces CDN for improved delivery performance. The CDN must cache objects based on Cache-Control headers with maximum age of 3600 seconds for static documents. The system must support cache invalidation through API calls when documents are updated or deleted.</p>
+    
+    <h3>3.5.5 Communication Protocols</h3>
+    
+    <p class="no-indent"><strong>PROTOCOL-1: HTTPS/TLS</strong></p>
+    <p>All client-server communication shall use HTTPS protocol with TLS 1.2 or higher encryption. The system must enforce HTTPS by redirecting HTTP requests to HTTPS endpoints. SSL certificates must be valid, properly configured, and automatically renewed before expiration.</p>
+    
+    <p class="no-indent"><strong>PROTOCOL-2: WebSocket/SSE</strong></p>
+    <p>Real-time features including chat streaming and progress updates shall use Server-Sent Events (SSE) over HTTP. SSE connections must maintain keep-alive with heartbeat messages every 30 seconds. The system must handle connection drops gracefully with automatic reconnection attempts using exponential backoff.</p>
+    
+    <p class="no-indent"><strong>PROTOCOL-3: Database Protocol</strong></p>
+    <p>Database connections shall use PostgreSQL wire protocol over TCP with SSL/TLS encryption enabled. Connection pooling must use persistent connections with maximum lifetime of 1 hour. The system must implement prepared statements for all parameterized queries to prevent SQL injection attacks.</p>
+    
+    <div class="page-number">3</div>
+</body>
+</html>

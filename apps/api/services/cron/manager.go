@@ -52,8 +52,17 @@ func (m *CronManager) Stop() {
 
 // registerJobs registers all cron jobs with their schedules
 func (m *CronManager) registerJobs() error {
+	// 0. Every 2 minutes: Check batch ingest KB indexing status (HIGH PRIORITY)
+	_, err := m.cron.AddFunc("0 */2 * * * *", func() {
+		m.logJobStart("check_batch_ingest_kb_indexing")
+		m.CheckBatchIngestKBIndexing()
+	})
+	if err != nil {
+		return err
+	}
+
 	// 1. Every 15 minutes: Check document indexing status
-	_, err := m.cron.AddFunc("0 */15 * * * *", func() {
+	_, err = m.cron.AddFunc("0 */15 * * * *", func() {
 		m.logJobStart("check_document_indexing")
 		m.CheckDocumentIndexingStatus()
 	})
@@ -119,6 +128,7 @@ func (m *CronManager) logJobStart(jobName string) {
 		JobName:   jobName,
 		Status:    "running",
 		StartedAt: time.Now(),
+		Metadata:  "{}",
 	}
 	m.db.Create(&cronLog)
 }
@@ -135,7 +145,7 @@ func (m *CronManager) logJobComplete(jobName string, message string) {
 		Updates(map[string]interface{}{
 			"status":       "completed",
 			"completed_at": time.Now(),
-			"result":       message,
+			"message":      message,
 		})
 }
 
@@ -151,6 +161,6 @@ func (m *CronManager) logJobError(jobName string, err error) {
 		Updates(map[string]interface{}{
 			"status":       "failed",
 			"completed_at": time.Now(),
-			"error":        err.Error(),
+			"error_msg":    err.Error(),
 		})
 }

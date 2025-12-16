@@ -40,9 +40,9 @@ func initGlobalSpacesConfig() (*SpacesConfig, error) {
 		return nil, fmt.Errorf("DO_SPACES_BUCKET and DO_SPACES_REGION must be configured")
 	}
 
-	// Set default endpoint if not provided
+	// Set default endpoint if not provided (without https:// prefix for URL construction)
 	if config.Endpoint == "" {
-		config.Endpoint = fmt.Sprintf("https://%s.digitaloceanspaces.com", config.Region)
+		config.Endpoint = fmt.Sprintf("%s.digitaloceanspaces.com", config.Region)
 	}
 
 	// If access keys are already configured, use them
@@ -79,14 +79,14 @@ func initGlobalSpacesConfig() (*SpacesConfig, error) {
 	}
 
 	if created {
-		log.Printf("Spaces: Created new access key '%s' (ID: %s)", keyName, newKey.AccessKeyID)
+		log.Printf("Spaces: Created new access key '%s' (ID: %s)", keyName, newKey.AccessKey)
 		log.Printf("Spaces: IMPORTANT - Save these credentials to your .env file:")
-		log.Printf("  DO_SPACES_ACCESS_KEY=%s", newKey.AccessKeyID)
-		log.Printf("  DO_SPACES_SECRET_KEY=%s", newKey.SecretAccessKey)
+		log.Printf("  DO_SPACES_ACCESS_KEY=%s", newKey.AccessKey)
+		log.Printf("  DO_SPACES_SECRET_KEY=%s", newKey.SecretKey)
 		log.Println("Spaces: The secret key is only shown once!")
 
-		config.AccessKey = newKey.AccessKeyID
-		config.SecretKey = newKey.SecretAccessKey
+		config.AccessKey = newKey.AccessKey
+		config.SecretKey = newKey.SecretKey
 		config.Initialized = true
 		return config, nil
 	}

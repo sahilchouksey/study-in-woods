@@ -11,6 +11,365 @@ import (
 	"github.com/sahilchouksey/go-init-setup/services/digitalocean"
 )
 
+// CheckBatchIngestKBIndexing checks the status of KB indexing jobs from batch ingest
+// Runs every 2 minutes to update batch ingest job status, notifications, and PYQ extraction status
+func (m *CronManager) CheckBatchIngestKBIndexing() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	jobName := "check_batch_ingest_kb_indexing"
+
+	log.Printf("[CRON] ========== %s ==========", jobName)
+	log.Printf("[CRON] Running at: %s (interval: every 2 minutes)", time.Now().Format("2006-01-02 15:04:05"))
+
+	// Get all indexing jobs waiting for KB indexing (with or without DO indexing job UUID)
+	var jobs []model.IndexingJob
+	err := m.db.Where("status = ?", model.IndexingJobStatusKBIndexing).Find(&jobs).Error
+	if err != nil {
+		m.logJobError(jobName, fmt.Errorf("failed to query jobs: %w", err))
+		return
+	}
+
+	log.Printf("[CRON] Found %d jobs with status 'kb_indexing' to check", len(jobs))
+
+	if len(jobs) == 0 {
+		m.logJobComplete(jobName, "No KB indexing jobs to check")
+		return
+	}
+
+	// Initialize DigitalOcean client
+	doClient := digitalocean.NewClient(digitalocean.Config{
+		APIToken: os.Getenv("DIGITALOCEAN_TOKEN"),
+	})
+
+	updated := 0
+	completed := 0
+	failed := 0
+
+	for _, job := range jobs {
+		var newStatus model.IndexingJobStatus
+		var isComplete bool
+
+		if job.DOIndexingJobUUID != "" {
+			// Case 1: We have an explicit indexing job UUID - check its status
+			doJob, err := doClient.GetIndexingJob(ctx, job.DOIndexingJobUUID)
+			if err != nil {
+				log.Printf("[CRON] Failed to get DO indexing job %s: %v", job.DOIndexingJobUUID, err)
+				failed++
+				continue
+			}
+
+			log.Printf("[CRON] DO Indexing job %s status: Phase=%s, Status=%s", job.DOIndexingJobUUID, doJob.Phase, doJob.Status)
+
+			// Check both Phase and Status fields from DO API
+			switch {
+			case doJob.Phase == "BATCH_JOB_PHASE_SUCCEEDED" || doJob.Status == "INDEX_JOB_STATUS_COMPLETED":
+				if job.FailedItems > 0 {
+					newStatus = model.IndexingJobStatusPartial
+				} else {
+					newStatus = model.IndexingJobStatusCompleted
+				}
+				isComplete = true
+				completed++
+			case doJob.Phase == "BATCH_JOB_PHASE_FAILED" || doJob.Status == "INDEX_JOB_STATUS_FAILED":
+				newStatus = model.IndexingJobStatusFailed
+				isComplete = true
+				failed++
+			default:
+				// Still in progress
+				continue
+			}
+		} else {
+			// Case 2: No explicit indexing job UUID - check data source status directly
+			// Get subject's KB UUID
+			var subject model.Subject
+			if err := m.db.First(&subject, job.SubjectID).Error; err != nil {
+				log.Printf("[CRON] Failed to get subject %d: %v", job.SubjectID, err)
+				continue
+			}
+
+			if subject.KnowledgeBaseUUID == "" {
+				// No KB - mark as completed (no AI indexing possible)
+				newStatus = model.IndexingJobStatusCompleted
+				isComplete = true
+				completed++
+			} else {
+				// Check data sources in KB
+				dataSources, err := doClient.ListKnowledgeBaseDataSources(ctx, subject.KnowledgeBaseUUID)
+				if err != nil {
+					log.Printf("[CRON] Failed to list data sources for KB %s: %v", subject.KnowledgeBaseUUID, err)
+					continue
+				}
+
+				log.Printf("[CRON] Job %d: Found %d data sources in KB %s", job.ID, len(dataSources), subject.KnowledgeBaseUUID)
+
+				// Get all document data source IDs for this job
+				var items []model.IndexingJobItem
+				m.db.Where("job_id = ?", job.ID).Find(&items)
+
+				var docIDs []uint
+				for _, item := range items {
+					if item.DocumentID != nil {
+						docIDs = append(docIDs, *item.DocumentID)
+					}
+				}
+
+				var documents []model.Document
+				m.db.Where("id IN ?", docIDs).Find(&documents)
+
+				log.Printf("[CRON] Job %d: Checking %d documents for indexing status", job.ID, len(documents))
+
+				// First, retry adding documents that don't have data_source_id to the KB
+				// This handles cases where initial KB upload failed due to rate limiting
+				var docsWithoutDataSource []model.Document
+				for _, doc := range documents {
+					if doc.DataSourceID == "" && doc.SpacesKey != "" {
+						docsWithoutDataSource = append(docsWithoutDataSource, doc)
+					}
+				}
+
+				if len(docsWithoutDataSource) > 0 {
+					log.Printf("[CRON] Job %d: Found %d documents without data_source_id, attempting to add to KB", job.ID, len(docsWithoutDataSource))
+
+					spacesName := os.Getenv("DO_SPACES_NAME")
+					spacesRegion := os.Getenv("DO_SPACES_REGION")
+					if spacesRegion == "" {
+						spacesRegion = "blr1"
+					}
+
+					for _, doc := range docsWithoutDataSource {
+						// Try to add to KB using CreateDataSource
+						dsReq := digitalocean.CreateDataSourceRequest{
+							KnowledgeBaseUUID: subject.KnowledgeBaseUUID,
+							SpacesDataSource: &digitalocean.SpacesDataSourceInput{
+								BucketName: spacesName,
+								Region:     spacesRegion,
+								ItemPath:   doc.SpacesKey,
+							},
+						}
+						dataSource, _, err := doClient.CreateDataSource(ctx, subject.KnowledgeBaseUUID, dsReq)
+						if err != nil {
+							log.Printf("[CRON] Job %d: Failed to add document %d to KB (rate limited?): %v", job.ID, doc.ID, err)
+							// Continue - will retry next cron run
+						} else {
+							log.Printf("[CRON] Job %d: Added document %d to KB with data_source_id: %s", job.ID, doc.ID, dataSource.UUID)
+							// Update document with data source ID
+							m.db.Model(&model.Document{}).Where("id = ?", doc.ID).Update("data_source_id", dataSource.UUID)
+							// Update local doc object for subsequent logic
+							doc.DataSourceID = dataSource.UUID
+						}
+						// Small delay to avoid rate limiting
+						time.Sleep(500 * time.Millisecond)
+					}
+
+					// Re-fetch documents to get updated data_source_ids
+					m.db.Where("id IN ?", docIDs).Find(&documents)
+					// Also re-fetch data sources list
+					dataSources, _ = doClient.ListKnowledgeBaseDataSources(ctx, subject.KnowledgeBaseUUID)
+				}
+
+				// Check if there's a bucket-level data source that's already indexed
+				// The bucket-level data source indexes ALL files in the bucket
+				var bucketDataSourceIndexed bool
+				for _, ds := range dataSources {
+					// Bucket-level data source has empty item_path
+					if (ds.SpacesDataSource != nil && ds.SpacesDataSource.ItemPath == "") || ds.ItemPath == "" {
+						// Check LastDataSourceIndexingJob first (new API field), then fallback to LastIndexingJob
+						if ds.LastDataSourceIndexingJob != nil {
+							log.Printf("[CRON] Job %d: Found bucket-level data source %s with status: %s", job.ID, ds.UUID, ds.LastDataSourceIndexingJob.Status)
+							if ds.LastDataSourceIndexingJob.Status == "INDEX_JOB_STATUS_COMPLETED" || ds.LastDataSourceIndexingJob.Status == "DATA_SOURCE_STATUS_UPDATED" {
+								bucketDataSourceIndexed = true
+							}
+						} else if ds.LastIndexingJob != nil {
+							log.Printf("[CRON] Job %d: Found bucket-level data source %s with status: %s", job.ID, ds.UUID, ds.LastIndexingJob.Status)
+							if ds.LastIndexingJob.Status == "INDEX_JOB_STATUS_COMPLETED" || ds.LastIndexingJob.Status == "DATA_SOURCE_STATUS_UPDATED" {
+								bucketDataSourceIndexed = true
+							}
+						}
+					}
+				}
+
+				// Check if all data sources are indexed
+				allIndexed := true
+				anyFailed := false
+				indexedCount := 0
+				pendingCount := 0
+				docsWithoutDataSourceCount := 0
+				for _, doc := range documents {
+					if doc.DataSourceID == "" {
+						log.Printf("[CRON] Job %d: Document %d still has no data_source_id after retry", job.ID, doc.ID)
+						docsWithoutDataSourceCount++
+						allIndexed = false // Can't be complete if docs still missing data_source_id
+						continue
+					}
+
+					// If bucket-level data source is indexed, consider all individual data sources as indexed too
+					if bucketDataSourceIndexed {
+						log.Printf("[CRON] Job %d: Document %d considered indexed via bucket-level data source", job.ID, doc.ID)
+						indexedCount++
+						continue
+					}
+
+					found := false
+					for _, ds := range dataSources {
+						if ds.UUID == doc.DataSourceID {
+							found = true
+							// Check LastDataSourceIndexingJob first (new API field), then fallback to LastIndexingJob
+							var dsStatus string
+							if ds.LastDataSourceIndexingJob != nil {
+								dsStatus = ds.LastDataSourceIndexingJob.Status
+							} else if ds.LastIndexingJob != nil {
+								dsStatus = ds.LastIndexingJob.Status
+							}
+
+							if dsStatus != "" {
+								log.Printf("[CRON] Job %d: Document %d (ds=%s) indexing status: %s", job.ID, doc.ID, doc.DataSourceID, dsStatus)
+								switch dsStatus {
+								case "INDEX_JOB_STATUS_COMPLETED", "DATA_SOURCE_STATUS_UPDATED":
+									indexedCount++
+								case "INDEX_JOB_STATUS_FAILED":
+									anyFailed = true
+								default:
+									allIndexed = false
+									pendingCount++
+								}
+							} else {
+								log.Printf("[CRON] Job %d: Document %d (ds=%s) has NO indexing job status yet", job.ID, doc.ID, doc.DataSourceID)
+								allIndexed = false
+								pendingCount++
+							}
+							break
+						}
+					}
+					if !found {
+						log.Printf("[CRON] Job %d: Document %d data_source_id %s NOT FOUND in KB data sources", job.ID, doc.ID, doc.DataSourceID)
+					}
+				}
+
+				log.Printf("[CRON] Job %d: indexedCount=%d, pendingCount=%d, allIndexed=%v, anyFailed=%v", job.ID, indexedCount, pendingCount, allIndexed, anyFailed)
+
+				if allIndexed {
+					if anyFailed {
+						newStatus = model.IndexingJobStatusPartial
+					} else if job.FailedItems > 0 {
+						newStatus = model.IndexingJobStatusPartial
+					} else {
+						newStatus = model.IndexingJobStatusCompleted
+					}
+					isComplete = true
+					completed++
+				} else if pendingCount > 0 && job.DOIndexingJobUUID == "" {
+					// Data sources exist but haven't been indexed yet
+					// Try to start an indexing job for them
+					var pendingDataSourceUUIDs []string
+					for _, doc := range documents {
+						if doc.DataSourceID != "" {
+							// Check if this data source needs indexing
+							for _, ds := range dataSources {
+								if ds.UUID == doc.DataSourceID && ds.LastIndexingJob == nil {
+									pendingDataSourceUUIDs = append(pendingDataSourceUUIDs, doc.DataSourceID)
+									break
+								}
+							}
+						}
+					}
+
+					if len(pendingDataSourceUUIDs) > 0 {
+						log.Printf("[CRON] Job %d: Attempting to start indexing job for %d pending data sources", job.ID, len(pendingDataSourceUUIDs))
+						indexJob, err := doClient.StartIndexingJob(ctx, digitalocean.StartIndexingJobRequest{
+							KnowledgeBaseUUID: subject.KnowledgeBaseUUID,
+							DataSourceUUIDs:   pendingDataSourceUUIDs,
+						})
+						if err != nil {
+							log.Printf("[CRON] Job %d: Failed to start indexing job (may be rate limited): %v", job.ID, err)
+						} else {
+							log.Printf("[CRON] Job %d: Started indexing job %s", job.ID, indexJob.UUID)
+							// Update job with DO indexing job UUID
+							m.db.Model(&model.IndexingJob{}).Where("id = ?", job.ID).Update("do_indexing_job_uuid", indexJob.UUID)
+						}
+					}
+					continue
+				} else {
+					// Still indexing
+					continue
+				}
+			}
+		}
+
+		if !isComplete {
+			continue
+		}
+
+		// Update job status
+		now := time.Now()
+		m.db.Model(&model.IndexingJob{}).Where("id = ?", job.ID).Updates(map[string]interface{}{
+			"status":       newStatus,
+			"completed_at": &now,
+		})
+
+		// Update documents indexing status for this job
+		var items []model.IndexingJobItem
+		m.db.Where("job_id = ?", job.ID).Find(&items)
+
+		for _, item := range items {
+			if item.DocumentID != nil {
+				docStatus := model.IndexingStatusCompleted
+				if newStatus == model.IndexingJobStatusFailed {
+					docStatus = model.IndexingStatusFailed
+				}
+				m.db.Model(&model.Document{}).Where("id = ?", *item.DocumentID).Update("indexing_status", docStatus)
+			}
+
+			// Update PYQ paper extraction status
+			if item.PYQPaperID != nil {
+				pyqStatus := model.PYQExtractionCompleted
+				if newStatus == model.IndexingJobStatusFailed {
+					pyqStatus = model.PYQExtractionFailed
+				}
+				m.db.Model(&model.PYQPaper{}).Where("id = ?", *item.PYQPaperID).Update("extraction_status", pyqStatus)
+				log.Printf("[CRON] Updated PYQ paper %d extraction_status to %s", *item.PYQPaperID, pyqStatus)
+			}
+		}
+
+		// Get subject for notification
+		var subject model.Subject
+		m.db.First(&subject, job.SubjectID)
+
+		// Update notification to final status
+		var title, message string
+		var notificationType model.NotificationType
+
+		if newStatus == model.IndexingJobStatusCompleted {
+			notificationType = model.NotificationTypeSuccess
+			title = "PYQ Papers Ready"
+			message = fmt.Sprintf("Successfully indexed %d papers for %s. You can now chat with the AI about these papers!", job.CompletedItems, subject.Name)
+		} else if newStatus == model.IndexingJobStatusPartial {
+			notificationType = model.NotificationTypeWarning
+			title = "PYQ Papers Partially Ready"
+			message = fmt.Sprintf("Indexed %d papers for %s (%d failed). You can chat with the AI about the indexed papers.", job.CompletedItems, subject.Name, job.FailedItems)
+		} else {
+			notificationType = model.NotificationTypeError
+			title = "PYQ Indexing Failed"
+			message = fmt.Sprintf("Failed to index papers for %s. Please try uploading again.", subject.Name)
+		}
+
+		// Find and update notification
+		m.db.Model(&model.UserNotification{}).
+			Where("indexing_job_id = ?", job.ID).
+			Updates(map[string]interface{}{
+				"type":       notificationType,
+				"title":      title,
+				"message":    message,
+				"updated_at": time.Now(),
+			})
+
+		updated++
+		log.Printf("[CRON] Updated batch ingest job %d to status %s", job.ID, newStatus)
+	}
+
+	m.logJobComplete(jobName, fmt.Sprintf("Checked %d jobs, updated %d, completed %d, failed %d", len(jobs), updated, completed, failed))
+}
+
 // CheckDocumentIndexingStatus checks the status of documents being indexed in knowledge bases
 // Runs every 15 minutes to update document indexing statuses from DigitalOcean
 func (m *CronManager) CheckDocumentIndexingStatus() {
@@ -69,24 +428,25 @@ func (m *CronManager) CheckDocumentIndexingStatus() {
 			continue
 		}
 
-		// Update document status based on data source status
+		// Update document status based on last indexing job status
 		var newStatus model.IndexingStatus
 		var errorMsg string
 
-		switch dataSource.Status {
-		case "pending":
-			newStatus = model.IndexingStatusPending
-		case "processing":
-			newStatus = model.IndexingStatusInProgress
-		case "indexed":
-			newStatus = model.IndexingStatusCompleted
-		case "failed":
-			newStatus = model.IndexingStatusFailed
-			errorMsg = "Indexing failed on DigitalOcean"
-		case "partially_indexed":
-			newStatus = model.IndexingStatusPartial
-			errorMsg = "Some chunks failed to index"
-		default:
+		if dataSource.LastIndexingJob != nil {
+			switch dataSource.LastIndexingJob.Status {
+			case "INDEX_JOB_STATUS_PENDING":
+				newStatus = model.IndexingStatusPending
+			case "INDEX_JOB_STATUS_IN_PROGRESS":
+				newStatus = model.IndexingStatusInProgress
+			case "INDEX_JOB_STATUS_COMPLETED":
+				newStatus = model.IndexingStatusCompleted
+			case "INDEX_JOB_STATUS_FAILED":
+				newStatus = model.IndexingStatusFailed
+				errorMsg = "Indexing failed on DigitalOcean"
+			default:
+				newStatus = model.IndexingStatusPending
+			}
+		} else {
 			newStatus = model.IndexingStatusPending
 		}
 
@@ -97,9 +457,6 @@ func (m *CronManager) CheckDocumentIndexingStatus() {
 			}
 			if errorMsg != "" {
 				updateData["indexing_error"] = errorMsg
-			}
-			if dataSource.ChunkCount > 0 {
-				updateData["page_count"] = dataSource.ChunkCount
 			}
 
 			if err := m.db.Model(&doc).Updates(updateData).Error; err != nil {

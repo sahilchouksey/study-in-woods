@@ -59,7 +59,7 @@ export function ConnectionTester({
     );
   };
 
-  const getButtonVariant = () => {
+  const getButtonVariant = (): "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" => {
     if (!lastResult) return 'outline';
     return lastResult.success ? 'outline' : 'outline';
   };

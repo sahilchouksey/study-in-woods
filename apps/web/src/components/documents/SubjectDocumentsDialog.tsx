@@ -12,7 +12,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { DocumentList, DocumentUploadForm } from './DocumentComponents';
+import { DocumentList } from './DocumentComponents';
+import { MultiFileUploadForm } from './MultiFileUploadForm';
 import { SyllabusTab } from './SyllabusTab';
 import { PYQTab } from './PYQTab';
 import { useDocuments } from '@/lib/api/hooks/useDocuments';
@@ -99,7 +100,7 @@ export function SubjectDocumentsDialog({
           onValueChange={(v) => setActiveTab(v as 'documents' | 'syllabus' | 'pyqs' | 'upload')}
           className="flex-1 flex flex-col min-h-0"
         >
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="documents" className="gap-1.5">
               <List className="h-4 w-4" />
               <span className="hidden sm:inline">Docs</span>
@@ -120,15 +121,18 @@ export function SubjectDocumentsDialog({
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger 
-              value="upload" 
-              className="gap-1.5"
-              disabled={!isAuthenticated}
-              title={!isAuthenticated ? 'Login to upload documents' : undefined}
-            >
-              <Upload className="h-4 w-4" />
-              <span className="hidden sm:inline">Upload</span>
-            </TabsTrigger>
+            {/* Upload tab - Admin only */}
+            {isAdmin && (
+              <TabsTrigger 
+                value="upload" 
+                className="gap-1.5"
+                disabled={!isAuthenticated}
+                title={!isAuthenticated ? 'Login to upload documents' : undefined}
+              >
+                <Upload className="h-4 w-4" />
+                <span className="hidden sm:inline">Upload</span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <div className="flex-1 min-h-0 mt-4">
@@ -147,37 +151,42 @@ export function SubjectDocumentsDialog({
             </TabsContent>
 
             <TabsContent value="pyqs" className="h-full m-0">
-              <PYQTab subjectId={subject.id} isAdmin={isAdmin} />
+              <PYQTab subjectId={subject.id} subjectCode={subject.code} subjectName={subject.name} isAdmin={isAdmin} />
             </TabsContent>
 
-            <TabsContent value="upload" className="h-full m-0">
-              {isAuthenticated ? (
-                <ScrollArea className="h-[350px] pr-4">
-                  <DocumentUploadForm
-                    subjectId={subject.id}
-                    onSuccess={() => setActiveTab('documents')}
-                  />
-                </ScrollArea>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground">
-                  <FolderOpen className="h-12 w-12 mb-3 opacity-50" />
-                  <p className="font-medium">Login Required</p>
-                  <p className="text-sm mt-1">
-                    Please log in to upload documents to this subject
-                  </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => {
-                      onOpenChange(false);
-                      window.location.href = '/login';
-                    }}
-                  >
-                    Go to Login
-                  </Button>
-                </div>
-              )}
-            </TabsContent>
+            {/* Upload tab content - Admin only */}
+            {isAdmin && (
+              <TabsContent value="upload" className="h-full m-0">
+                {isAuthenticated ? (
+                  <ScrollArea className="h-[350px] pr-4">
+                    <MultiFileUploadForm
+                      subjectId={subject.id}
+                      subjectName={subject.name}
+                      onSuccess={() => setActiveTab('documents')}
+                      excludeTypes={['syllabus']}
+                    />
+                  </ScrollArea>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground">
+                    <FolderOpen className="h-12 w-12 mb-3 opacity-50" />
+                    <p className="font-medium">Login Required</p>
+                    <p className="text-sm mt-1">
+                      Please log in to upload documents to this subject
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="mt-4"
+                      onClick={() => {
+                        onOpenChange(false);
+                        window.location.href = '/login';
+                      }}
+                    >
+                      Go to Login
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+            )}
           </div>
         </Tabs>
       </DialogContent>

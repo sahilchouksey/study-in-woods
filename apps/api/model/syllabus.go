@@ -22,8 +22,8 @@ type Syllabus struct {
 	CreatedAt        time.Time                `json:"created_at"`
 	UpdatedAt        time.Time                `json:"updated_at"`
 	DeletedAt        gorm.DeletedAt           `gorm:"index" json:"-"`
-	SubjectID        uint                     `gorm:"uniqueIndex;not null" json:"subject_id"` // One syllabus per subject
-	DocumentID       uint                     `gorm:"index" json:"document_id"`               // Source document
+	SubjectID        uint                     `gorm:"index;not null" json:"subject_id"` // Multiple syllabuses can exist per subject (from different documents)
+	DocumentID       uint                     `gorm:"index" json:"document_id"`         // Source document
 	SubjectName      string                   `gorm:"type:varchar(255)" json:"subject_name"`
 	SubjectCode      string                   `gorm:"type:varchar(50)" json:"subject_code"`
 	TotalCredits     int                      `gorm:"default:0" json:"total_credits"`
@@ -46,9 +46,10 @@ type SyllabusUnit struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 	SyllabusID  uint           `gorm:"not null;index" json:"syllabus_id"`
 	UnitNumber  int            `gorm:"not null" json:"unit_number"` // 1, 2, 3, etc.
-	Title       string         `gorm:"type:varchar(255);not null" json:"title"`
+	Title       string         `gorm:"type:varchar(1000);not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description,omitempty"`
-	Hours       int            `gorm:"default:0" json:"hours"` // Teaching hours allocated
+	RawText     string         `gorm:"type:text" json:"raw_text,omitempty"` // Exact verbatim text from syllabus
+	Hours       int            `gorm:"default:0" json:"hours"`              // Teaching hours allocated
 
 	// Relationships
 	Syllabus Syllabus        `gorm:"foreignKey:SyllabusID;constraint:OnDelete:CASCADE" json:"-"`
@@ -63,7 +64,7 @@ type SyllabusTopic struct {
 	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 	UnitID      uint           `gorm:"not null;index" json:"unit_id"`
 	TopicNumber int            `gorm:"not null" json:"topic_number"` // Order within the unit
-	Title       string         `gorm:"type:varchar(255);not null" json:"title"`
+	Title       string         `gorm:"type:varchar(500);not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description,omitempty"`
 	Keywords    string         `gorm:"type:text" json:"keywords,omitempty"` // Comma-separated keywords for search
 
@@ -111,6 +112,7 @@ type SyllabusUnitResponse struct {
 	UnitNumber  int                     `json:"unit_number"`
 	Title       string                  `json:"title"`
 	Description string                  `json:"description,omitempty"`
+	RawText     string                  `json:"raw_text,omitempty"`
 	Hours       int                     `json:"hours,omitempty"`
 	Topics      []SyllabusTopicResponse `json:"topics"`
 }
@@ -158,6 +160,7 @@ func (s *Syllabus) ToResponse() *SyllabusResponse {
 			UnitNumber:  unit.UnitNumber,
 			Title:       unit.Title,
 			Description: unit.Description,
+			RawText:     unit.RawText,
 			Hours:       unit.Hours,
 			Topics:      make([]SyllabusTopicResponse, 0),
 		}

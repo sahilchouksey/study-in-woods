@@ -262,3 +262,18 @@ export function useDeleteSubject() {
     },
   });
 }
+
+/**
+ * Hook to delete all subjects in a semester (admin only)
+ */
+export function useDeleteAllSubjects() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (semesterId: string) =>
+      subjectService.deleteAllSubjects(semesterId),
+    onSuccess: (_, semesterId) => {
+      queryClient.invalidateQueries({ queryKey: ['subjects', semesterId] });
+    },
+  });
+}

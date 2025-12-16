@@ -1,51 +1,90 @@
 'use client';
 
-import { useState } from 'react';
-import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useQueryState, parseAsString, parseAsInteger } from 'nuqs';
+import { useQueryClient } from '@tanstack/react-query';
+import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUniversities, useCoursesByUniversity, useSemesters, useSubjects } from '@/lib/api/hooks/useCourses';
 import { useAuth } from '@/providers/auth-provider';
 import { useUpdateProfile } from '@/lib/api/hooks/useAuth';
-import { useDeleteUniversity, useDeleteCourse, useDeleteSemester, useDeleteSubject } from '@/lib/api/hooks/useAdminMutations';
+import { useDeleteUniversity, useDeleteCourse, useDeleteSemester, useDeleteSubject, useDeleteAllSubjects } from '@/lib/api/hooks/useAdminMutations';
 import { AdminActionButtons } from '@/components/admin/AdminActionButtons';
 import { UniversityFormDialog } from '@/components/admin/UniversityFormDialog';
 import { CourseFormDialog } from '@/components/admin/CourseFormDialog';
 import { SemesterFormDialog } from '@/components/admin/SemesterFormDialog';
 import { SubjectFormDialog } from '@/components/admin/SubjectFormDialog';
 import { DeleteConfirmationDialog } from '@/components/admin/DeleteConfirmationDialog';
-import { SubjectDocumentsDialog } from '@/components/documents/SubjectDocumentsDialog';
+import { SubjectDocumentsDialog, SemesterSyllabusUploadDialog } from '@/components/documents';
+import { CoursesBreadcrumb } from '@/components/CoursesBreadcrumb';
 import { toast } from 'sonner';
 import type { University, Course, Semester, Subject } from '@/lib/api/courses';
 
 export function CoursesTab() {
+  const queryClient = useQueryClient();
   const { user, isAdmin, isAuthenticated } = useAuth();
   const { data: universities = [], isLoading: universitiesLoading } = useUniversities();
-  const [selectedUniversityId, setSelectedUniversityId] = useState<string | null>(
-    user?.university_id || null
-  );
+  
+  // Use nuqs for URL state management - enables shareable URLs and persistence
+  const [selectedUniversityId, setSelectedUniversityId] = useQueryState('university', parseAsString);
+  
   const { data: courses = [], isLoading: coursesLoading } = useCoursesByUniversity(
-    selectedUniversityId
+    selectedUniversityId || user?.university_id || null
   );
   const updateProfileMutation = useUpdateProfile();
 
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(
-    user?.course_id || null
+  const [selectedCourseId, setSelectedCourseId] = useQueryState('course', parseAsString);
+  
+  const { data: semesters = [], isLoading: semestersLoading } = useSemesters(
+    selectedCourseId || user?.course_id || null
   );
   
-  const { data: semesters = [], isLoading: semestersLoading } = useSemesters(selectedCourseId);
+  const [selectedSemesterId, setSelectedSemesterId] = useQueryState('semester', parseAsString);
   
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(null);
+  // Subject search and pagination - URL-persisted state
+  const [subjectSearchQuery, setSubjectSearchQuery] = useQueryState('search', parseAsString);
+  const [subjectPage, setSubjectPage] = useQueryState('subjectPage', parseAsInteger.withDefault(1));
   
-  const { data: subjects = [], isLoading: subjectsLoading } = useSubjects(selectedSemesterId);
+  // Debounced search value for API calls
+  const [debouncedSearch, setDebouncedSearch] = useState(subjectSearchQuery || '');
+  
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(subjectSearchQuery || '');
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [subjectSearchQuery]);
+  
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    if (subjectSearchQuery !== null) {
+      setSubjectPage(1);
+    }
+  }, [subjectSearchQuery, setSubjectPage]);
+  
+  const { data: subjectsData, isLoading: subjectsLoading } = useSubjects(
+    selectedSemesterId,
+    {
+      page: subjectPage,
+      per_page: 10,
+      search: debouncedSearch || undefined,
+    }
+  );
+  
+  const subjects = subjectsData?.data || [];
+  const subjectsPagination = subjectsData?.pagination;
 
   // Admin mutations
   const deleteUniversityMutation = useDeleteUniversity();
   const deleteCourseMutation = useDeleteCourse();
   const deleteSemesterMutation = useDeleteSemester();
   const deleteSubjectMutation = useDeleteSubject();
+  const deleteAllSubjectsMutation = useDeleteAllSubjects();
 
   // Dialog states
   const [universityDialog, setUniversityDialog] = useState<{ open: boolean; university: University | null }>({
@@ -71,10 +110,19 @@ export function CoursesTab() {
     subject: null,
   });
 
+  // Semester upload dialog state
+  const [semesterUploadDialog, setSemesterUploadDialog] = useState<{ open: boolean; semester: Semester | null }>({
+    open: false,
+    semester: null,
+  });
+
+  // URL state for extraction reconnection (survives page refresh)
+  const [urlExtracting] = useQueryState('extracting', parseAsString);
+
   // Delete confirmation dialog states
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
-    type: 'university' | 'course' | 'semester' | 'subject' | null;
+    type: 'university' | 'course' | 'semester' | 'subject' | 'all-subjects' | null;
     id: string | null;
     name: string;
     courseId?: string;
@@ -87,9 +135,55 @@ export function CoursesTab() {
     name: '',
   });
 
+  // Search/filter states (university and course remain client-side)
+  const [universitySearch, setUniversitySearch] = useState('');
+  const [courseSearch, setCourseSearch] = useState('');
+
   const selectedUniversity = universities.find((u) => u.id === selectedUniversityId);
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
   const selectedSemester = semesters.find((s) => s.id === selectedSemesterId);
+
+  // Auto-open syllabus upload dialog if URL has extracting=true (reconnection after page refresh)
+  useEffect(() => {
+    if (urlExtracting === 'true' && !semesterUploadDialog.open) {
+      // Create a minimal semester object for the dialog if we have selectedSemester
+      const semester: Semester | null = selectedSemester || (selectedSemesterId ? {
+        id: selectedSemesterId,
+        course_id: selectedCourseId || '',
+        name: `Semester`,
+        number: 1,
+        created_at: '',
+        updated_at: '',
+      } : null);
+      
+      setSemesterUploadDialog({ open: true, semester });
+    }
+  }, [urlExtracting, selectedSemester, selectedSemesterId, selectedCourseId, semesterUploadDialog.open]);
+
+  // Filtered lists based on search
+  const filteredUniversities = useMemo(() => {
+    if (!universitySearch) return universities;
+    const search = universitySearch.toLowerCase();
+    return universities.filter(
+      (u) =>
+        u.name.toLowerCase().includes(search) ||
+        u.code.toLowerCase().includes(search) ||
+        u.location.toLowerCase().includes(search)
+    );
+  }, [universities, universitySearch]);
+
+  const filteredCourses = useMemo(() => {
+    if (!courseSearch) return courses;
+    const search = courseSearch.toLowerCase();
+    return courses.filter(
+      (c) =>
+        c.name.toLowerCase().includes(search) ||
+        c.code.toLowerCase().includes(search) ||
+        c.description?.toLowerCase().includes(search)
+    );
+  }, [courses, courseSearch]);
+
+  // Subjects are now filtered server-side via API params
 
   const handleSaveProfile = async () => {
     if (!selectedUniversityId || !selectedCourseId || !selectedSemesterId) {
@@ -117,7 +211,7 @@ export function CoursesTab() {
 
   // Open delete confirmation dialog
   const openDeleteDialog = (
-    type: 'university' | 'course' | 'semester' | 'subject',
+    type: 'university' | 'course' | 'semester' | 'subject' | 'all-subjects',
     id: string,
     name: string,
     extra?: { courseId?: string; semesterNumber?: number; semesterId?: string }
@@ -185,6 +279,17 @@ export function CoursesTab() {
             toast.success('Subject deleted successfully');
           }
           break;
+
+        case 'all-subjects':
+          if (deleteDialog.semesterId) {
+            const result = await deleteAllSubjectsMutation.mutateAsync(deleteDialog.semesterId);
+            if (result.failed_count > 0) {
+              toast.warning(`Deleted ${result.deleted_count} subjects, ${result.failed_count} failed`);
+            } else {
+              toast.success(`All ${result.deleted_count} subjects deleted successfully`);
+            }
+          }
+          break;
       }
       closeDeleteDialog();
     } catch (error: unknown) {
@@ -222,6 +327,12 @@ export function CoursesTab() {
           description: `Are you sure you want to delete "${deleteDialog.name}"?`,
           cascadeWarning: 'This will permanently delete all documents associated with this subject.',
         };
+      case 'all-subjects':
+        return {
+          title: 'Delete All Subjects',
+          description: `Are you sure you want to delete all subjects in "${deleteDialog.name}"?`,
+          cascadeWarning: 'This will permanently delete ALL subjects and ALL documents in this semester. This action will clean up AI agents and knowledge bases for each subject.',
+        };
       default:
         return {
           title: 'Delete',
@@ -235,18 +346,36 @@ export function CoursesTab() {
     deleteUniversityMutation.isPending ||
     deleteCourseMutation.isPending ||
     deleteSemesterMutation.isPending ||
-    deleteSubjectMutation.isPending;
+    deleteSubjectMutation.isPending ||
+    deleteAllSubjectsMutation.isPending;
 
   return (
     <div className="h-full flex flex-col min-h-0">
       {/* Header */}
       <div className="border-b border-neutral-200 dark:border-neutral-800 p-6">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h2 className="text-2xl font-semibold">My Courses</h2>
             <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
               Select your university, course, and semester for personalized learning
             </p>
+            {/* Breadcrumbs */}
+            {(selectedUniversity || selectedCourse || selectedSemester) && (
+              <div className="mt-3">
+                <CoursesBreadcrumb
+                  university={selectedUniversity}
+                  course={selectedCourse}
+                  semester={selectedSemester}
+                  onUniversityClick={() => {
+                    setSelectedCourseId(null);
+                    setSelectedSemesterId(null);
+                  }}
+                  onCourseClick={() => {
+                    setSelectedSemesterId(null);
+                  }}
+                />
+              </div>
+            )}
           </div>
           {hasChanges && (
             <Button
@@ -287,6 +416,19 @@ export function CoursesTab() {
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
               Choose your university to see available courses
             </p>
+
+            {/* Search Input */}
+            {universities.length > 3 && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search universities..."
+                  value={universitySearch}
+                  onChange={(e) => setUniversitySearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            )}
             
             {universitiesLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -294,7 +436,12 @@ export function CoursesTab() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {universities.map((university) => (
+                {filteredUniversities.length === 0 ? (
+                  <div className="col-span-2 text-center py-8 text-muted-foreground">
+                    No universities found matching "{universitySearch}"
+                  </div>
+                ) : (
+                  filteredUniversities.map((university) => (
                   <div
                     key={university.id}
                     role="button"
@@ -346,7 +493,8 @@ export function CoursesTab() {
                       </div>
                     </div>
                   </div>
-                ))}
+                ))
+                )}
               </div>
             )}
           </div>
@@ -358,6 +506,9 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Select Course</h3>
+                  {coursesLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
+                  )}
                 </div>
                 {isAdmin && (
                   <AdminActionButtons
@@ -372,8 +523,23 @@ export function CoursesTab() {
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
                 {selectedUniversity
                   ? `Available courses at ${selectedUniversity.name}`
+                  : coursesLoading 
+                  ? 'Loading university...'
                   : 'Choose your course program'}
               </p>
+
+              {/* Search Input */}
+              {courses.length > 3 && (
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search courses..."
+                    value={courseSearch}
+                    onChange={(e) => setCourseSearch(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              )}
               
               {coursesLoading ? (
                 <div className="flex items-center justify-center py-12">
@@ -385,7 +551,12 @@ export function CoursesTab() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {courses.map((course) => (
+                  {filteredCourses.length === 0 ? (
+                    <div className="col-span-2 text-center py-8 text-muted-foreground">
+                      No courses found matching "{courseSearch}"
+                    </div>
+                  ) : (
+                    filteredCourses.map((course) => (
                     <div
                       key={course.id}
                       role="button"
@@ -439,7 +610,8 @@ export function CoursesTab() {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))
+                  )}
                 </div>
               )}
             </div>
@@ -452,6 +624,9 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookMarked className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Select Semester</h3>
+                  {semestersLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
+                  )}
                 </div>
                 {isAdmin && (
                   <AdminActionButtons
@@ -464,7 +639,7 @@ export function CoursesTab() {
                 )}
               </div>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Choose your current semester for targeted content
+                {semestersLoading ? 'Loading semesters...' : 'Choose your current semester for targeted content'}
               </p>
 
               {semestersLoading ? (
@@ -516,90 +691,277 @@ export function CoursesTab() {
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
                   <h3 className="text-lg font-semibold">Subjects</h3>
+                  {subjectsLoading && (
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-black dark:border-white" />
+                  )}
                 </div>
-                {isAdmin && (
-                  <AdminActionButtons
-                    showCreate
-                    showEdit={false}
-                    showDelete={false}
-                    createLabel="Add Subject"
-                    onCreate={() => setSubjectDialog({ open: true, subject: null })}
-                  />
-                )}
+                <div className="flex items-center gap-2">
+                  {isAdmin && (subjectsPagination?.total ?? subjects.length) > 0 && selectedSemesterId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const semester: Semester | null = selectedSemester || (selectedSemesterId ? {
+                          id: selectedSemesterId,
+                          course_id: selectedCourseId || '',
+                          name: `Semester ${selectedSemesterId}`,
+                          number: parseInt(selectedSemesterId) || 1,
+                          created_at: '',
+                          updated_at: '',
+                        } : null);
+                        setSemesterUploadDialog({ open: true, semester });
+                      }}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Upload Syllabus
+                    </Button>
+                  )}
+                  {isAdmin && (
+                    <>
+                      {(subjectsPagination?.total ?? subjects.length) > 0 && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => 
+                            openDeleteDialog(
+                              'all-subjects',
+                              selectedSemesterId!,
+                              selectedSemester?.name || 'this semester',
+                              { semesterId: selectedSemesterId! }
+                            )
+                          }
+                          disabled={deleteAllSubjectsMutation.isPending}
+                        >
+                          {deleteAllSubjectsMutation.isPending ? 'Deleting...' : 'Delete All'}
+                        </Button>
+                      )}
+                      <AdminActionButtons
+                        showCreate
+                        showEdit={false}
+                        showDelete={false}
+                        createLabel="Add Subject"
+                        onCreate={() => setSubjectDialog({ open: true, subject: null })}
+                      />
+                    </>
+                  )}
+                </div>
               </div>
               <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                Browse subjects for {selectedSemester?.name}
+                {subjectsLoading ? 'Loading subjects...' : `Browse subjects for ${selectedSemester?.name || 'this semester'}`}
               </p>
+
+              {/* Search Input - Always show when there's a semester selected */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search subjects by name or code..."
+                  value={subjectSearchQuery || ''}
+                  onChange={(e) => setSubjectSearchQuery(e.target.value || null)}
+                  className="pl-9"
+                />
+                {subjectSearchQuery && (
+                  <button
+                    onClick={() => setSubjectSearchQuery(null)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <span className="sr-only">Clear search</span>
+                    ×
+                  </button>
+                )}
+              </div>
 
               {subjectsLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-black dark:border-white" />
                 </div>
-              ) : subjects.length === 0 ? (
-                <div className="text-center py-12 text-neutral-600 dark:text-neutral-400">
-                  No subjects available for this semester
+              ) : subjects.length === 0 && !subjectSearchQuery ? (
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 mx-auto mb-3 text-muted-foreground opacity-50" />
+                  <p className="text-neutral-600 dark:text-neutral-400 font-medium mb-2">
+                    No subjects available for this semester
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {isAdmin 
+                      ? 'Upload a syllabus to auto-create subjects, or add subjects manually'
+                      : 'No subjects available yet. Please contact an admin to add subjects.'}
+                  </p>
+                  {isAdmin && (
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        variant="default"
+                        onClick={() => {
+                          const semester: Semester | null = selectedSemester || (selectedSemesterId ? {
+                            id: selectedSemesterId,
+                            course_id: selectedCourseId || '',
+                            name: `Semester ${selectedSemesterId}`,
+                            number: parseInt(selectedSemesterId) || 1,
+                            created_at: '',
+                            updated_at: '',
+                          } : null);
+                          setSemesterUploadDialog({ open: true, semester });
+                        }}
+                      >
+                        <FileText className="mr-2 h-4 w-4" />
+                        Upload Syllabus
+                      </Button>
+                      <Button
+                        onClick={() => setSubjectDialog({ open: true, subject: null })}
+                      >
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Add Subject
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : subjects.length === 0 && subjectSearchQuery ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No subjects found matching "{subjectSearchQuery}"
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {subjects.map((subject) => (
-                    <Card 
-                      key={subject.id} 
-                      className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50"
-                      onClick={() => setDocumentsDialog({ open: true, subject })}
-                    >
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">{subject.name}</CardTitle>
-                            <CardDescription className="mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {subject.code}
-                              </Badge>
-                              {subject.credits && (
-                                <span className="ml-2 text-xs">
-                                  {subject.credits} credits
-                                </span>
+                <>
+                  <div className="grid grid-cols-1 gap-4">
+                    {subjects.map((subject) => (
+                      <Card 
+                        key={subject.id} 
+                        className="hover:shadow-md transition-shadow cursor-pointer hover:border-primary/50"
+                        onClick={() => setDocumentsDialog({ open: true, subject })}
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="text-lg">{subject.name}</CardTitle>
+                              <CardDescription className="mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {subject.code}
+                                </Badge>
+                                {subject.credits && (
+                                  <span className="ml-2 text-xs">
+                                    {subject.credits} credits
+                                  </span>
+                                )}
+                              </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 gap-1 text-muted-foreground hover:text-foreground"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDocumentsDialog({ open: true, subject });
+                                }}
+                              >
+                                <FileText className="h-4 w-4" />
+                                <span className="text-xs">Documents</span>
+                              </Button>
+                              {isAdmin && (
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <AdminActionButtons
+                                    showCreate={false}
+                                    onEdit={() => setSubjectDialog({ open: true, subject })}
+                                    onDelete={() => openDeleteDialog('subject', subject.id, subject.name, {
+                                      semesterId: selectedSemesterId!,
+                                    })}
+                                    isDeleting={deleteSubjectMutation.isPending}
+                                  />
+                                </div>
                               )}
-                            </CardDescription>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 gap-1 text-muted-foreground hover:text-foreground"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDocumentsDialog({ open: true, subject });
-                              }}
-                            >
-                              <FileText className="h-4 w-4" />
-                              <span className="text-xs">Documents</span>
-                            </Button>
-                            {isAdmin && (
-                              <div onClick={(e) => e.stopPropagation()}>
-                                <AdminActionButtons
-                                  showCreate={false}
-                                  onEdit={() => setSubjectDialog({ open: true, subject })}
-                                  onDelete={() => openDeleteDialog('subject', subject.id, subject.name, {
-                                    semesterId: selectedSemesterId!,
-                                  })}
-                                  isDeleting={deleteSubjectMutation.isPending}
-                                />
-                              </div>
-                            )}
-                          </div>
+                        </CardHeader>
+                        {subject.description && (
+                          <CardContent>
+                            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                              {subject.description}
+                            </p>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {subjectsPagination && subjectsPagination.total_pages > 1 && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {((subjectsPagination.current_page - 1) * subjectsPagination.per_page) + 1} to{' '}
+                        {Math.min(subjectsPagination.current_page * subjectsPagination.per_page, subjectsPagination.total)} of{' '}
+                        {subjectsPagination.total} subjects
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setSubjectPage(1)}
+                          disabled={subjectsPagination.current_page === 1}
+                        >
+                          <ChevronsLeft className="h-4 w-4" />
+                          <span className="sr-only">First page</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setSubjectPage(Math.max(1, subjectPage - 1))}
+                          disabled={subjectsPagination.current_page === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="sr-only">Previous page</span>
+                        </Button>
+                        <div className="flex items-center gap-1 mx-2">
+                          {Array.from({ length: Math.min(5, subjectsPagination.total_pages) }, (_, i) => {
+                            let pageNum: number;
+                            const totalPages = subjectsPagination.total_pages;
+                            const currentPage = subjectsPagination.current_page;
+                            
+                            if (totalPages <= 5) {
+                              pageNum = i + 1;
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1;
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i;
+                            } else {
+                              pageNum = currentPage - 2 + i;
+                            }
+                            
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={pageNum === currentPage ? 'default' : 'outline'}
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => setSubjectPage(pageNum)}
+                              >
+                                {pageNum}
+                              </Button>
+                            );
+                          })}
                         </div>
-                      </CardHeader>
-                      {subject.description && (
-                        <CardContent>
-                          <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                            {subject.description}
-                          </p>
-                        </CardContent>
-                      )}
-                    </Card>
-                  ))}
-                </div>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setSubjectPage(Math.min(subjectsPagination.total_pages, subjectPage + 1))}
+                          disabled={subjectsPagination.current_page === subjectsPagination.total_pages}
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                          <span className="sr-only">Next page</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => setSubjectPage(subjectsPagination.total_pages)}
+                          disabled={subjectsPagination.current_page === subjectsPagination.total_pages}
+                        >
+                          <ChevronsRight className="h-4 w-4" />
+                          <span className="sr-only">Last page</span>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -682,6 +1044,21 @@ export function CoursesTab() {
         userId={user?.id}
         isAdmin={isAdmin}
         isAuthenticated={isAuthenticated}
+      />
+
+      {/* Semester Syllabus Upload Dialog - For uploading syllabus to auto-create subjects */}
+      <SemesterSyllabusUploadDialog
+        open={semesterUploadDialog.open}
+        onOpenChange={(open: boolean) => setSemesterUploadDialog({ open, semester: open ? semesterUploadDialog.semester : null })}
+        semester={semesterUploadDialog.semester}
+        isAuthenticated={isAuthenticated}
+        semesterId={selectedSemesterId || undefined}
+        onSubjectsCreated={() => {
+          // Invalidate subjects query to refetch the updated list
+          if (selectedSemesterId) {
+            queryClient.invalidateQueries({ queryKey: ['subjects', selectedSemesterId] });
+          }
+        }}
       />
     </div>
   );

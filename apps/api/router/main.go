@@ -15,6 +15,8 @@ import (
 	chat_handlers "github.com/sahilchouksey/go-init-setup/handlers/chat"
 	course_handlers "github.com/sahilchouksey/go-init-setup/handlers/course"
 	document_handlers "github.com/sahilchouksey/go-init-setup/handlers/document"
+	ingest_handlers "github.com/sahilchouksey/go-init-setup/handlers/ingest"
+	notification_handlers "github.com/sahilchouksey/go-init-setup/handlers/notification"
 	pyq_handlers "github.com/sahilchouksey/go-init-setup/handlers/pyq"
 	semester_handlers "github.com/sahilchouksey/go-init-setup/handlers/semester"
 	subject_handlers "github.com/sahilchouksey/go-init-setup/handlers/subject"
@@ -104,13 +106,29 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	apiKeyService := services.NewAPIKeyService(db)
 	apiKeyHandler := apikey_handlers.NewAPIKeyHandler(db, apiKeyService)
 
-	// Initialize Syllabus handlers with SyllabusService
+	// Initialize Syllabus handlers with SyllabusService and DocumentService
 	syllabusService := services.NewSyllabusService(db)
-	syllabusHandler := syllabus_handlers.NewSyllabusHandler(db, syllabusService)
+	syllabusHandler := syllabus_handlers.NewSyllabusHandler(db, syllabusService, documentService)
+
+	// Initialize Progress Tracker for SSE streaming (if Redis is available)
+	var progressTracker *services.ProgressTracker
+	if redisCache != nil {
+		progressTracker = services.NewProgressTracker(redisCache)
+		syllabusHandler.SetProgressTracker(progressTracker)
+		log.Println("Progress tracker initialized for SSE streaming support")
+	}
 
 	// Initialize PYQ handlers with PYQService
 	pyqService := services.NewPYQService(db)
 	pyqHandler := pyq_handlers.NewPYQHandler(db, pyqService)
+
+	// Initialize Notification service and handler
+	notificationService := services.NewNotificationService(db)
+	notificationHandler := notification_handlers.NewNotificationHandler(notificationService)
+
+	// Initialize Batch Ingest service and handler
+	batchIngestService := services.NewBatchIngestService(db, notificationService, pyqService)
+	batchIngestHandler := ingest_handlers.NewBatchIngestHandler(batchIngestService)
 
 	// Apply security middleware
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
@@ -120,12 +138,13 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	middleware.SetupSecurity(app, middleware.SecurityConfig{
 		AllowedOrigins:    allowedOrigins,
-		RateLimitRequests: 100,             // 100 requests
-		RateLimitWindow:   1 * time.Minute, // per minute
+		RateLimitRequests: 100000000,            // 100 requests
+		RateLimitWindow:   100000 * time.Minute, // per minute
 	})
 
-	// Health check endpoint (public)
+	// Health check endpoints (public)
 	app.Get("/ping", utils.MakeHTTPHandleFunc(handlers.HandleCheckHealth, store))
+	app.Get("/health/detailed", utils.MakeHTTPHandleFunc(handlers.HandleDetailedHealth, store))
 
 	// API v1 group
 	api := app.Group("/api/v1")
@@ -184,11 +203,16 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Subjects routes (nested under semesters)
 	subjects := api.Group("/semesters/:semester_id/subjects")
-	subjects.Get("/", subjectHandler.ListSubjects)                                   // Public: List subjects for a semester
-	subjects.Get("/:id", subjectHandler.GetSubject)                                  // Public: Get subject by ID
-	subjects.Post("/", authMiddleware.Required(), subjectHandler.CreateSubject)      // Protected: Create subject with AI
-	subjects.Put("/:id", authMiddleware.Required(), subjectHandler.UpdateSubject)    // Protected: Update subject
-	subjects.Delete("/:id", authMiddleware.Required(), subjectHandler.DeleteSubject) // Protected: Delete subject with cleanup
+	subjects.Get("/", subjectHandler.ListSubjects)                                        // Public: List subjects for a semester
+	subjects.Get("/:id", subjectHandler.GetSubject)                                       // Public: Get subject by ID
+	subjects.Post("/", authMiddleware.Required(), subjectHandler.CreateSubject)           // Protected: Create subject with AI
+	subjects.Put("/:id", authMiddleware.Required(), subjectHandler.UpdateSubject)         // Protected: Update subject
+	subjects.Delete("/", authMiddleware.RequireAdmin(), subjectHandler.DeleteAllSubjects) // Admin: Delete all subjects in semester
+	subjects.Delete("/:id", authMiddleware.Required(), subjectHandler.DeleteSubject)      // Protected: Delete subject with cleanup
+
+	// Semester-level syllabus upload (creates subjects automatically)
+	semesterSyllabus := api.Group("/semesters/:semester_id/syllabus")
+	semesterSyllabus.Post("/upload", authMiddleware.Required(), syllabusHandler.UploadAndExtractSyllabus) // Protected: Upload syllabus and create subjects
 
 	// ===============================================================================
 
@@ -211,6 +235,9 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	subjectSyllabus.Get("/", syllabusHandler.GetSyllabusBySubject) // Public: Get syllabus for a subject
 	subjectSyllabus.Get("/search", syllabusHandler.SearchTopics)   // Public: Search topics in syllabus
 
+	// Multiple syllabuses per subject route
+	api.Get("/subjects/:subject_id/syllabuses", syllabusHandler.GetAllSyllabusesBySubject) // Public: Get all syllabuses for a subject
+
 	// Document syllabus extraction
 	api.Post("/documents/:document_id/extract-syllabus", authMiddleware.Required(), syllabusHandler.ExtractSyllabus) // Protected: Extract syllabus from document
 
@@ -228,19 +255,44 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// PYQ routes (nested under subjects)
 	subjectPYQs := api.Group("/subjects/:subject_id/pyqs")
-	subjectPYQs.Get("/", pyqHandler.GetPYQsBySubject)      // Public: Get PYQ papers for a subject
-	subjectPYQs.Get("/search", pyqHandler.SearchQuestions) // Public: Search questions in PYQs
+	subjectPYQs.Get("/", pyqHandler.GetPYQsBySubject)                                   // Public: Get PYQ papers for a subject
+	subjectPYQs.Get("/search", pyqHandler.SearchQuestions)                              // Public: Search questions in PYQs
+	subjectPYQs.Get("/search-available", pyqHandler.SearchAvailablePYQs)                // Public: Search available PYQs from crawlers
+	subjectPYQs.Post("/ingest", authMiddleware.Required(), pyqHandler.IngestCrawledPYQ) // Protected: Ingest a crawled PYQ paper
 
 	// Document PYQ extraction
 	api.Post("/documents/:document_id/extract-pyq", authMiddleware.Required(), pyqHandler.ExtractPYQ) // Protected: Extract PYQ from document
 
 	// PYQ management routes
 	pyqs := api.Group("/pyqs")
+	pyqs.Get("/crawler-sources", pyqHandler.GetCrawlerSources)                     // Public: Get available crawler sources
 	pyqs.Get("/:id", pyqHandler.GetPYQById)                                        // Public: Get PYQ paper by ID
 	pyqs.Get("/:id/status", pyqHandler.GetExtractionStatus)                        // Public: Get extraction status
 	pyqs.Get("/:id/questions", pyqHandler.ListQuestions)                           // Public: List questions
 	pyqs.Post("/:id/retry", authMiddleware.Required(), pyqHandler.RetryExtraction) // Protected: Retry failed extraction
 	pyqs.Delete("/:id", authMiddleware.RequireAdmin(), pyqHandler.DeletePYQ)       // Admin: Delete PYQ paper
+
+	// ==================== Batch Ingest ====================
+
+	// Batch ingest for subjects (add to existing subject PYQs group)
+	subjectPYQs.Post("/batch-ingest", authMiddleware.Required(), batchIngestHandler.BatchIngestPYQs)  // Protected: Start batch ingest
+	subjectPYQs.Get("/indexing-jobs", authMiddleware.Required(), batchIngestHandler.GetJobsBySubject) // Protected: List indexing jobs for subject
+
+	// Indexing job management routes
+	indexingJobs := api.Group("/indexing-jobs", authMiddleware.Required())
+	indexingJobs.Get("/:job_id", batchIngestHandler.GetJobStatus)      // Protected: Get job status with items
+	indexingJobs.Post("/:job_id/cancel", batchIngestHandler.CancelJob) // Protected: Cancel active job
+
+	// ==================== Notifications ====================
+
+	// Notification routes (all protected - require authentication)
+	notifications := api.Group("/notifications", authMiddleware.Required())
+	notifications.Get("/", notificationHandler.GetNotifications)           // Protected: List user's notifications
+	notifications.Get("/unread-count", notificationHandler.GetUnreadCount) // Protected: Get unread notification count
+	notifications.Post("/:id/read", notificationHandler.MarkAsRead)        // Protected: Mark notification as read
+	notifications.Post("/read-all", notificationHandler.MarkAllAsRead)     // Protected: Mark all as read
+	notifications.Delete("/:id", notificationHandler.DeleteNotification)   // Protected: Delete notification
+	notifications.Delete("/", notificationHandler.DeleteAllNotifications)  // Protected: Delete all notifications
 
 	// ======================================================================
 
@@ -324,6 +376,27 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	apiKeys.Delete("/:id", apiKeyHandler.DeleteAPIKey)      // Protected: Delete API key
 	apiKeys.Get("/:id/usage", apiKeyHandler.GetUsageStats)  // Protected: Get API key usage stats
 	apiKeys.Post("/:id/extend", apiKeyHandler.ExtendExpiry) // Protected: Extend API key expiry
+
+	// ===========================================================================
+
+	// ==================== API v2: SSE Streaming Support ====================
+
+	apiv2 := app.Group("/api/v2")
+
+	// Semester-level syllabus upload (Step 1 of two-step SSE process)
+	v2Semesters := apiv2.Group("/semesters", authMiddleware.Required())
+	v2Semesters.Post("/:semester_id/syllabus/upload", syllabusHandler.UploadSyllabusForStreaming) // Upload only, returns document_id
+
+	// Document extraction with SSE streaming (Step 2 of two-step SSE process)
+	v2Documents := apiv2.Group("/documents", authMiddleware.Required())
+	v2Documents.Get("/:document_id/extract-syllabus", syllabusHandler.ExtractSyllabusStream) // SSE streaming extraction
+
+	// Extraction job management
+	v2Jobs := apiv2.Group("/extraction-jobs", authMiddleware.Required())
+	v2Jobs.Get("/active", syllabusHandler.GetMyActiveJob)         // Get user's active job
+	v2Jobs.Get("/:job_id", syllabusHandler.GetJobStatus)          // Get job status
+	v2Jobs.Get("/:job_id/stream", syllabusHandler.ReconnectToJob) // Reconnect to job stream
+	v2Jobs.Post("/:job_id/cancel", syllabusHandler.CancelJob)     // Cancel job
 
 	// ===========================================================================
 

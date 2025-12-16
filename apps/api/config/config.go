@@ -44,6 +44,17 @@ type EnviornmentVariable struct {
 	DO_SPACES_REGION   string
 	DO_SPACES_ENDPOINT string
 	MODEL_ACCESS_KEY   string
+
+	// Extraction Retry Configuration
+	EXTRACTION_MAX_RETRIES              int
+	EXTRACTION_RETRY_DELAY_SECONDS      int
+	EXTRACTION_RETRY_BACKOFF_MULTIPLIER float64
+	EXTRACTION_MAX_BACKOFF_SECONDS      int
+	EXTRACTION_CHUNK_TIMEOUT_SECONDS    int
+
+	// Job State Configuration
+	EXTRACTION_JOB_TTL_SUCCESS_HOURS int
+	EXTRACTION_JOB_TTL_FAILURE_HOURS int
 }
 
 func Get() (*EnviornmentVariable, error) {
@@ -86,7 +97,44 @@ func Get() (*EnviornmentVariable, error) {
 		DO_SPACES_REGION:   os.Getenv("DO_SPACES_REGION"),
 		DO_SPACES_ENDPOINT: os.Getenv("DO_SPACES_ENDPOINT"),
 		MODEL_ACCESS_KEY:   os.Getenv("MODEL_ACCESS_KEY"),
+
+		// Extraction Retry Configuration (with defaults)
+		EXTRACTION_MAX_RETRIES:              getEnvInt("EXTRACTION_MAX_RETRIES", 3),
+		EXTRACTION_RETRY_DELAY_SECONDS:      getEnvInt("EXTRACTION_RETRY_DELAY_SECONDS", 5),
+		EXTRACTION_RETRY_BACKOFF_MULTIPLIER: getEnvFloat("EXTRACTION_RETRY_BACKOFF_MULTIPLIER", 1.5),
+		EXTRACTION_MAX_BACKOFF_SECONDS:      getEnvInt("EXTRACTION_MAX_BACKOFF_SECONDS", 30),
+		EXTRACTION_CHUNK_TIMEOUT_SECONDS:    getEnvInt("EXTRACTION_CHUNK_TIMEOUT_SECONDS", 180),
+
+		// Job State Configuration (with defaults)
+		EXTRACTION_JOB_TTL_SUCCESS_HOURS: getEnvInt("EXTRACTION_JOB_TTL_SUCCESS_HOURS", 1),
+		EXTRACTION_JOB_TTL_FAILURE_HOURS: getEnvInt("EXTRACTION_JOB_TTL_FAILURE_HOURS", 24),
 	}
 
 	return envVariables, nil
+}
+
+// getEnvInt returns an integer environment variable or a default value
+func getEnvInt(key string, defaultVal int) int {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	intVal, err := strconv.Atoi(val)
+	if err != nil {
+		return defaultVal
+	}
+	return intVal
+}
+
+// getEnvFloat returns a float64 environment variable or a default value
+func getEnvFloat(key string, defaultVal float64) float64 {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	floatVal, err := strconv.ParseFloat(val, 64)
+	if err != nil {
+		return defaultVal
+	}
+	return floatVal
 }

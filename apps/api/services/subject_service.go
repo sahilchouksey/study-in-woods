@@ -6,9 +6,11 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/sahilchouksey/go-init-setup/model"
 	"github.com/sahilchouksey/go-init-setup/services/digitalocean"
+	"github.com/sahilchouksey/go-init-setup/utils/crypto"
 	"gorm.io/gorm"
 )
 
@@ -54,17 +56,63 @@ type CreateSubjectResult struct {
 	Subject              *model.Subject
 	KnowledgeBaseCreated bool
 	AgentCreated         bool
+	AgentDeployed        bool
+	CitationsEnabled     bool
+	APIKeyCreated        bool
 	Error                error
 }
 
 // generateKnowledgeBaseName generates a unique name for the knowledge base
 func (s *SubjectService) generateKnowledgeBaseName(course *model.Course, semester *model.Semester, subject *model.Subject) string {
-	// Format: coursecode-sem1-subjectcode (e.g., "mca-sem1-dsa")
-	courseName := strings.ToLower(strings.ReplaceAll(course.Code, " ", "-"))
+	// Format: coursecode-sem1-subjectcode (e.g., "mca-sem1-mca301")
+	// DigitalOcean KB names must be alphanumeric with hyphens only (no spaces, parentheses, etc.)
+	courseName := sanitizeKBName(course.Code)
 	semesterName := fmt.Sprintf("sem%d", semester.Number)
-	subjectName := strings.ToLower(strings.ReplaceAll(subject.Code, " ", "-"))
+	subjectName := sanitizeKBName(subject.Code)
 
-	return fmt.Sprintf("%s-%s-%s", courseName, semesterName, subjectName)
+	name := fmt.Sprintf("%s-%s-%s", courseName, semesterName, subjectName)
+	log.Printf("generateKnowledgeBaseName: course=%q semester=%d subject=%q -> %q",
+		course.Code, semester.Number, subject.Code, name)
+	return name
+}
+
+// sanitizeKBName sanitizes a string to be valid for DigitalOcean KB names
+// KB names must be lowercase alphanumeric with hyphens, no consecutive hyphens
+func sanitizeKBName(s string) string {
+	// Convert to lowercase
+	s = strings.ToLower(s)
+
+	// Replace spaces with hyphens
+	s = strings.ReplaceAll(s, " ", "-")
+
+	// Remove parentheses and their content like "(2)" -> "2"
+	// Keep the number but remove the parens
+	s = strings.ReplaceAll(s, "(", "-")
+	s = strings.ReplaceAll(s, ")", "")
+
+	// Remove any other non-alphanumeric characters except hyphens
+	var result strings.Builder
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' {
+			result.WriteRune(r)
+		}
+	}
+	s = result.String()
+
+	// Remove consecutive hyphens
+	for strings.Contains(s, "--") {
+		s = strings.ReplaceAll(s, "--", "-")
+	}
+
+	// Remove leading/trailing hyphens
+	s = strings.Trim(s, "-")
+
+	// Ensure name is not empty
+	if s == "" {
+		s = "kb"
+	}
+
+	return s
 }
 
 // CreateSubjectWithAI creates a subject with automatic AI integration
@@ -126,8 +174,10 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	// Get configuration from environment
 	embeddingModel := os.Getenv("DO_EMBEDDING_MODEL_UUID")
 	projectID := os.Getenv("DO_PROJECT_ID")
-	spacesName := os.Getenv("DO_SPACES_NAME")
-	spacesRegion := os.Getenv("DO_SPACES_REGION")
+	// spacesName and spacesRegion are available but we don't use them for KB creation
+	// Individual documents are added with specific ItemPath when uploaded
+	// spacesName := os.Getenv("DO_SPACES_NAME")
+	// spacesRegion := os.Getenv("DO_SPACES_REGION")
 	// DatabaseID allows reusing a single OpenSearch database across multiple knowledge bases
 	// instead of creating a new database for each one (which is expensive and wasteful)
 	databaseID := os.Getenv("DO_GENAI_DATABASE_ID")
@@ -135,11 +185,6 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	// GenAI is only available in tor1 region - use tor1 for both KB and Agent
 	// to ensure compatibility
 	genAIRegion := "tor1"
-
-	// Spaces region defaults to blr1 if not set
-	if spacesRegion == "" {
-		spacesRegion = "blr1"
-	}
 
 	createKBReq := digitalocean.CreateKnowledgeBaseRequest{
 		Name:           kbName,
@@ -150,17 +195,11 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		DatabaseID:     databaseID,  // Reuse existing database if provided
 	}
 
-	// Add datasource - Spaces bucket is required
-	if spacesName != "" {
-		createKBReq.DataSources = []digitalocean.DataSourceCreateInput{
-			{
-				SpacesDataSource: &digitalocean.SpacesDataSourceInput{
-					BucketName: spacesName,
-					Region:     spacesRegion,
-				},
-			},
-		}
-	}
+	// NOTE: We intentionally do NOT add a bucket-level data source here.
+	// Adding a bucket without ItemPath would index ALL files in the bucket,
+	// including files from other subjects. Instead, individual documents
+	// are added as data sources with specific ItemPath when they are uploaded.
+	// This ensures each subject's KB only contains its own documents.
 
 	kb, err := s.doClient.CreateKnowledgeBase(ctx, createKBReq)
 	if err != nil {
@@ -222,8 +261,8 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		ProjectID:    projectID,
 		Region:       genAIRegion,
 		Instructions: agentInstructions,
-		Temperature:  0.7,
-		TopP:         0.9,
+		Temperature:  0,
+		TopP:         1,
 		// Note: Don't attach KB during creation - it may not be ready yet
 	}
 
@@ -246,7 +285,51 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 	result.AgentCreated = true
 	subject.AgentUUID = agent.UUID
 
-	// 7. Update subject with UUIDs
+	// 7. Deploy the Agent (private visibility - accessible only via API key)
+	deployedAgent, err := s.doClient.DeployAgent(ctx, agent.UUID, digitalocean.VisibilityPrivate)
+	if err != nil {
+		log.Printf("Warning: Failed to deploy agent %s: %v. Agent will need manual deployment.", agent.UUID, err)
+	} else {
+		result.AgentDeployed = true
+		// Wait for deployment URL to be available (max 60 seconds)
+		if deployedAgent.Deployment == nil || deployedAgent.Deployment.URL == "" {
+			log.Printf("Waiting for agent deployment URL...")
+			deployedAgent, err = s.doClient.WaitForAgentDeployment(ctx, agent.UUID, 60*time.Second)
+			if err != nil {
+				log.Printf("Warning: Deployment URL not ready: %v", err)
+			}
+		}
+		if deployedAgent != nil && deployedAgent.Deployment != nil {
+			subject.AgentDeploymentURL = deployedAgent.Deployment.URL
+		}
+	}
+
+	// 8. Enable Citations for the Agent
+	if _, err := s.doClient.EnableAgentCitations(ctx, agent.UUID); err != nil {
+		log.Printf("Warning: Failed to enable citations for agent %s: %v", agent.UUID, err)
+	} else {
+		result.CitationsEnabled = true
+		log.Printf("Enabled citations for agent %s", agent.UUID)
+	}
+
+	// 9. Create API Key for the Agent
+	apiKeyName := fmt.Sprintf("%s-api-key", strings.ToLower(strings.ReplaceAll(subject.Code, " ", "-")))
+	apiKeyResult, err := s.doClient.CreateAgentAPIKey(ctx, agent.UUID, apiKeyName)
+	if err != nil {
+		log.Printf("Warning: Failed to create API key for agent %s: %v", agent.UUID, err)
+	} else if apiKeyResult.SecretKey != "" {
+		// 10. Encrypt and store the API key
+		encryptedKey, err := crypto.EncryptAPIKeyForStorage(apiKeyResult.SecretKey)
+		if err != nil {
+			log.Printf("Warning: Failed to encrypt API key: %v. Key will not be stored.", err)
+		} else {
+			subject.AgentAPIKeyEncrypted = encryptedKey
+			result.APIKeyCreated = true
+			log.Printf("Created and stored encrypted API key for agent %s", agent.UUID)
+		}
+	}
+
+	// 11. Update subject with UUIDs and encrypted API key
 	if err := tx.Save(&subject).Error; err != nil {
 		// Clean up DigitalOcean resources
 		s.doClient.DeleteAgent(ctx, agent.UUID)
@@ -255,7 +338,7 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		return nil, fmt.Errorf("failed to update subject with UUIDs: %w", err)
 	}
 
-	// 8. Commit transaction
+	// 12. Commit transaction
 	if err := tx.Commit().Error; err != nil {
 		// Clean up DigitalOcean resources if commit fails
 		s.doClient.DeleteAgent(ctx, agent.UUID)
@@ -263,6 +346,204 @@ func (s *SubjectService) CreateSubjectWithAI(ctx context.Context, req CreateSubj
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
+	return result, nil
+}
+
+// GetSubjectAgentAPIKey retrieves and decrypts the stored API key for a subject's agent
+// Returns empty string if no API key is stored
+func (s *SubjectService) GetSubjectAgentAPIKey(subject *model.Subject) (string, error) {
+	if subject.AgentAPIKeyEncrypted == "" {
+		return "", nil
+	}
+	return crypto.DecryptAPIKeyFromStorage(subject.AgentAPIKeyEncrypted)
+}
+
+// GetSubjectByID retrieves a subject by ID
+func (s *SubjectService) GetSubjectByID(ctx context.Context, subjectID uint) (*model.Subject, error) {
+	var subject model.Subject
+	if err := s.db.First(&subject, subjectID).Error; err != nil {
+		return nil, err
+	}
+	return &subject, nil
+}
+
+// GetDOClient returns the DigitalOcean client (for services that need to use it directly)
+func (s *SubjectService) GetDOClient() *digitalocean.Client {
+	return s.doClient
+}
+
+// SetupSubjectAI sets up AI resources (KB, Agent, API key) for an existing subject
+// This is used when subjects are created outside of CreateSubjectWithAI (e.g., syllabus extraction)
+// It's safe to call this even if the subject already has AI resources - it will skip setup
+func (s *SubjectService) SetupSubjectAI(ctx context.Context, subjectID uint) (*CreateSubjectResult, error) {
+	result := &CreateSubjectResult{}
+
+	// Skip if DigitalOcean client is not available
+	if s.doClient == nil {
+		log.Printf("SetupSubjectAI: DO client not available, skipping AI setup for subject %d", subjectID)
+		return result, nil
+	}
+
+	// Get subject with semester and course preloaded
+	var subject model.Subject
+	if err := s.db.Preload("Semester.Course").First(&subject, subjectID).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch subject: %w", err)
+	}
+
+	result.Subject = &subject
+
+	// Skip if already has AI resources
+	if subject.KnowledgeBaseUUID != "" && subject.AgentUUID != "" && subject.AgentAPIKeyEncrypted != "" {
+		log.Printf("SetupSubjectAI: Subject %d already has AI resources, skipping", subjectID)
+		result.KnowledgeBaseCreated = true
+		result.AgentCreated = true
+		result.APIKeyCreated = true
+		return result, nil
+	}
+
+	// Get configuration from environment
+	embeddingModel := os.Getenv("DO_EMBEDDING_MODEL_UUID")
+	projectID := os.Getenv("DO_PROJECT_ID")
+	databaseID := os.Getenv("DO_GENAI_DATABASE_ID")
+	genAIRegion := "tor1"
+
+	// 1. Create Knowledge Base if not exists
+	if subject.KnowledgeBaseUUID == "" {
+		kbName := s.generateKnowledgeBaseName(&subject.Semester.Course, &subject.Semester, &subject)
+		kbDescription := fmt.Sprintf("Knowledge base for %s - %s (%s)", subject.Semester.Course.Name, subject.Name, subject.Code)
+
+		createKBReq := digitalocean.CreateKnowledgeBaseRequest{
+			Name:           kbName,
+			Description:    kbDescription,
+			EmbeddingModel: embeddingModel,
+			ProjectID:      projectID,
+			Region:         genAIRegion,
+			DatabaseID:     databaseID,
+		}
+
+		// NOTE: We intentionally do NOT add a bucket-level data source here.
+		// Adding a bucket without ItemPath would index ALL files in the bucket,
+		// including files from other subjects. Individual documents are added
+		// as data sources with specific ItemPath when they are uploaded.
+
+		kb, err := s.doClient.CreateKnowledgeBase(ctx, createKBReq)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create knowledge base: %w", err)
+		}
+
+		subject.KnowledgeBaseUUID = kb.UUID
+		result.KnowledgeBaseCreated = true
+		log.Printf("SetupSubjectAI: Created KB %s for subject %d", kb.UUID, subjectID)
+
+		// Start indexing job
+		dataSources, err := s.doClient.ListKnowledgeBaseDataSources(ctx, kb.UUID)
+		if err == nil && len(dataSources) > 0 {
+			dsUUIDs := make([]string, len(dataSources))
+			for i, ds := range dataSources {
+				dsUUIDs[i] = ds.UUID
+			}
+			indexReq := digitalocean.StartIndexingJobRequest{
+				KnowledgeBaseUUID: kb.UUID,
+				DataSourceUUIDs:   dsUUIDs,
+			}
+			if _, err := s.doClient.StartIndexingJob(ctx, indexReq); err != nil {
+				log.Printf("Warning: Failed to start indexing job for KB %s: %v", kb.UUID, err)
+			}
+		}
+	} else {
+		result.KnowledgeBaseCreated = true
+	}
+
+	// 2. Create Agent if not exists
+	if subject.AgentUUID == "" {
+		modelUUID := os.Getenv("DO_AGENT_MODEL_UUID")
+		if modelUUID == "" {
+			modelUUID = "18bc9b8f-73c5-11f0-b074-4e013e2ddde4" // OpenAI GPT-oss-120b
+		}
+
+		agentName := fmt.Sprintf("%s Agent", subject.Name)
+		agentDescription := fmt.Sprintf("AI assistant for %s course", subject.Name)
+		agentInstructions := fmt.Sprintf(
+			"You are a helpful AI assistant for the %s course. "+
+				"Use the knowledge base to answer questions accurately. "+
+				"If you don't know the answer, say so honestly. "+
+				"Always be clear, concise, and educational.",
+			subject.Name,
+		)
+
+		createAgentReq := digitalocean.CreateAgentRequest{
+			Name:         agentName,
+			Description:  agentDescription,
+			ModelUUID:    modelUUID,
+			ProjectID:    projectID,
+			Region:       genAIRegion,
+			Instructions: agentInstructions,
+			Temperature:  0,
+			TopP:         1,
+		}
+
+		agent, err := s.doClient.CreateAgent(ctx, createAgentReq)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create agent: %w", err)
+		}
+
+		subject.AgentUUID = agent.UUID
+		result.AgentCreated = true
+		log.Printf("SetupSubjectAI: Created Agent %s for subject %d", agent.UUID, subjectID)
+
+		// Attach KB to Agent
+		if subject.KnowledgeBaseUUID != "" {
+			if err := s.doClient.AttachKnowledgeBase(ctx, agent.UUID, subject.KnowledgeBaseUUID); err != nil {
+				log.Printf("Warning: Failed to attach KB to agent: %v", err)
+			}
+		}
+
+		// Deploy Agent
+		if deployedAgent, err := s.doClient.DeployAgent(ctx, agent.UUID, digitalocean.VisibilityPrivate); err != nil {
+			log.Printf("Warning: Failed to deploy agent: %v", err)
+		} else {
+			result.AgentDeployed = true
+			if deployedAgent.Deployment != nil {
+				subject.AgentDeploymentURL = deployedAgent.Deployment.URL
+			}
+		}
+
+		// Enable citations
+		if _, err := s.doClient.EnableAgentCitations(ctx, agent.UUID); err != nil {
+			log.Printf("Warning: Failed to enable citations: %v", err)
+		} else {
+			result.CitationsEnabled = true
+		}
+	} else {
+		result.AgentCreated = true
+	}
+
+	// 3. Create API Key if not exists
+	if subject.AgentAPIKeyEncrypted == "" && subject.AgentUUID != "" {
+		apiKeyName := fmt.Sprintf("%s-api-key", strings.ToLower(strings.ReplaceAll(subject.Code, " ", "-")))
+		apiKeyResult, err := s.doClient.CreateAgentAPIKey(ctx, subject.AgentUUID, apiKeyName)
+		if err != nil {
+			log.Printf("Warning: Failed to create API key: %v", err)
+		} else if apiKeyResult.SecretKey != "" {
+			encryptedKey, err := crypto.EncryptAPIKeyForStorage(apiKeyResult.SecretKey)
+			if err != nil {
+				log.Printf("Warning: Failed to encrypt API key: %v", err)
+			} else {
+				subject.AgentAPIKeyEncrypted = encryptedKey
+				result.APIKeyCreated = true
+				log.Printf("SetupSubjectAI: Created API key for subject %d", subjectID)
+			}
+		}
+	} else if subject.AgentAPIKeyEncrypted != "" {
+		result.APIKeyCreated = true
+	}
+
+	// Save updated subject
+	if err := s.db.Save(&subject).Error; err != nil {
+		return nil, fmt.Errorf("failed to save subject with AI resources: %w", err)
+	}
+
+	result.Subject = &subject
 	return result, nil
 }
 
