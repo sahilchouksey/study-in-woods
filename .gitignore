@@ -115,6 +115,18 @@ worktrees/
 output.txt
 plan.md
 
+# Task management
+.taskmaster/
+.cursor/
+
+# Python virtual environments
+venv/
+.venv/
+ENV/
+
+# Docker essentials (local dev script)
+apps/api/docker_essentials
+
 # Logs
 logs
 dev-debug.log

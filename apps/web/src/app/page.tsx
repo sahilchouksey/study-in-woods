@@ -73,13 +73,6 @@ export default function HomePage() {
 
 
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
   // Easter egg - Rayquaza appears on 5 clicks on title
   const handleTitleClick = () => {
     setClickCount((prev) => {
@@ -128,14 +121,22 @@ export default function HomePage() {
               <span className="font-semibold text-lg">Study in Woods 🪵</span>
             </div>
 
-            {!isLoading && !isAuthenticated && (
+            {!isLoading && (
               <div className="flex items-center gap-3">
-                <Link href="/login">
-                  <Button variant="outline">Login</Button>
-                </Link>
-                <Link href="/register">
-                  <Button>Signup</Button>
-                </Link>
+                {isAuthenticated ? (
+                  <Link href="/dashboard">
+                    <Button>Go to Dashboard</Button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <Button variant="outline">Login</Button>
+                    </Link>
+                    <Link href="/register">
+                      <Button>Signup</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             )}
           </div>

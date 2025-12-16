@@ -1,0 +1,89 @@
+# =============================================================================
+# Study in Woods - Docker Ignore
+# =============================================================================
+
+# Git
+.git
+.gitignore
+
+# Node modules (will be installed in container)
+**/node_modules
+**/.pnp
+**/.pnp.js
+
+# Build outputs (will be built in container)
+**/.next
+**/out
+**/dist
+**/build
+**/.turbo
+
+# Go build artifacts
+**/bin
+**/tmp
+**/vendor
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/venv
+**/.venv
+**/ENV
+
+# Environment files (use docker-compose env vars)
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Documentation
+**/docs
+**/*.md
+!**/README.md
+
+# Project docs (not needed in container)
+project-docs
+
+# Tests
+**/tests
+**/testdata
+**/*.test.go
+**/*_test.go
+**/coverage
+
+# Development files
+**/.air.toml
+**/Dockerfile.dev
+**/docker-compose.yml
+!docker-compose.prod.yml
+
+# Logs
+**/*.log
+**/logs
+
+# Debug files
+**/debug_*
+**/*.bak
+**/*.backup
+
+# Task management
+.taskmaster
+.cursor
+
+# Misc
+thoughts
+worktrees
+*.tmp
+*.temp
