@@ -105,10 +105,13 @@ func (h *DocumentHandler) GetDocument(c *fiber.Ctx) error {
 func (h *DocumentHandler) UploadDocument(c *fiber.Ctx) error {
 	subjectID := c.Params("subject_id")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can upload documents")
 	}
 
 	// Parse subject ID

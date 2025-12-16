@@ -113,7 +113,17 @@ func (h *SubjectHandler) GetSubject(c *fiber.Ctx) error {
 }
 
 // CreateSubject handles POST /api/v1/semesters/:semester_id/subjects
+// Only administrators can create subjects
 func (h *SubjectHandler) CreateSubject(c *fiber.Ctx) error {
+	// Authorization: Admin only
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can create subjects")
+	}
+
 	semesterID := c.Params("semester_id")
 
 	// Parse and validate request
@@ -198,9 +208,10 @@ func (h *SubjectHandler) UpdateSubject(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to fetch subject")
 	}
 
-	// Authorization: Admin or subject owner can update
-	// For now, allow any authenticated user (can be restricted later based on requirements)
-	_ = user // Placeholder for authorization logic
+	// Authorization: Admin only can update subjects
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can update subjects")
+	}
 
 	// Check if code is being changed and already exists
 	if req.Code != "" && req.Code != subject.Code {
@@ -260,9 +271,10 @@ func (h *SubjectHandler) DeleteSubject(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to fetch subject")
 	}
 
-	// Authorization: Admin or subject owner can delete
-	// For now, allow any authenticated user (can be restricted later based on requirements)
-	_ = user // Placeholder for authorization logic
+	// Authorization: Admin only can delete subjects
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can delete subjects")
+	}
 
 	// Delete all documents for this subject first (cascade delete)
 	if err := h.db.Where("subject_id = ?", id).Delete(&model.Document{}).Error; err != nil {

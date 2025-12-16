@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/model"
+	"github.com/sahilchouksey/go-init-setup/utils/middleware"
 	"github.com/sahilchouksey/go-init-setup/utils/response"
 	"github.com/sahilchouksey/go-init-setup/utils/validation"
 	"gorm.io/gorm"
@@ -105,6 +106,15 @@ func (h *UniversityHandler) GetUniversity(c *fiber.Ctx) error {
 
 // CreateUniversity handles POST /api/v1/universities
 func (h *UniversityHandler) CreateUniversity(c *fiber.Ctx) error {
+	// Authorization: Admin only
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can create universities")
+	}
+
 	// Parse request body
 	var req CreateUniversityRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -147,6 +157,15 @@ func (h *UniversityHandler) CreateUniversity(c *fiber.Ctx) error {
 // UpdateUniversity handles PUT /api/v1/universities/:id
 func (h *UniversityHandler) UpdateUniversity(c *fiber.Ctx) error {
 	id := c.Params("id")
+
+	// Authorization: Admin only
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can update universities")
+	}
 
 	// Parse request body
 	var req UpdateUniversityRequest
@@ -202,6 +221,15 @@ func (h *UniversityHandler) UpdateUniversity(c *fiber.Ctx) error {
 // Cascade deletes all courses, semesters, subjects, and documents
 func (h *UniversityHandler) DeleteUniversity(c *fiber.Ctx) error {
 	id := c.Params("id")
+
+	// Authorization: Admin only
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can delete universities")
+	}
 
 	// Check if university exists
 	var university model.University

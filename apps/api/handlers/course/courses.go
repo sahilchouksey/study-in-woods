@@ -106,10 +106,13 @@ func (h *CourseHandler) GetCourse(c *fiber.Ctx) error {
 
 // CreateCourse handles POST /api/v1/courses
 func (h *CourseHandler) CreateCourse(c *fiber.Ctx) error {
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can create courses")
 	}
 
 	// Parse request body
@@ -166,10 +169,13 @@ func (h *CourseHandler) CreateCourse(c *fiber.Ctx) error {
 func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can update courses")
 	}
 
 	// Parse request body
@@ -242,10 +248,13 @@ func (h *CourseHandler) UpdateCourse(c *fiber.Ctx) error {
 func (h *CourseHandler) DeleteCourse(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can delete courses")
 	}
 
 	// Check if course exists

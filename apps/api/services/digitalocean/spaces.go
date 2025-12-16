@@ -72,12 +72,13 @@ func NewSpacesClient(config SpacesConfig) (*SpacesClient, error) {
 
 // UploadFile uploads a file to Spaces
 func (s *SpacesClient) UploadFile(ctx context.Context, key string, data io.Reader, contentType string) (string, error) {
-	// Upload to S3-compatible Spaces
+	// Upload to S3-compatible Spaces with private ACL
+	// Files are accessed via presigned URLs for security
 	_, err := s.s3Client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(key),
 		Body:        aws.ReadSeekCloser(data),
-		ACL:         aws.String("public-read"), // Make publicly accessible
+		ACL:         aws.String("private"), // Private - use presigned URLs for access
 		ContentType: aws.String(contentType),
 	})
 	if err != nil {

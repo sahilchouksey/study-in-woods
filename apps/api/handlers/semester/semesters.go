@@ -112,10 +112,13 @@ func (h *SemesterHandler) GetSemester(c *fiber.Ctx) error {
 func (h *SemesterHandler) CreateSemester(c *fiber.Ctx) error {
 	courseID := c.Params("course_id")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can create semesters")
 	}
 
 	// Parse request body
@@ -176,10 +179,13 @@ func (h *SemesterHandler) UpdateSemester(c *fiber.Ctx) error {
 	courseID := c.Params("course_id")
 	number := c.Params("number")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can update semesters")
 	}
 
 	// Parse request body
@@ -245,10 +251,13 @@ func (h *SemesterHandler) DeleteSemester(c *fiber.Ctx) error {
 	courseID := c.Params("course_id")
 	number := c.Params("number")
 
-	// Get user from context
+	// Authorization: Admin only
 	user, ok := middleware.GetUser(c)
 	if !ok || user == nil {
 		return response.Unauthorized(c, "User not authenticated")
+	}
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can delete semesters")
 	}
 
 	// Check if course exists

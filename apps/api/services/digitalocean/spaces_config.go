@@ -80,10 +80,8 @@ func initGlobalSpacesConfig() (*SpacesConfig, error) {
 
 	if created {
 		log.Printf("Spaces: Created new access key '%s' (ID: %s)", keyName, newKey.AccessKey)
-		log.Printf("Spaces: IMPORTANT - Save these credentials to your .env file:")
-		log.Printf("  DO_SPACES_ACCESS_KEY=%s", newKey.AccessKey)
-		log.Printf("  DO_SPACES_SECRET_KEY=%s", newKey.SecretKey)
-		log.Println("Spaces: The secret key is only shown once!")
+		log.Println("Spaces: IMPORTANT - New credentials created. Check your environment or secrets manager.")
+		log.Println("Spaces: The secret key has been configured automatically.")
 
 		config.AccessKey = newKey.AccessKey
 		config.SecretKey = newKey.SecretKey
