@@ -154,35 +154,90 @@ func (r *ChatToolsRegistry) BuildToolsPrompt() string {
 		return ""
 	}
 
+	// Check which tools are actually available
+	hasWebSearch := false
+	hasWebScrape := false
+	hasSearchMemory := false
+	hasConversationSummary := false
+
+	for _, tool := range tools {
+		switch tool.Name {
+		case "web_search":
+			hasWebSearch = true
+		case "web_scrape":
+			hasWebScrape = true
+		case "search_memory":
+			hasSearchMemory = true
+		case "get_conversation_summary":
+			hasConversationSummary = true
+		}
+	}
+
 	var sb strings.Builder
 
 	sb.WriteString(`
 ##TOOLS_AVAILABLE##
-You have access to external tools. You MUST use them when appropriate.
+You have access to external tools. Use them when appropriate.
 
-**MANDATORY TOOL USE - You MUST call a tool when:**
-- User asks about "latest", "current", "recent", "new", "today's", "2024", "2025" → use web_search
-- User says "search", "look up", "find online", "google", "browse the web" → use web_search  
+**WHEN TO USE TOOLS:**
+`)
+
+	// Only mention tools that are actually available
+	if hasWebSearch {
+		sb.WriteString(`- User asks about "latest", "current", "recent", "new", "today's", "2024", "2025" → use web_search
+- User says "search", "look up", "find online", "google", "browse the web" → use web_search
 - User asks to "ground", "verify", "cite sources", "find references" → use web_search
 - User wants news, updates, releases, version info, announcements → use web_search
-- User provides a URL and wants content → use web_scrape
-- User asks to "read this page", "scrape", "extract from URL" → use web_scrape
+`)
+	}
 
+	if hasWebScrape {
+		sb.WriteString(`- User provides a URL and wants content → use web_scrape
+- User asks to "read this page", "scrape", "extract from URL" → use web_scrape
+`)
+	}
+
+	if hasSearchMemory {
+		sb.WriteString(`- User asks "what did we discuss about X", "do you remember when I asked about Y" → use search_memory
+- User wants to recall previous conversations or topics → use search_memory
+`)
+	}
+
+	if hasConversationSummary {
+		sb.WriteString(`- User asks "what have we talked about", "summarize our conversation" → use get_conversation_summary
+`)
+	}
+
+	sb.WriteString(`
 **HOW TO CALL A TOOL:**
 Output EXACTLY this format (nothing before it):
 
 ##TOOL_CALL##
 {"tool": "tool_name", "arguments": {"param": "value"}}
 ##END_TOOL_CALL##
+`)
 
+	// Add example based on available tools
+	if hasWebSearch {
+		sb.WriteString(`
 **EXAMPLE - User asks "What's the latest Python version?":**
 ##TOOL_CALL##
 {"tool": "web_search", "arguments": {"query": "latest Python version release 2025"}}
 ##END_TOOL_CALL##
+`)
+	} else if hasSearchMemory {
+		sb.WriteString(`
+**EXAMPLE - User asks "What did we discuss about databases?":**
+##TOOL_CALL##
+{"tool": "search_memory", "arguments": {"query": "databases"}}
+##END_TOOL_CALL##
+`)
+	}
 
+	sb.WriteString(`
 **RULES:**
-1. When triggers match above, ALWAYS output ##TOOL_CALL## block FIRST
-2. Do NOT answer from memory for time-sensitive questions - search first
+1. ONLY use tools listed below - do NOT call tools that are not in the list
+2. If a tool you need is not available, answer based on your knowledge instead
 3. After receiving tool results, provide a comprehensive answer citing the sources
 4. If no tool is needed, just answer normally without any ##TOOL_CALL## block
 

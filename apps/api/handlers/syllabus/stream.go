@@ -86,12 +86,8 @@ func (h *SyllabusHandler) ExtractSyllabusStream(c *fiber.Ctx) error {
 	c.Set("Transfer-Encoding", "chunked")
 	c.Set("X-Accel-Buffering", "no") // Disable nginx buffering
 
-	// CORS headers for SSE (needed when withCredentials is used)
-	origin := c.Get("Origin")
-	if origin != "" {
-		c.Set("Access-Control-Allow-Origin", origin)
-		c.Set("Access-Control-Allow-Credentials", "true")
-	}
+	// Note: CORS headers are handled by the CORS middleware in security.go
+	// Do NOT set them here to avoid duplicate headers which breaks browsers
 
 	// Start streaming
 	c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {

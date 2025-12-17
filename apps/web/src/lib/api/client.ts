@@ -18,11 +18,13 @@ export const apiClient: AxiosInstance = axios.create({
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Get access token from localStorage
-    const accessToken = localStorage.getItem('access_token');
-    
-    if (accessToken && config.headers) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    // Only access localStorage on client side
+    if (typeof window !== 'undefined') {
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (accessToken && config.headers) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
     
     return config;

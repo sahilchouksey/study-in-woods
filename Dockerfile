@@ -39,7 +39,7 @@ WORKDIR /app
 COPY package.json package-lock.json turbo.json ./
 COPY apps/web/package.json ./apps/web/
 
-# Install dependencies
+# Install dependencies (hoisted to root node_modules)
 RUN npm ci --legacy-peer-deps
 
 # =============================================================================
@@ -48,9 +48,8 @@ RUN npm ci --legacy-peer-deps
 FROM web-base AS web-builder
 WORKDIR /app
 
-# Copy dependencies
+# Copy dependencies (only root node_modules exists with npm workspaces)
 COPY --from=web-deps /app/node_modules ./node_modules
-COPY --from=web-deps /app/apps/web/node_modules ./apps/web/node_modules
 
 # Copy source files
 COPY package.json package-lock.json turbo.json ./
@@ -59,10 +58,17 @@ COPY apps/web ./apps/web
 # Build the web app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+
+# Build-time environment variables for Next.js
+ARG NEXT_PUBLIC_API_URL=https://api.studyinwoods.app
+ARG NEXT_PUBLIC_APP_URL=https://studyinwoods.app
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+
 RUN npm run web:build
 
 # =============================================================================
-# Stage 4: Web App Production
+# Stage 4: Web App Production (HARDENED)
 # =============================================================================
 FROM node:20-alpine AS web
 WORKDIR /app
@@ -76,8 +82,16 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# SECURITY: Remove attack tools that can be used for reverse shells
+# Remove wget, nc (netcat), curl, and other potentially dangerous binaries
+RUN apk del wget curl busybox-extras 2>/dev/null || true && \
+    rm -f /usr/bin/wget /usr/bin/nc /usr/bin/curl /usr/bin/ncat 2>/dev/null || true && \
+    rm -rf /tmp/* /var/tmp/* && \
+    chmod 1733 /tmp
+
 # Copy built assets
-COPY --from=web-builder /app/apps/web/public ./public
+# Note: public folder must be at apps/web/public (relative to server.js location)
+COPY --from=web-builder /app/apps/web/public ./apps/web/public
 COPY --from=web-builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=web-builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
@@ -85,8 +99,9 @@ USER nextjs
 
 EXPOSE 3000
 
+# SECURITY: Use node for healthcheck instead of wget
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+    CMD node -e "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 
 CMD ["node", "apps/web/server.js"]
 
@@ -171,19 +186,21 @@ RUN apt-get update && apt-get install -y \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python packages from builder
-COPY --from=ocr-builder /root/.local /root/.local
+# Create non-root user first
+RUN useradd -m -u 1000 ocruser
+
+# Copy Python packages from builder to user's home
+COPY --from=ocr-builder /root/.local /home/ocruser/.local
 
 # Make sure scripts in .local are usable
-ENV PATH=/root/.local/bin:$PATH
+ENV PATH=/home/ocruser/.local/bin:$PATH
 
 # Copy application code
 COPY apps/ocr-service/main.py .
 COPY apps/ocr-service/requirements.txt .
 
-# Create non-root user
-RUN useradd -m -u 1000 ocruser && \
-    chown -R ocruser:ocruser /app
+# Change ownership
+RUN chown -R ocruser:ocruser /app /home/ocruser/.local
 
 USER ocruser
 

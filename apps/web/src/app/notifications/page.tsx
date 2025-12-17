@@ -1,3 +1,6 @@
+'use client';
+
+
 import { NotificationsTab } from '@/components/NotificationsTab';
 
 export default function NotificationsPage() {

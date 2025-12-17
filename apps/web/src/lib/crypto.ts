@@ -2,6 +2,11 @@ import CryptoJS from 'crypto-js';
 
 // Generate a unique salt for this browser session
 const getUserSalt = (): string => {
+  if (typeof window === 'undefined') {
+    // Return a temporary salt for SSR - actual salt will be used on client
+    return 'ssr-temp-salt';
+  }
+  
   let salt = localStorage.getItem('study_woods_salt');
   if (!salt) {
     salt = CryptoJS.lib.WordArray.random(128/8).toString(CryptoJS.enc.Hex);
@@ -12,6 +17,11 @@ const getUserSalt = (): string => {
 
 // Generate encryption key from browser fingerprint and salt
 const getEncryptionKey = (): string => {
+  if (typeof window === 'undefined') {
+    // Return a placeholder for SSR
+    return 'ssr-placeholder-key';
+  }
+  
   const salt = getUserSalt();
   const browserFingerprint = [
     navigator.userAgent,
@@ -65,7 +75,9 @@ export const decryptData = (encryptedData: string): string => {
  * Securely clears encryption salt (useful for logout/reset)
  */
 export const clearEncryptionSalt = (): void => {
-  localStorage.removeItem('study_woods_salt');
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('study_woods_salt');
+  }
 };
 
 /**

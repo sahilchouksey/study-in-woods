@@ -198,13 +198,13 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
   } = useInfiniteChatMessages(sessionId);
 
   // Flatten paginated messages and sort by created_at
-  const messages = useMemo(() => {
+  const allMessages = useMemo(() => {
     if (!messagesData?.pages) return [];
     // Pages are in order: page 1 (newest), page 2 (older), etc.
     // We need to reverse pages order and flatten to get chronological order
-    const allMessages = messagesData.pages.flatMap(page => page.messages);
+    const flatMessages = messagesData.pages.flatMap(page => page.messages);
     // Sort by created_at to ensure proper order
-    return allMessages.sort((a, b) => 
+    return flatMessages.sort((a, b) => 
       new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
   }, [messagesData]);
@@ -335,6 +335,29 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
     },
     aiSettings: aiSettings,
   });
+
+  // Filter messages to avoid duplicate display when streaming completes
+  // When hasCompletedResponse is true, the StreamingMessageBubble shows the AI response,
+  // but the query invalidation also fetches the persisted assistant message.
+  // We filter out the last assistant message to prevent showing it twice.
+  const messages = useMemo(() => {
+    if (!allMessages.length) return [];
+    
+    // Check if we have any streaming data that would cause StreamingMessageBubble to render
+    const hasStreamingData = streamingContent || streamingReasoning || streamingToolEvents.length > 0;
+    
+    // If we have a completed streaming response with any data, filter out the last assistant message
+    // to avoid showing it twice (once in StreamingMessageBubble, once in MessageBubble)
+    if (hasCompletedResponse && hasStreamingData) {
+      // Find the index of the last assistant message
+      const lastAssistantIndex = allMessages.findLastIndex(m => m.role === 'assistant');
+      if (lastAssistantIndex !== -1) {
+        return allMessages.filter((_, index) => index !== lastAssistantIndex);
+      }
+    }
+    
+    return allMessages;
+  }, [allMessages, hasCompletedResponse, streamingContent, streamingReasoning, streamingToolEvents]);
 
   // Auto-scroll to bottom when new messages arrive or streaming content updates
   // Only auto-scroll if user hasn't scrolled up to load more
@@ -1378,14 +1401,14 @@ function StreamingMessageBubble({
               </Streamdown>
             )}
           </div>
-        ) : isReasoning && reasoning ? null : (
+        ) : isReasoning && reasoning ? null : isActivelyStreaming ? (
           <div className="flex items-center gap-2">
             <Loader className="text-primary" size={16} />
             <span className="text-sm text-muted-foreground">
               Generating response...
             </span>
           </div>
-        )}
+        ) : null}
         
         {/* Citations - Only show citations that are actually referenced in the content */}
         {citedCitations.length > 0 && (

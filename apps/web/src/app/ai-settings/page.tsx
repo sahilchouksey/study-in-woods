@@ -1,3 +1,6 @@
+'use client';
+
+
 import { AISettingsTab } from '@/components/AISettingsTab';
 
 export default function AISettingsPage() {
