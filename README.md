@@ -10,7 +10,8 @@ Built with Turborepo for optimized builds and development workflow.
 study-in-woods/
 ├── apps/
 │   ├── api/          # Backend API (Go + Fiber + PostgreSQL)
-│   └── web/          # Frontend Application (Next.js + React)
+│   ├── web/          # Frontend Application (Next.js + React)
+│   └── ocr-service/  # OCR Service (Python + FastAPI + Docling)
 ├── package.json      # Root package.json with Turborepo
 ├── turbo.json        # Turborepo configuration
 ├── pnpm-workspace.yaml
@@ -50,6 +51,17 @@ Modern web application providing user interface for:
 - Admin panel
 
 📖 **Documentation**: See [`apps/web/README.md`](apps/web/README.md)
+
+### OCR Service (`apps/ocr-service`)
+**Tech Stack**: Python, FastAPI, IBM Docling
+
+Lightweight OCR microservice for PDF text extraction:
+- PDF file upload processing
+- PDF URL processing
+- Synchronous text extraction with page count
+- Used by backend API for document indexing
+
+📖 **Documentation**: See [`apps/ocr-service/README.md`](apps/ocr-service/README.md)
 
 ---
 
