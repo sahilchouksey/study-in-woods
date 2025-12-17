@@ -74,6 +74,9 @@ services:
   # ===========================================================================
   # OCR Service (Python/FastAPI)
   # ===========================================================================
+  # Memory Usage: ~1.2GB due to ML models (IBM Docling)
+  # Limit set to 1.5GB to allow headroom while preventing OOM issues
+  # Note: Memory pressure may cause slower OCR processing (acceptable trade-off)
   ocr:
     build:
       context: .
@@ -83,8 +86,14 @@ services:
     restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 1536M
+        reservations:
+          memory: 1024M
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:8081/health"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
       interval: 30s
       timeout: 10s
       start_period: 60s
@@ -152,7 +161,7 @@ services:
     ports:
       - "${WEB_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 3s
       start_period: 10s
