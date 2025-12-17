@@ -40,10 +40,8 @@ func main() {
 	fmt.Println("🎉 Seeding completed successfully!")
 	fmt.Println(separator)
 	fmt.Println()
-	fmt.Println("Default Admin Credentials:")
-	fmt.Println("  Email:    admin@studyinwoods.com")
-	fmt.Println("  Password: Admin123!")
 	fmt.Println()
-	fmt.Println("⚠️  Please change the admin password after first login!")
+	fmt.Println("Admin user created from ADMIN_EMAIL and ADMIN_PASSWORD environment variables.")
+	fmt.Println("If not set, admin user creation is skipped.")
 	fmt.Println()
 }

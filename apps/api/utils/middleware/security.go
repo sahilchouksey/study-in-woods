@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -10,7 +11,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"time"
 )
 
 // SecurityConfig holds security middleware configuration
@@ -84,4 +84,25 @@ func TrustedProxyConfig(app *fiber.App, trustedProxies []string) {
 	// For Fiber v2, this is typically handled through app configuration
 	// You may need to configure this when creating the Fiber app instance
 	_ = trustedProxies // Avoid unused variable warning
+}
+
+// NewRateLimiter creates a rate limiter middleware with custom configuration
+// Use this for route-specific rate limiting (e.g., auth endpoints, chat endpoints)
+func NewRateLimiter(max int, window time.Duration, keyPrefix string) fiber.Handler {
+	return limiter.New(limiter.Config{
+		Max:        max,
+		Expiration: window,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return keyPrefix + ":" + c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"success": false,
+				"error": fiber.Map{
+					"code":    "RATE_LIMIT_EXCEEDED",
+					"message": "Too many requests. Please try again later.",
+				},
+			})
+		},
+	})
 }

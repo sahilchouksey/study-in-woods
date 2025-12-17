@@ -16,8 +16,8 @@ set -e
 
 # Configuration
 API_BASE="http://localhost:8080"
-ADMIN_EMAIL="admin@studyinwoods.com"
-ADMIN_PASSWORD="Admin123!"
+ADMIN_EMAIL="${ADMIN_EMAIL:-admin@example.com}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-ChangeMe123!}"
 
 # Colors for output
 RED='\033[0;31m'

@@ -11,8 +11,8 @@ echo ""
 
 # Configuration
 API_URL="http://localhost:8080"
-EMAIL="admin@studyinwoods.com"
-PASSWORD="Admin123!"
+EMAIL="${ADMIN_EMAIL:-admin@example.com}"
+PASSWORD="${ADMIN_PASSWORD:-ChangeMe123!}"
 PDF_FILE="${1:-frm_download_file.pdf}"
 
 # Check if PDF exists

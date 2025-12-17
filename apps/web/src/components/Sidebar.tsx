@@ -10,7 +10,12 @@ import { authService } from '@/lib/api/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNotifications } from '@/providers/notification-provider';
 
-export function Sidebar() {
+interface SidebarContentProps {
+  onNavigate?: () => void;
+}
+
+// Shared sidebar content - used by both desktop sidebar and mobile drawer
+export function SidebarContent({ onNavigate }: SidebarContentProps) {
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -27,15 +32,19 @@ export function Sidebar() {
   const handleLogout = async () => {
     try {
       await authService.logout();
-      queryClient.clear(); // Clear all cached data
+      queryClient.clear();
       router.push('/');
     } catch (error) {
       console.error('Logout failed:', error);
     }
   };
 
+  const handleNavClick = () => {
+    onNavigate?.();
+  };
+
   return (
-    <aside className="w-64 border-r border-border bg-background flex flex-col">
+    <>
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between">
           <h1 className="text-foreground flex items-center gap-2">
@@ -50,7 +59,7 @@ export function Sidebar() {
           const Icon = tab.icon;
           const isActive = pathname === tab.href;
           return (
-            <Link key={tab.href} href={tab.href}>
+            <Link key={tab.href} href={tab.href} onClick={handleNavClick}>
               <Button
                 variant={isActive ? 'default' : 'ghost'}
                 className="w-full justify-start"
@@ -82,6 +91,15 @@ export function Sidebar() {
           Logout
         </Button>
       </div>
+    </>
+  );
+}
+
+// Desktop sidebar - hidden on mobile
+export function Sidebar() {
+  return (
+    <aside className="hidden md:flex w-64 border-r border-border bg-background flex-col">
+      <SidebarContent />
     </aside>
   );
 }

@@ -76,6 +76,17 @@ func getEnv(key, defaultValue string) string {
 func createUsers(db *gorm.DB) ([]UserCredentials, error) {
 	var credentials []UserCredentials
 
+	// Get admin credentials from environment
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
+	if adminEmail == "" {
+		adminEmail = "admin@example.com"
+	}
+	if adminPassword == "" {
+		adminPassword = "ChangeMe123!"
+	}
+
 	// Define users to create
 	usersToCreate := []struct {
 		Email    string
@@ -85,14 +96,14 @@ func createUsers(db *gorm.DB) ([]UserCredentials, error) {
 		Semester int
 	}{
 		{
-			Email:    "admin@studyinwoods.com",
-			Password: "Admin123!",
+			Email:    adminEmail,
+			Password: adminPassword,
 			Name:     "System Administrator",
 			Role:     "admin",
 			Semester: 0,
 		},
 		{
-			Email:    "user@studyinwoods.com",
+			Email:    "user@example.com",
 			Password: "User123!",
 			Name:     "Test Student",
 			Role:     "student",

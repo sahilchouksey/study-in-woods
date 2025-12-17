@@ -145,8 +145,8 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	middleware.SetupSecurity(app, middleware.SecurityConfig{
 		AllowedOrigins:    allowedOrigins,
-		RateLimitRequests: 100000000,            // 100 requests
-		RateLimitWindow:   100000 * time.Minute, // per minute
+		RateLimitRequests: 30,          // 30 requests
+		RateLimitWindow:   time.Minute, // per minute
 	})
 
 	// Health check endpoints (public)
@@ -156,20 +156,23 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// API v1 group
 	api := app.Group("/api/v1")
 
-	// Auth routes (public)
-	authGroup := api.Group("/auth")
-	authGroup.Post("/register", authHandler.Register)
+	// Auth rate limiter: 5 requests per 2 minutes
+	authRateLimiter := middleware.NewRateLimiter(5, 2*time.Minute, "auth")
 
-	// Login with brute force protection
+	// Auth routes (public) with rate limiting
+	authGroup := api.Group("/auth")
+	authGroup.Post("/register", authRateLimiter, authHandler.Register)
+
+	// Login with brute force protection AND rate limiting
 	if bruteForceProtection != nil {
-		authGroup.Post("/login", bruteForceProtection.CheckAndRecordAttempt(), authHandler.Login)
+		authGroup.Post("/login", authRateLimiter, bruteForceProtection.CheckAndRecordAttempt(), authHandler.Login)
 	} else {
-		authGroup.Post("/login", authHandler.Login)
+		authGroup.Post("/login", authRateLimiter, authHandler.Login)
 	}
 
 	authGroup.Post("/refresh", authHandler.RefreshToken)
-	authGroup.Post("/forgot-password", authHandler.ForgotPassword)
-	authGroup.Post("/reset-password", authHandler.ResetPassword)
+	authGroup.Post("/forgot-password", authRateLimiter, authHandler.ForgotPassword)
+	authGroup.Post("/reset-password", authRateLimiter, authHandler.ResetPassword)
 
 	// Protected auth routes
 	authGroup.Post("/logout", authMiddleware.Required(), authHandler.Logout)
@@ -305,6 +308,9 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// ==================== Phase 7: Chat Functionality ====================
 
+	// Chat rate limiter: 30 requests per minute (covers AI/chat operations)
+	chatRateLimiter := middleware.NewRateLimiter(30, time.Minute, "chat")
+
 	// Chat routes (all protected - require authentication)
 	chat := api.Group("/chat", authMiddleware.Required())
 
@@ -327,8 +333,8 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	chat.Post("/sessions/:id/archive", chatHandler.ArchiveSession) // Protected: Archive session
 
 	// Message management
-	chat.Get("/sessions/:id/messages", chatHandler.GetMessages)  // Protected: Get session messages
-	chat.Post("/sessions/:id/messages", chatHandler.SendMessage) // Protected: Send message (supports streaming)
+	chat.Get("/sessions/:id/messages", chatHandler.GetMessages)                   // Protected: Get session messages
+	chat.Post("/sessions/:id/messages", chatRateLimiter, chatHandler.SendMessage) // Protected: Send message (rate limited)
 
 	// Chat history routes (for history page with infinite scroll)
 	chatHistory := chat.Group("/history")

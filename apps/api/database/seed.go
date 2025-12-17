@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/sahilchouksey/go-init-setup/model"
@@ -66,14 +67,23 @@ func (s *Seeder) SeedAdminUser() error {
 		return nil
 	}
 
+	// Get admin credentials from environment variables
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+
+	if adminEmail == "" || adminPassword == "" {
+		log.Println("⚠️  ADMIN_EMAIL and ADMIN_PASSWORD environment variables not set, skipping admin user creation")
+		return nil
+	}
+
 	// Hash password
-	passwordHash, err := auth.HashPassword("Admin123!")
+	passwordHash, err := auth.HashPassword(adminPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	admin := &model.User{
-		Email:        "admin@studyinwoods.com",
+		Email:        adminEmail,
 		PasswordHash: passwordHash,
 		PasswordSalt: []byte("legacy_salt"), // bcrypt handles salt internally
 		Name:         "System Administrator",
@@ -86,7 +96,7 @@ func (s *Seeder) SeedAdminUser() error {
 		return err
 	}
 
-	log.Printf("✅ Created admin user: %s (password: Admin123!)\n", admin.Email)
+	log.Printf("✅ Created admin user: %s\n", admin.Email)
 	return nil
 }
 

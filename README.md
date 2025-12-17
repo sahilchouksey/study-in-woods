@@ -38,8 +38,6 @@ Complete RESTful API with 96 endpoints covering:
 
 **Lines of Code**: 12,046 lines across 75 Go files
 
-📖 **Documentation**: See [`apps/api/PROJECT_COMPLETE.md`](apps/api/PROJECT_COMPLETE.md)
-
 ### Frontend Application (`apps/web`)
 **Tech Stack**: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui
 
@@ -462,8 +460,6 @@ npm run build
 - API Keys (8)
 - Admin (29)
 - Health (1)
-
-📖 **Full API Documentation**: See [`apps/api/PROJECT_COMPLETE.md`](apps/api/PROJECT_COMPLETE.md)
 
 ---
 
