@@ -12,10 +12,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable CSR bailout error for missing Suspense
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
+
   turbopack: {
     root: path.resolve(__dirname, '../../'),
   },
