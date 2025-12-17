@@ -153,16 +153,38 @@ export const chatMessageSchema = z.object({
   }).optional(),
 });
 
+// File schema that works in both browser and SSR environments
+// On server, File doesn't exist, so we use a custom validation
+const fileSchema = z.custom<File>(
+  (val) => {
+    // During SSR, File global doesn't exist - accept any value as this schema
+    // is only used for client-side form validation
+    if (typeof File === 'undefined') {
+      return true;
+    }
+    return val instanceof File;
+  },
+  { message: 'File is required' }
+);
+
 // Document upload form
 export const documentUploadSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters').max(200),
   description: z.string().max(1000).optional(),
   subject_id: uuidSchema,
   document_type: documentTypeSchema,
-  file: z.instanceof(File, { message: 'File is required' })
-    .refine((file) => file.size <= 10 * 1024 * 1024, 'File size must be less than 10MB')
+  file: fileSchema
+    .refine((file) => {
+      // Skip validation during SSR
+      if (typeof File === 'undefined') return true;
+      return file.size <= 10 * 1024 * 1024;
+    }, 'File size must be less than 10MB')
     .refine(
-      (file) => ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'].includes(file.type),
+      (file) => {
+        // Skip validation during SSR
+        if (typeof File === 'undefined') return true;
+        return ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'].includes(file.type);
+      },
       'Only PDF, DOC, DOCX, and TXT files are allowed'
     ),
 });

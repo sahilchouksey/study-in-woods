@@ -22,6 +22,27 @@ const STORAGE_KEYS = {
 // Current version for migration purposes
 const CURRENT_VERSION = 1;
 
+/**
+ * Check if code is running in browser environment
+ * Used to prevent localStorage access during SSR
+ */
+function isBrowser(): boolean {
+  return typeof window !== 'undefined';
+}
+
+/**
+ * Creates a default storage structure for SSR/non-browser environments
+ */
+function createDefaultStorage(): AISettingsStorage {
+  const defaultStored = createStoredSettings(DEFAULT_AI_SETTINGS, false);
+  return {
+    version: CURRENT_VERSION,
+    global: defaultStored,
+    subjects: {},
+    last_used: defaultStored,
+  };
+}
+
 // Extended settings with metadata
 export interface StoredAISettings extends AISettings {
   /** When these settings were last updated */
@@ -73,6 +94,11 @@ function createStoredSettings(settings: AISettings, isCustom = true): StoredAISe
  * Gets the current storage structure, initializing if needed
  */
 function getStorage(): AISettingsStorage {
+  // Return default storage structure during SSR
+  if (!isBrowser()) {
+    return createDefaultStorage();
+  }
+  
   try {
     const version = localStorage.getItem(STORAGE_KEYS.SETTINGS_VERSION);
     
@@ -174,6 +200,11 @@ function migrateStorage(fromVersion: number): AISettingsStorage {
  * Saves storage to localStorage
  */
 function saveStorage(storage: AISettingsStorage): void {
+  // No-op during SSR - localStorage is not available
+  if (!isBrowser()) {
+    return;
+  }
+  
   try {
     localStorage.setItem(STORAGE_KEYS.SETTINGS_VERSION, storage.version.toString());
     localStorage.setItem(STORAGE_KEYS.GLOBAL_SETTINGS, JSON.stringify(storage.global));
@@ -279,6 +310,11 @@ export function removeSubjectAISettings(subjectId: string): void {
  * Resets all settings to defaults
  */
 export function resetAllAISettings(): void {
+  // No-op during SSR - localStorage is not available
+  if (!isBrowser()) {
+    return;
+  }
+  
   try {
     localStorage.removeItem(STORAGE_KEYS.GLOBAL_SETTINGS);
     localStorage.removeItem(STORAGE_KEYS.SUBJECT_SETTINGS);
