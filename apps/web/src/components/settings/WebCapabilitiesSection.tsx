@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Globe, Search, Shield, Lock, Eye } from 'lucide-react';
+import { Globe, Search, Shield, Lock, Eye, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,22 @@ import {
   getApiKey, 
   getWebCapabilitiesConfig,
 } from '@/lib/api-keys';
+
+// API key signup/dashboard URLs
+const API_KEY_URLS: Record<ApiProvider, { label: string; url: string }> = {
+  tavily: {
+    label: 'Get Tavily API Key',
+    url: 'https://app.tavily.com/home',
+  },
+  exa: {
+    label: 'Get Exa API Key',
+    url: 'https://dashboard.exa.ai',
+  },
+  firecrawl: {
+    label: 'Get Firecrawl API Key',
+    url: 'https://www.firecrawl.dev/app',
+  },
+};
 
 export function WebCapabilitiesSection() {
   const [config, setConfig] = React.useState<WebCapabilitiesConfig | null>(null);
@@ -194,7 +210,18 @@ export function WebCapabilitiesSection() {
                 <h4 className="font-medium">Tavily API</h4>
                 <p className="text-sm text-muted-foreground">Real-time web search and news discovery</p>
               </div>
-              <Badge variant="outline">Search Engine</Badge>
+              <div className="flex items-center gap-2">
+                <a
+                  href={API_KEY_URLS.tavily.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  {API_KEY_URLS.tavily.label}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <Badge variant="outline">Search Engine</Badge>
+              </div>
             </div>
 
             <ApiKeyInput
@@ -243,7 +270,18 @@ export function WebCapabilitiesSection() {
                 <h4 className="font-medium">Exa API</h4>
                 <p className="text-sm text-muted-foreground">Semantic search and content discovery</p>
               </div>
-              <Badge variant="outline">Semantic Search</Badge>
+              <div className="flex items-center gap-2">
+                <a
+                  href={API_KEY_URLS.exa.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  {API_KEY_URLS.exa.label}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <Badge variant="outline">Semantic Search</Badge>
+              </div>
             </div>
 
             <ApiKeyInput
@@ -305,7 +343,18 @@ export function WebCapabilitiesSection() {
                 <h4 className="font-medium">Firecrawl API</h4>
                 <p className="text-sm text-muted-foreground">Web scraping, crawling, and content extraction</p>
               </div>
-              <Badge variant="outline">Web Scraper</Badge>
+              <div className="flex items-center gap-2">
+                <a
+                  href={API_KEY_URLS.firecrawl.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                  {API_KEY_URLS.firecrawl.label}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <Badge variant="outline">Web Scraper</Badge>
+              </div>
             </div>
 
             <ApiKeyInput
