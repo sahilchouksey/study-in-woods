@@ -9,6 +9,7 @@ import {
   type NotificationCategory,
 } from '@/lib/api/notifications';
 import { formatNotificationTime as formatApiTime } from '@/lib/notifications';
+import { authService } from '@/lib/api/auth';
 
 // Re-export the Notification type for backward compatibility
 // The API notification structure is similar but with numeric IDs
@@ -78,6 +79,9 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
+  // Only fetch notifications when user is authenticated
+  const isAuthenticated = authService.isAuthenticated();
+
   // Fetch notifications from API
   const {
     data: notificationsData,
@@ -88,9 +92,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     queryKey: ['notifications'],
     queryFn: () => notificationService.getNotifications({ limit: 50 }),
     staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Poll every minute
+    refetchInterval: isAuthenticated ? 60 * 1000 : false, // Poll every minute only when authenticated
     // Don't throw on error - we'll handle it gracefully
     retry: 2,
+    enabled: isAuthenticated, // Only run query when authenticated
   });
 
   // Fetch unread count separately for more frequent updates
@@ -98,8 +103,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     queryKey: ['notifications', 'unread-count'],
     queryFn: () => notificationService.getUnreadCount(),
     staleTime: 10 * 1000, // 10 seconds
-    refetchInterval: 30 * 1000, // Poll every 30 seconds
+    refetchInterval: isAuthenticated ? 30 * 1000 : false, // Poll every 30 seconds only when authenticated
     retry: 2,
+    enabled: isAuthenticated, // Only run query when authenticated
   });
 
   // Convert API notifications to local format
