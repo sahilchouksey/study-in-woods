@@ -1,91 +1,209 @@
 """
-Simple OCR Service
-Takes a PDF (binary or URL) and returns extracted text
-NO database, NO job tracking, NO webhooks - just OCR!
+OCR Service with PaddleOCR
+
+Environment variables:
+- OCR_DPI: DPI for PDF rendering (default: 300)
 """
 
-import io
-import tempfile
+import os
+import re
+import gc
 import logging
-from typing import Optional
+from typing import Tuple
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, HttpUrl
 import requests
 
-# Lazy import for Docling (imported only when needed)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Simple OCR Service", version="1.0.0")
+app = FastAPI(title="OCR Service", version="2.0.0")
 
-# Global converter instance (lazy loaded)
-converter = None
+# Configuration
+OCR_DPI = int(os.getenv("OCR_DPI", "300"))
+
+# Global instance (lazy loaded)
+_paddle_ocr = None
 
 
-def get_converter():
-    """Lazy load Docling converter with optimized settings for exam papers"""
-    global converter
-    if converter is None:
-        logger.info("Initializing Docling converter...")
-        from docling.document_converter import DocumentConverter
-        from docling.datamodel.pipeline_options import PdfPipelineOptions
-
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.do_ocr = True
-        pipeline_options.do_table_structure = True
-        # Higher image scale for better OCR quality on scanned documents
-        # Default is 1.0, we use 2.0 for better text recognition on exam papers
-        pipeline_options.images_scale = 2.0
-
-        converter = DocumentConverter(
-            allowed_formats=None,
-            format_options={"PDF": pipeline_options},  # type: ignore
+def get_paddle_ocr():
+    """Lazy load PaddleOCR with optimized settings for scanned exam papers"""
+    global _paddle_ocr
+    if _paddle_ocr is None:
+        logger.info("Initializing PaddleOCR with optimized settings...")
+        from paddleocr import PaddleOCR
+        
+        _paddle_ocr = PaddleOCR(
+            lang='en',
+            device='cpu',
+            ocr_version='PP-OCRv4',
+            use_doc_orientation_classify=False,
+            use_doc_unwarping=False,
+            use_textline_orientation=False,
+            # Improved detection settings (lowered thresholds to catch all text)
+            text_det_box_thresh=0.3,
+            text_det_thresh=0.2,
+            text_det_unclip_ratio=2.0,
+            text_det_limit_side_len=2048,
+            text_rec_score_thresh=0.5,
         )
-        logger.info("Docling converter ready with enhanced settings (images_scale=2.0)")
-    return converter
+        logger.info("PaddleOCR ready (PP-OCRv4, optimized detection)")
+    return _paddle_ocr
 
+
+def preprocess_image_for_paddle(img):
+    """Apply preprocessing to improve OCR detection on scanned documents"""
+    import cv2
+    import numpy as np
+    
+    if hasattr(img, 'convert'):
+        img = np.array(img.convert('RGB'))
+    
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+    denoised = cv2.medianBlur(enhanced, 3)
+    rgb = cv2.cvtColor(denoised, cv2.COLOR_GRAY2RGB)
+    bordered = cv2.copyMakeBorder(
+        rgb, 50, 50, 50, 50, 
+        cv2.BORDER_CONSTANT, value=(255, 255, 255)
+    )
+    return bordered
+
+
+def filter_garbage_text(text: str) -> str:
+    """Filter out Hindi/non-ASCII and garbage text"""
+    if not text or len(text.strip()) < 2:
+        return ""
+    if any(ord(c) > 127 for c in text):
+        return ""
+    if re.match(r'^[^a-zA-Z0-9\[\]\(\){}]*$', text):
+        return ""
+    return text.strip()
+
+
+def merge_text_lines(texts_with_positions: list) -> str:
+    """Merge OCR text fragments into coherent paragraphs."""
+    if not texts_with_positions:
+        return ""
+    
+    sorted_texts = sorted(texts_with_positions, key=lambda x: (x['y'], x['x']))
+    
+    lines = []
+    current_line = []
+    current_y = None
+    y_threshold = 20
+    
+    for item in sorted_texts:
+        if current_y is None:
+            current_y = item['y']
+            current_line.append(item['text'])
+        elif abs(item['y'] - current_y) < y_threshold:
+            current_line.append(item['text'])
+        else:
+            lines.append(' '.join(current_line))
+            current_line = [item['text']]
+            current_y = item['y']
+    
+    if current_line:
+        lines.append(' '.join(current_line))
+    
+    return '\n'.join(lines)
+
+
+def process_pdf_bytes(pdf_bytes: bytes) -> Tuple[str, int]:
+    """Process PDF with PaddleOCR"""
+    from pdf2image import convert_from_bytes
+    
+    ocr = get_paddle_ocr()
+    
+    logger.info(f"Converting PDF to images at {OCR_DPI} DPI...")
+    images = convert_from_bytes(pdf_bytes, dpi=OCR_DPI)
+    page_count = len(images)
+    logger.info(f"Found {page_count} pages")
+    
+    all_pages_text = []
+    
+    for i, image in enumerate(images):
+        page_num = i + 1
+        logger.info(f"Processing page {page_num}/{page_count}...")
+        
+        preprocessed = preprocess_image_for_paddle(image)
+        result = ocr.predict(preprocessed)
+        
+        texts_with_positions = []
+        
+        if result:
+            for item in result:
+                if 'rec_texts' in item and 'rec_scores' in item and 'dt_polys' in item:
+                    for text, score, poly in zip(
+                        item['rec_texts'], 
+                        item['rec_scores'],
+                        item['dt_polys']
+                    ):
+                        text = filter_garbage_text(text)
+                        if text and score > 0.5:
+                            y = float(poly[0][1])
+                            x = float(poly[0][0])
+                            texts_with_positions.append({
+                                'text': text,
+                                'score': score,
+                                'x': x,
+                                'y': y
+                            })
+        
+        page_text = merge_text_lines(texts_with_positions)
+        
+        if page_text:
+            all_pages_text.append(f"--- Page {page_num} ---\n{page_text}")
+        
+        gc.collect()
+    
+    full_text = '\n\n'.join(all_pages_text)
+    logger.info(f"PaddleOCR completed: {page_count} pages, {len(full_text)} characters")
+    
+    return full_text, page_count
+
+
+# =============================================================================
+# API Endpoints
+# =============================================================================
 
 class URLRequest(BaseModel):
     """Request model for URL-based OCR"""
-
     url: HttpUrl
 
 
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "service": "ocr"}
+    return {
+        "status": "healthy", 
+        "service": "ocr",
+        "engine": "paddle",
+        "dpi": OCR_DPI
+    }
 
 
 @app.post("/ocr/file")
 async def ocr_from_file(file: UploadFile = File(...)):
-    """
-    Extract text from uploaded PDF file
-
-    Args:
-        file: PDF file (multipart/form-data)
-
-    Returns:
-        {"text": "extracted text content", "page_count": 10}
-    """
+    """Extract text from uploaded PDF file"""
     try:
-        # Validate PDF
         if not file.filename.lower().endswith(".pdf"):
             raise HTTPException(status_code=400, detail="Only PDF files are supported")
 
-        # Read PDF bytes
         pdf_bytes = await file.read()
-        logger.info(
-            f"Processing uploaded PDF: {file.filename} ({len(pdf_bytes)} bytes)"
-        )
+        logger.info(f"Processing uploaded PDF: {file.filename} ({len(pdf_bytes)} bytes)")
 
-        # Process OCR
         text, page_count = process_pdf_bytes(pdf_bytes)
 
-        return JSONResponse(
-            {"text": text, "page_count": page_count, "filename": file.filename}
-        )
+        return JSONResponse({
+            "text": text, 
+            "page_count": page_count, 
+            "filename": file.filename,
+            "engine": "paddle"
+        })
 
     except Exception as e:
         logger.error(f"OCR failed: {e}")
@@ -94,24 +212,16 @@ async def ocr_from_file(file: UploadFile = File(...)):
 
 @app.post("/ocr/url")
 async def ocr_from_url(request: URLRequest):
-    """
-    Extract text from PDF at given URL
-
-    Args:
-        url: URL to PDF file
-
-    Returns:
-        {"text": "extracted text content", "page_count": 10}
-    """
+    """Extract text from PDF at given URL"""
     try:
         url = str(request.url)
         logger.info(f"Downloading PDF from URL: {url}")
 
-        # Download PDF
         response = requests.get(url, timeout=60)
         response.raise_for_status()
 
-        if "application/pdf" not in response.headers.get("Content-Type", ""):
+        content_type = response.headers.get("Content-Type", "")
+        if "application/pdf" not in content_type and not url.lower().endswith('.pdf'):
             raise HTTPException(
                 status_code=400, detail="URL does not point to a PDF file"
             )
@@ -119,10 +229,14 @@ async def ocr_from_url(request: URLRequest):
         pdf_bytes = response.content
         logger.info(f"Downloaded {len(pdf_bytes)} bytes")
 
-        # Process OCR
         text, page_count = process_pdf_bytes(pdf_bytes)
 
-        return JSONResponse({"text": text, "page_count": page_count, "source_url": url})
+        return JSONResponse({
+            "text": text, 
+            "page_count": page_count, 
+            "source_url": url,
+            "engine": "paddle"
+        })
 
     except requests.RequestException as e:
         logger.error(f"Failed to download PDF: {e}")
@@ -132,52 +246,6 @@ async def ocr_from_url(request: URLRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def process_pdf_bytes(pdf_bytes: bytes) -> tuple[str, int]:
-    """
-    Process PDF bytes with Docling OCR
-
-    Args:
-        pdf_bytes: PDF file as bytes
-
-    Returns:
-        Tuple of (extracted_text, page_count)
-    """
-    tmp_path = None
-    try:
-        # Get converter instance
-        conv = get_converter()
-
-        # Save to temp file (Docling needs file path)
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
-            tmp_file.write(pdf_bytes)
-            tmp_path = tmp_file.name
-
-        # Convert with Docling
-        logger.info("Converting PDF with Docling OCR...")
-        result = conv.convert(tmp_path)
-
-        # Extract text and metadata
-        text = result.document.export_to_markdown()
-        page_count = (
-            len(result.document.pages) if hasattr(result.document, "pages") else 0
-        )
-
-        logger.info(f"OCR completed: {page_count} pages, {len(text)} characters")
-
-        return text, page_count
-
-    finally:
-        # Cleanup temp file
-        if tmp_path:
-            import os
-
-            try:
-                os.unlink(tmp_path)
-            except:
-                pass
-
-
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8081)

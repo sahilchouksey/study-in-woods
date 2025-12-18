@@ -11,6 +11,7 @@ import (
 	"github.com/sahilchouksey/go-init-setup/model"
 	"github.com/sahilchouksey/go-init-setup/services"
 	"github.com/sahilchouksey/go-init-setup/utils/middleware"
+	"github.com/sahilchouksey/go-init-setup/utils/pdfvalidation"
 	"github.com/sahilchouksey/go-init-setup/utils/response"
 	"github.com/sahilchouksey/go-init-setup/utils/sse"
 )
@@ -389,18 +390,16 @@ func (h *SyllabusHandler) UploadSyllabusForStreaming(c *fiber.Ctx) error {
 		return response.BadRequest(c, "File is required")
 	}
 
-	// Validate file size (max 50MB)
-	const maxFileSize = 50 * 1024 * 1024 // 50MB
-	if file.Size > maxFileSize {
-		return response.BadRequest(c, "File size exceeds maximum allowed size of 50MB")
+	// Validate PDF file (size, type, and page count)
+	validation, err := pdfvalidation.ValidatePDFFile(file, pdfvalidation.SyllabusLimits)
+	if err != nil {
+		return response.InternalServerError(c, "Failed to validate PDF: "+err.Error())
+	}
+	if !validation.Valid {
+		return response.BadRequest(c, validation.Error)
 	}
 
-	// Validate file type (PDF only)
-	if !isValidPDFFile(file.Filename) {
-		return response.BadRequest(c, "Only PDF files are supported for syllabus upload")
-	}
-
-	// Open file
+	// Open file for upload (need to re-open as validation consumed the reader)
 	fileContent, err := file.Open()
 	if err != nil {
 		return response.InternalServerError(c, "Failed to open file")
