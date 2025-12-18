@@ -2,11 +2,13 @@ package document
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/model"
 	"github.com/sahilchouksey/go-init-setup/services"
 	"github.com/sahilchouksey/go-init-setup/utils/middleware"
+	"github.com/sahilchouksey/go-init-setup/utils/pdfvalidation"
 	"github.com/sahilchouksey/go-init-setup/utils/response"
 	"github.com/sahilchouksey/go-init-setup/utils/validation"
 	"gorm.io/gorm"
@@ -146,10 +148,35 @@ func (h *DocumentHandler) UploadDocument(c *fiber.Ctx) error {
 		return response.BadRequest(c, "File is required")
 	}
 
-	// Validate file size (max 50MB)
-	const maxFileSize = 50 * 1024 * 1024 // 50MB
-	if file.Size > maxFileSize {
-		return response.BadRequest(c, "File size exceeds maximum allowed size of 50MB")
+	// For PDF files, validate size and page count based on document type
+	filename := strings.ToLower(file.Filename)
+	if strings.HasSuffix(filename, ".pdf") {
+		// Select appropriate limits based on document type
+		var limits pdfvalidation.PDFLimits
+		switch docType {
+		case model.DocumentTypePYQ:
+			limits = pdfvalidation.PYQLimits
+		case model.DocumentTypeNotes:
+			limits = pdfvalidation.NotesLimits
+		case model.DocumentTypeSyllabus:
+			limits = pdfvalidation.SyllabusLimits
+		default:
+			limits = pdfvalidation.DefaultLimits
+		}
+
+		validation, err := pdfvalidation.ValidatePDFFile(file, limits)
+		if err != nil {
+			return response.InternalServerError(c, "Failed to validate PDF: "+err.Error())
+		}
+		if !validation.Valid {
+			return response.BadRequest(c, validation.Error)
+		}
+	} else {
+		// Non-PDF files: just validate file size (max 50MB)
+		const maxFileSize = 50 * 1024 * 1024 // 50MB
+		if file.Size > maxFileSize {
+			return response.BadRequest(c, "File size exceeds maximum allowed size of 50MB")
+		}
 	}
 
 	// Open file

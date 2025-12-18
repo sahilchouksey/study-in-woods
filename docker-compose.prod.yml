@@ -1,21 +1,20 @@
 # =============================================================================
-# Study in Woods - Production Docker Compose
+# Study in Woods - Production Docker Compose (4GB VPS)
 # =============================================================================
-# Deploys all services: Web, API, OCR, PostgreSQL, Redis
+# Deploys backend services: API, OCR, PostgreSQL, Redis
+# (Frontend is deployed separately on Vercel)
+#
+# IMPORTANT: Ensure swap is enabled (2GB recommended)
+#   sudo fallocate -l 2G /swapfile
+#   sudo chmod 600 /swapfile
+#   sudo mkswap /swapfile
+#   sudo swapon /swapfile
+#   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 #
 # Usage:
 #   docker-compose -f docker-compose.prod.yml up -d
 #   docker-compose -f docker-compose.prod.yml logs -f
 #   docker-compose -f docker-compose.prod.yml down
-#
-# Environment variables required (create .env.prod file):
-#   - DATABASE_URL
-#   - REDIS_URL
-#   - JWT_SECRET
-#   - DIGITALOCEAN_TOKEN
-#   - DO_INFERENCE_API_KEY
-#   - DO_SPACES_ACCESS_KEY
-#   - DO_SPACES_SECRET_KEY
 # =============================================================================
 
 services:
@@ -36,14 +35,11 @@ services:
       - ./apps/api/database/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 5
     networks:
       - study-woods-network
-    # Don't expose port in production - only internal access
-    # ports:
-    #   - "5432:5432"
 
   # ===========================================================================
   # Redis Cache
@@ -55,28 +51,23 @@ services:
     command: >
       redis-server 
       --appendonly yes 
-      --maxmemory 512mb 
+      --maxmemory 128mb 
       --maxmemory-policy allkeys-lru
       ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 30s
       timeout: 3s
       retries: 5
     networks:
       - study-woods-network
-    # Don't expose port in production - only internal access
-    # ports:
-    #   - "6379:6379"
 
   # ===========================================================================
-  # OCR Service (Python/FastAPI)
+  # OCR Service (PaddleOCR)
+  # Memory: 2GB limit with swap
   # ===========================================================================
-  # Memory Usage: ~1.2GB due to ML models (IBM Docling)
-  # Limit set to 1.5GB to allow headroom while preventing OOM issues
-  # Note: Memory pressure may cause slower OCR processing (acceptable trade-off)
   ocr:
     build:
       context: .
@@ -86,23 +77,22 @@ services:
     restart: unless-stopped
     environment:
       - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=2
+      - MKL_NUM_THREADS=2
+      - OCR_DPI=300
     deploy:
       resources:
         limits:
-          memory: 1536M
-        reservations:
-          memory: 1024M
+          memory: 2048M
+    memswap_limit: 3072M
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8081/health')"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8081/health"]
       interval: 30s
       timeout: 10s
-      start_period: 60s
+      start_period: 30s
       retries: 3
     networks:
       - study-woods-network
-    # Internal only - API will proxy requests
-    # ports:
-    #   - "8081:8081"
 
   # ===========================================================================
   # Go API (Fiber)
@@ -124,11 +114,8 @@ services:
     volumes:
       - ./apps/api/.env:/app/.env:ro
     environment:
-      # Override DB_HOST for Docker network
       DB_HOST: postgres
-      # Override OCR service URL for Docker network
       OCR_SERVICE_URL: http://ocr:8081
-      # Override Redis URL for Docker network
       REDIS_URL: redis://redis:6379
     ports:
       - "${API_PORT:-8080}:8080"
@@ -137,34 +124,6 @@ services:
       interval: 30s
       timeout: 3s
       start_period: 5s
-      retries: 3
-    networks:
-      - study-woods-network
-
-  # ===========================================================================
-  # Next.js Web App
-  # ===========================================================================
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: web
-    container_name: study-woods-web
-    restart: unless-stopped
-    depends_on:
-      api:
-        condition: service_healthy
-    environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://api:8080}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-    ports:
-      - "${WEB_PORT:-3000}:3000"
-    healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
-      interval: 30s
-      timeout: 3s
-      start_period: 10s
       retries: 3
     networks:
       - study-woods-network
