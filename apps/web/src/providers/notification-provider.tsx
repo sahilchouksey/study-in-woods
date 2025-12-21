@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   notificationService,
@@ -79,8 +79,14 @@ const NotificationContext = createContext<NotificationContextType | undefined>(u
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
-  // Only fetch notifications when user is authenticated
-  const isAuthenticated = authService.isAuthenticated();
+  // Use state to track authentication status after hydration
+  // This prevents hydration mismatches and ensures stable query behavior
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  useEffect(() => {
+    // Check auth status after component mounts (client-side only)
+    setIsAuthenticated(authService.isAuthenticated());
+  }, []);
 
   // Fetch notifications from API
   const {
