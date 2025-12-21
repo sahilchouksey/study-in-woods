@@ -818,9 +818,11 @@ export function CoursesTab() {
                             <div className="flex-1">
                               <CardTitle className="text-lg">{subject.name}</CardTitle>
                               <CardDescription className="mt-1">
-                                <Badge variant="outline" className="text-xs">
-                                  {subject.code}
-                                </Badge>
+                                {subject.code && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {subject.code}
+                                  </Badge>
+                                )}
                               </CardDescription>
                             </div>
                             <div className="flex items-center gap-2">

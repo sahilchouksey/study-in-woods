@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Send, Sparkles, ArrowLeft, StopCircle, ChevronUp, ChevronDown, BookOpen, FileQuestion, Library, FileText, Quote, Settings2 } from 'lucide-react';
+import { Send, Sparkles, ArrowLeft, StopCircle, ChevronUp, ChevronDown, BookOpen, FileQuestion, Library, FileText, Quote, Settings2, Maximize2 } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Streamdown } from 'streamdown';
 import remarkMath from 'remark-math';
@@ -19,6 +19,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { 
   useInfiniteChatMessages, 
   useStreamingChat,
@@ -500,12 +507,14 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
             <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
             {subject?.name || 'Chat Session'}
           </h2>
-          <p className="text-xs text-muted-foreground truncate">
-            {subject?.code || ''} {subject?.has_syllabus && '• Syllabus context enabled'}
-            {settingsLoaded && subject?.id && hasSubjectCustomSettings(subject.id.toString()) && (
-              <span className="ml-2 text-primary">• Custom AI settings</span>
-            )}
-          </p>
+          {(subject?.code || subject?.has_syllabus || (settingsLoaded && subject?.id && hasSubjectCustomSettings(subject.id.toString()))) && (
+            <p className="text-xs text-muted-foreground truncate">
+              {subject?.code}{subject?.code && subject?.has_syllabus && ' • '}{subject?.has_syllabus && 'Syllabus context enabled'}
+              {settingsLoaded && subject?.id && hasSubjectCustomSettings(subject.id.toString()) && (
+                <span className="ml-2 text-primary">• Custom AI settings</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {session && (
@@ -749,7 +758,10 @@ function extractCitedIndices(content: string): number[] {
 }
 
 /**
- * Filter citations to only include those that are actually referenced in the content.
+ * Filter citations to include:
+ * 1. Those actually referenced in the content with [[C#]] markers
+ * 2. Those with high confidence score (>= 0.85) even without markers
+ * 
  * Also returns a mapping from original index to new index for proper display.
  */
 function filterCitedCitations(
@@ -758,19 +770,43 @@ function filterCitedCitations(
 ): { citations: Citation[]; indexMap: Map<number, number> } {
   const citedIndices = extractCitedIndices(content);
   
-  // If no citations are referenced, return empty
-  if (citedIndices.length === 0) {
-    return { citations: [], indexMap: new Map() };
-  }
-  
   // Filter citations and create index mapping
   const filteredCitations: Citation[] = [];
   const indexMap = new Map<number, number>(); // original index -> new index
+  const addedIndices = new Set<number>();
   
+  // First, add citations that are explicitly referenced with [[C#]] markers
   for (const originalIndex of citedIndices) {
-    if (originalIndex < citations.length) {
+    if (originalIndex < citations.length && !addedIndices.has(originalIndex)) {
       indexMap.set(originalIndex, filteredCitations.length);
       filteredCitations.push(citations[originalIndex]);
+      addedIndices.add(originalIndex);
+    }
+  }
+  
+  // Then, add citations with valid scores (>= 0.50) that weren't already added
+  // This ensures sources are shown even when AI doesn't use [[C#]] markers
+  // PYQ sources typically have scores around 0.5-0.6 which are still relevant
+  const CONFIDENCE_THRESHOLD = 0.50;
+  
+  for (let i = 0; i < citations.length; i++) {
+    if (addedIndices.has(i)) continue;
+    
+    const citation = citations[i];
+    const score = citation.score;
+    const filename = citation.filename || '';
+    
+    // Check if this is a PYQ/syllabus source (always show these as they're course materials)
+    const isPYQSource = filename.includes('/pyqs/') || filename.includes('/syllabus/');
+    
+    // Check if score is a valid confidence value (between 0 and 1)
+    const hasValidScore = typeof score === 'number' && score >= CONFIDENCE_THRESHOLD && score <= 1;
+    
+    // Show citation if: has valid score OR is a PYQ/syllabus source
+    if (hasValidScore || isPYQSource) {
+      indexMap.set(i, filteredCitations.length);
+      filteredCitations.push(citation);
+      addedIndices.add(i);
     }
   }
   
@@ -795,6 +831,7 @@ interface CitationItemProps {
 
 function CitationItem({ citation, index, messageId, isExpanded, onToggle }: CitationItemProps) {
   const [localExpanded, setLocalExpanded] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const content = citation.page_content || citation.content;
   const hasContent = content && content.trim().length > 0;
   
@@ -813,79 +850,138 @@ function CitationItem({ citation, index, messageId, isExpanded, onToggle }: Cita
   const citationId = `citation-${messageId}-${index + 1}`;
 
   return (
-    <div 
-      id={citationId}
-      className={cn(
-        "border rounded-lg overflow-hidden transition-all duration-300",
-        // Use card background (white/dark) to contrast with muted message bubble
-        "bg-card border-border shadow-sm",
-        expanded && "ring-2 ring-primary/40 shadow-md"
-      )}
-    >
-      {/* Citation Header - Always visible */}
-      <button
-        onClick={() => hasContent && handleToggle()}
+    <>
+      <div 
+        id={citationId}
         className={cn(
-          "w-full flex items-center gap-2 px-3 py-2 text-left",
-          hasContent && "hover:bg-accent/50 cursor-pointer",
-          !hasContent && "cursor-default"
+          "border rounded-lg overflow-hidden transition-all duration-300",
+          // Use card background (white/dark) to contrast with muted message bubble
+          "bg-card border-border shadow-sm",
+          expanded && "ring-2 ring-primary/40 shadow-md"
         )}
       >
-        <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-semibold">
-          {index + 1}
-        </span>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-            <span className="text-xs font-medium truncate text-foreground">
-              {citation.filename || citation.source || 'Knowledge Base'}
-            </span>
-            {citation.page && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                p. {citation.page}
-              </Badge>
-            )}
-            {citation.score != null && citation.score > 0 && citation.score <= 1 && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                {(citation.score * 100).toFixed(0)}% match
-              </Badge>
-            )}
+        {/* Citation Header - Always visible */}
+        <button
+          onClick={() => hasContent && handleToggle()}
+          className={cn(
+            "w-full flex items-center gap-2 px-3 py-2 text-left",
+            hasContent && "hover:bg-accent/50 cursor-pointer",
+            !hasContent && "cursor-default"
+          )}
+        >
+          <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-semibold">
+            {index + 1}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <FileText className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+              <span className="text-xs font-medium truncate text-foreground">
+                {citation.filename || citation.source || 'Knowledge Base'}
+              </span>
+              {citation.page && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  p. {citation.page}
+                </Badge>
+              )}
+              {citation.score != null && citation.score > 0 && citation.score <= 1 && (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                  {(citation.score * 100).toFixed(0)}% match
+                </Badge>
+              )}
+            </div>
           </div>
-        </div>
-        {hasContent && (
-          <ChevronDown className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform flex-shrink-0",
-            expanded && "rotate-180"
-          )} />
-        )}
-      </button>
-      
-      {/* Citation Content - Expandable */}
-      {hasContent && (
-        <div className={cn(
-          "border-t border-border px-3 py-2 bg-accent/30",
-          !expanded && "hidden"
-        )}>
-          <div className="flex items-start gap-2">
-            <Quote className="h-3 w-3 text-primary/60 mt-1 flex-shrink-0" />
-            <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
-              {previewContent}
-            </p>
-          </div>
-          {shouldTruncate && (
+          {/* Expand to dialog button */}
+          {hasContent && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleToggle();
+                setDialogOpen(true);
               }}
-              className="text-xs text-primary hover:underline mt-1 ml-5"
+              className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+              title="View full content"
             >
-              {expanded ? 'Show less' : 'Show more'}
+              <Maximize2 className="h-3.5 w-3.5" />
             </button>
           )}
-        </div>
-      )}
-    </div>
+          {hasContent && (
+            <ChevronDown className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform flex-shrink-0",
+              expanded && "rotate-180"
+            )} />
+          )}
+        </button>
+        
+        {/* Citation Content - Expandable */}
+        {hasContent && (
+          <div className={cn(
+            "border-t border-border px-3 py-2 bg-accent/30",
+            !expanded && "hidden"
+          )}>
+            <div className="flex items-start gap-2">
+              <Quote className="h-3 w-3 text-primary/60 mt-1 flex-shrink-0" />
+              <p className="text-xs text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                {previewContent}
+              </p>
+            </div>
+            {shouldTruncate && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggle();
+                }}
+                className="text-xs text-primary hover:underline mt-1 ml-5"
+              >
+                {expanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Full Content Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/15 text-primary text-xs font-semibold">
+                {index + 1}
+              </span>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span className="truncate">
+                {citation.filename || citation.source || 'Knowledge Base'}
+              </span>
+            </DialogTitle>
+            <DialogDescription className="flex items-center gap-2 flex-wrap">
+              {citation.page && (
+                <Badge variant="outline" className="text-xs">
+                  Page {citation.page}
+                </Badge>
+              )}
+              {citation.score != null && citation.score > 0 && citation.score <= 1 && (
+                <Badge variant="secondary" className="text-xs">
+                  {(citation.score * 100).toFixed(0)}% relevance match
+                </Badge>
+              )}
+              <span className="text-muted-foreground">
+                Source content from course materials
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto min-h-0 mt-4 pr-2">
+            <div className="bg-accent/30 rounded-lg p-4 border border-border">
+              <div className="flex items-start gap-3">
+                <Quote className="h-4 w-4 text-primary/60 mt-1 flex-shrink-0" />
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {content}
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -1201,7 +1297,10 @@ function MessageBubble({
                 Sources ({citedCitations.length})
               </p>
             </div>
-            <div className="space-y-2">
+            <div className={cn(
+              "space-y-2",
+              citedCitations.length > 2 && "max-h-[120px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+            )}>
               {citedCitations.map((citation, idx) => {
                 const originalIndex = originalIndices[idx] - 1; // Convert back to 0-based
                 return (
@@ -1419,7 +1518,10 @@ function StreamingMessageBubble({
                 Sources ({citedCitations.length})
               </p>
             </div>
-            <div className="space-y-2">
+            <div className={cn(
+              "space-y-2",
+              citedCitations.length > 2 && "max-h-[120px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent"
+            )}>
               {citedCitations.map((citation, idx) => {
                 const originalIndex = originalIndices[idx] - 1; // Convert back to 0-based
                 return (

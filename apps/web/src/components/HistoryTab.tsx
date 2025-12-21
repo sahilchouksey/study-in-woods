@@ -90,7 +90,7 @@ function SessionCard({ session, onClick, onDelete, isDeleting }: SessionCardProp
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                className="h-8 w-8 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                 onClick={(e) => e.stopPropagation()}
                 disabled={isDeleting}
               >
@@ -140,12 +140,16 @@ function SessionCard({ session, onClick, onDelete, isDeleting }: SessionCardProp
         {session.subject && (
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <Badge variant="outline" className="text-xs">
-              {session.subject.code}
-            </Badge>
-            <span className="text-sm text-muted-foreground truncate">
-              {session.subject.name}
-            </span>
+            {session.subject.code && (
+              <Badge variant="outline" className="text-xs">
+                {session.subject.code}
+              </Badge>
+            )}
+            {session.subject.name && (
+              <span className="text-sm text-muted-foreground truncate">
+                {session.subject.name}
+              </span>
+            )}
           </div>
         )}
 

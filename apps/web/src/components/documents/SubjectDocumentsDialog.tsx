@@ -72,9 +72,11 @@ export function SubjectDocumentsDialog({
             <div className="flex-1 min-w-0">
               <DialogTitle className="text-lg truncate">{subject.name}</DialogTitle>
               <div className="flex flex-wrap items-center gap-2 mt-1">
-                <Badge variant="outline" className="text-xs">
-                  {subject.code}
-                </Badge>
+                {subject.code && (
+                  <Badge variant="outline" className="text-xs">
+                    {subject.code}
+                  </Badge>
+                )}
                 {subject.credits && (
                   <span className="text-xs text-muted-foreground">
                     {subject.credits} credits
