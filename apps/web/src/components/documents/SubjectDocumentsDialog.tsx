@@ -160,14 +160,14 @@ export function SubjectDocumentsDialog({
             {isAdmin && (
               <TabsContent value="upload" className="h-full m-0">
                 {isAuthenticated ? (
-                  <ScrollArea className="h-[350px] pr-4">
+                  <div className="h-[350px]">
                     <MultiFileUploadForm
                       subjectId={subject.id}
                       subjectName={subject.name}
                       onSuccess={() => setActiveTab('documents')}
                       excludeTypes={['syllabus']}
                     />
-                  </ScrollArea>
+                  </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground">
                     <FolderOpen className="h-12 w-12 mb-3 opacity-50" />

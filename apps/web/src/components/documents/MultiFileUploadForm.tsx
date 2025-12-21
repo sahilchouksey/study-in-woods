@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -258,56 +257,57 @@ export function MultiFileUploadForm({
   const pendingCount = files.filter(f => f.status === 'pending').length;
 
   return (
-    <div className="space-y-4">
-      {/* Drop Zone */}
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          dragActive
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-      >
-        <input
-          type="file"
-          id="multi-file-upload"
-          className="hidden"
-          multiple
-          accept={ALLOWED_FILE_EXTENSIONS.join(',')}
-          onChange={handleFileInput}
-        />
-        <label htmlFor="multi-file-upload" className="cursor-pointer">
-          <Plus className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm font-medium">
-            Drop files here or click to browse
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Max {MAX_FILE_SIZE / (1024 * 1024)}MB per file - PDF, DOCX, TXT, and more
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            You can select multiple files at once
-          </p>
-        </label>
-      </div>
+    <div className="flex flex-col h-full">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+        {/* Drop Zone */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            dragActive
+              ? 'border-primary bg-primary/5'
+              : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+          }`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          <input
+            type="file"
+            id="multi-file-upload"
+            className="hidden"
+            multiple
+            accept={ALLOWED_FILE_EXTENSIONS.join(',')}
+            onChange={handleFileInput}
+          />
+          <label htmlFor="multi-file-upload" className="cursor-pointer">
+            <Plus className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              Drop files here or click to browse
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Max {MAX_FILE_SIZE / (1024 * 1024)}MB per file - PDF, DOCX, TXT, and more
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              You can select multiple files at once
+            </p>
+          </label>
+        </div>
 
-      {/* Files List */}
-      {files.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              {files.length} file{files.length !== 1 ? 's' : ''} selected
-            </span>
-            {!isUploading && (
-              <Button variant="ghost" size="sm" onClick={clearAllFiles}>
-                Clear All
-              </Button>
-            )}
-          </div>
+        {/* Files List */}
+        {files.length > 0 && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                {files.length} file{files.length !== 1 ? 's' : ''} selected
+              </span>
+              {!isUploading && (
+                <Button variant="ghost" size="sm" onClick={clearAllFiles}>
+                  Clear All
+                </Button>
+              )}
+            </div>
 
-          <ScrollArea className="max-h-[300px]">
-            <div className="space-y-2 pr-4">
+            <div className="space-y-2">
               {files.map((localFile) => (
                 <Card key={localFile.id} className="overflow-hidden">
                   <CardContent className="py-2 px-3">
@@ -394,8 +394,13 @@ export function MultiFileUploadForm({
                 </Card>
               ))}
             </div>
-          </ScrollArea>
+          </div>
+        )}
+      </div>
 
+      {/* Sticky Footer - Progress and Upload Button */}
+      {files.length > 0 && (
+        <div className="flex-shrink-0 pt-4 mt-4 border-t bg-background sticky bottom-0 space-y-3">
           {/* Progress */}
           {isUploading && (
             <div className="space-y-2">
