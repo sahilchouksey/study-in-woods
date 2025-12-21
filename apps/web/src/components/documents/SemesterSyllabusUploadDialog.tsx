@@ -339,8 +339,9 @@ export function SemesterSyllabusUploadDialog({
                 `/api/v2/semesters/${targetSemesterId}/syllabus/upload`,
                 formData,
                 {
+                    // IMPORTANT: Don't set Content-Type manually for FormData!
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                        'Content-Type': undefined as unknown as string,
                     },
                     timeout: 60000, // 1 minute for upload only
                 }
@@ -400,8 +401,9 @@ export function SemesterSyllabusUploadDialog({
                 `/api/v1/semesters/${targetSemesterId}/syllabus/upload`,
                 formData,
                 {
+                    // IMPORTANT: Don't set Content-Type manually for FormData!
                     headers: {
-                        'Content-Type': 'multipart/form-data',
+                        'Content-Type': undefined as unknown as string,
                     },
                     timeout: 180000, // 3 minutes for extraction
                 }

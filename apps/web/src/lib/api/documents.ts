@@ -167,12 +167,14 @@ export const documentService = {
     formData.append('file', file);
     formData.append('type', type);
 
+    // IMPORTANT: Don't set Content-Type manually for FormData!
+    // Axios will automatically set it with the correct boundary parameter.
     const response = await apiClient.post<ApiResponse<UploadDocumentResponse>>(
       `/api/v1/subjects/${subjectId}/documents`,
       formData,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined as unknown as string,
         },
         timeout: 120000, // 2 minutes for upload
       }

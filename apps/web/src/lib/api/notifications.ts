@@ -414,12 +414,18 @@ export const batchDocumentUploadService = {
       });
     }
     
+    // IMPORTANT: Don't set Content-Type manually for FormData!
+    // Axios will automatically set it with the correct boundary parameter.
+    // Setting it manually breaks the multipart parsing on the server.
     const response = await apiClient.post<ApiResponse<BatchUploadResponse>>(
       `/api/v1/subjects/${subjectId}/documents/batch-upload`,
       formData,
       {
+        // Increase timeout for large file uploads (5 minutes)
+        timeout: 300000,
+        // Let axios set the Content-Type automatically for FormData
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': undefined as unknown as string,
         },
       }
     );
