@@ -234,17 +234,19 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Documents routes (nested under subjects)
 	documents := api.Group("/subjects/:subject_id/documents")
-	documents.Get("/", documentHandler.ListDocuments)                                                       // Public: List documents for a subject
+	documents.Get("/", documentHandler.ListDocuments)                              // Public: List documents for a subject
+	documents.Post("/", authMiddleware.Required(), documentHandler.UploadDocument) // Protected: Upload document
+
+	// Batch document upload routes - MUST be before /:id routes to avoid conflict
+	documents.Post("/batch-upload", authMiddleware.Required(), batchDocumentUploadHandler.BatchUploadDocuments)         // Protected: Start batch upload
+	documents.Get("/upload-jobs", authMiddleware.Required(), batchDocumentUploadHandler.GetDocumentUploadJobsBySubject) // Protected: List upload jobs for subject
+
+	// Parameterized routes (must come after specific routes like /batch-upload and /upload-jobs)
 	documents.Get("/:id", documentHandler.GetDocument)                                                      // Public: Get document details
-	documents.Post("/", authMiddleware.Required(), documentHandler.UploadDocument)                          // Protected: Upload document
 	documents.Put("/:id", authMiddleware.Required(), documentHandler.UpdateDocument)                        // Protected: Update document metadata
 	documents.Delete("/:id", authMiddleware.Required(), documentHandler.DeleteDocument)                     // Protected: Delete document
 	documents.Get("/:id/download", documentHandler.GetDownloadURL)                                          // Public: Get download URL
 	documents.Post("/:id/refresh-status", authMiddleware.Required(), documentHandler.RefreshIndexingStatus) // Protected: Refresh indexing status
-
-	// Batch document upload routes (nested under subjects)
-	documents.Post("/batch-upload", authMiddleware.Required(), batchDocumentUploadHandler.BatchUploadDocuments)         // Protected: Start batch upload
-	documents.Get("/upload-jobs", authMiddleware.Required(), batchDocumentUploadHandler.GetDocumentUploadJobsBySubject) // Protected: List upload jobs for subject
 
 	// ==================== Syllabus Extraction ====================
 
