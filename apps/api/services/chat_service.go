@@ -268,6 +268,152 @@ func (s *AISettings) GetMaxTokens() int {
 	return tokens
 }
 
+// Continuation detection patterns - keywords that indicate user wants to continue a partial response
+// These are checked ONLY when there's a partial message in the session
+var continuationKeywords = []string{
+	// English - direct continuation requests
+	"continue",
+	"go on",
+	"keep going",
+	"carry on",
+	"proceed",
+	"resume",
+	"continue from where you left off",
+	"please continue",
+	"continue please",
+	"pls continue",
+	"plz continue",
+	"keep writing",
+	"finish",
+	"finish it",
+	"finish this",
+	"complete",
+	"complete it",
+	"complete this",
+	"finish your response",
+	"complete your response",
+	"continue your response",
+	"continue writing",
+
+	// English - short prompts
+	"more",
+	"more please",
+	"go ahead",
+	"yes continue",
+	"yes go on",
+	"yes",
+	"ok continue",
+	"okay continue",
+	"and",
+	"and then",
+	"then",
+	"next",
+	"what's next",
+	"what next",
+	"whats next",
+
+	// English - questions about continuation
+	"what were you saying",
+	"you were saying",
+	"you got cut off",
+	"it got cut off",
+	"response got cut off",
+	"message got cut off",
+	"timed out",
+	"it timed out",
+
+	// Hindi
+	"जारी रखें", // continue
+	"आगे बढ़ें", // go ahead
+	"आगे",       // ahead/next
+	"और",        // and/more
+	"फिर",       // then
+	"पूरा करें", // complete it
+	"खत्म करें", // finish it
+
+	// Common typos/variations
+	"continu",
+	"contineu",
+	"coninue",
+	"countinue",
+}
+
+// isContinuationRequest checks if the user message is requesting continuation of a previous response
+// This returns true for short messages that match continuation keywords
+// The actual continuation only happens if there's a partial message in the session
+func isContinuationRequest(content string) bool {
+	normalizedContent := strings.ToLower(strings.TrimSpace(content))
+
+	// Only check short messages (< 100 chars) to avoid false positives
+	// Long messages are likely new questions even if they contain "continue"
+	if len(normalizedContent) > 100 {
+		return false
+	}
+
+	// Check for exact or near-exact matches
+	for _, keyword := range continuationKeywords {
+		keyword = strings.ToLower(keyword)
+
+		// Exact match
+		if normalizedContent == keyword {
+			return true
+		}
+
+		// Match with punctuation
+		if normalizedContent == keyword+"." ||
+			normalizedContent == keyword+"?" ||
+			normalizedContent == keyword+"!" ||
+			normalizedContent == keyword+"..." ||
+			normalizedContent == keyword+".." {
+			return true
+		}
+
+		// Match at start/end with space
+		if strings.HasPrefix(normalizedContent, keyword+" ") ||
+			strings.HasSuffix(normalizedContent, " "+keyword) {
+			return true
+		}
+
+		// Match with "please" variations
+		if normalizedContent == keyword+" please" ||
+			normalizedContent == "please "+keyword ||
+			normalizedContent == keyword+" pls" ||
+			normalizedContent == "pls "+keyword {
+			return true
+		}
+	}
+
+	return false
+}
+
+// getLastPartialMessage finds the most recent partial assistant message in a session
+func (s *ChatService) getLastPartialMessage(sessionID uint) (*model.ChatMessage, error) {
+	var partialMsg model.ChatMessage
+	err := s.db.Where("session_id = ? AND role = ? AND status = ?",
+		sessionID, model.MessageRoleAssistant, model.MessageStatusPartial).
+		Order("created_at DESC").
+		First(&partialMsg).Error
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, nil // No partial message found
+		}
+		return nil, err
+	}
+	return &partialMsg, nil
+}
+
+// buildContinuationPrompt creates a prompt that includes the partial content for continuation
+func buildContinuationPrompt(partialContent string) string {
+	return fmt.Sprintf(`The previous response was cut off due to a timeout. Here is what was generated so far:
+
+---BEGIN PARTIAL RESPONSE---
+%s
+---END PARTIAL RESPONSE---
+
+Please continue from EXACTLY where this left off. Do NOT repeat any content that was already provided above. Simply continue the response naturally from the last word/sentence.`, partialContent)
+}
+
 // SendMessageRequest represents a request to send a message
 type SendMessageRequest struct {
 	SessionID uint
@@ -568,6 +714,17 @@ type ToolEvent struct {
 	Error     string      `json:"error"`     // Error message if any
 }
 
+// PartialMessageInfo contains information about a partial (incomplete) message
+type PartialMessageInfo struct {
+	MessageID      uint   `json:"message_id"`      // ID of the saved partial message
+	PartialContent string `json:"partial_content"` // Content accumulated before error
+	Reason         string `json:"reason"`          // Why the message is partial (e.g., "timeout")
+	ErrorType      string `json:"error_type"`      // Type of error that occurred
+	ErrorMessage   string `json:"error_message"`   // Human-readable error message
+	CanContinue    bool   `json:"can_continue"`    // Whether the message can be continued
+	ChunkCount     int    `json:"chunk_count"`     // Number of chunks received before error
+}
+
 // EnhancedStreamCallbacks holds callbacks for different event types
 type EnhancedStreamCallbacks struct {
 	OnReasoning func(chunk string) error                    // Called for reasoning/thinking content
@@ -575,6 +732,7 @@ type EnhancedStreamCallbacks struct {
 	OnCitations func(citations []model.Citation) error      // Called when citations are available
 	OnUsage     func(usage *digitalocean.StreamUsage) error // Called with token usage
 	OnToolEvent func(event ToolEvent) error                 // Called for tool-related events
+	OnPartial   func(info PartialMessageInfo) error         // Called when a partial message is saved due to timeout/error
 }
 
 // StreamMessageEnhanced streams a message with separate callbacks for reasoning and content
@@ -637,6 +795,21 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		}
 	}
 
+	// Check if this is a continuation request
+	var continuationContext string
+	var continuingFromMsg *model.ChatMessage
+	if isContinuationRequest(req.Content) {
+		partialMsg, partialErr := s.getLastPartialMessage(req.SessionID)
+		if partialErr != nil {
+			log.Printf("Warning: failed to check for partial message: %v", partialErr)
+		} else if partialMsg != nil {
+			log.Printf("[Continuation] Detected continuation request for partial message ID=%d (content: %d chars)",
+				partialMsg.ID, len(partialMsg.Content))
+			continuationContext = buildContinuationPrompt(partialMsg.Content)
+			continuingFromMsg = partialMsg
+		}
+	}
+
 	// Build messages for AI
 	customPrompt := ""
 	if req.Settings != nil {
@@ -675,6 +848,15 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		}
 	}
 
+	// If this is a continuation, inject the continuation context
+	if continuationContext != "" {
+		// Replace the last user message (which is just "continue") with the continuation prompt
+		if len(messages) > 0 && messages[len(messages)-1].Role == "user" {
+			messages[len(messages)-1].Content = continuationContext
+			log.Printf("[Continuation] Injected continuation context into user message")
+		}
+	}
+
 	// Inject tools into system prompt if tools registry is available
 	if s.toolsRegistry != nil && s.toolsRegistry.ToolsEnabled() {
 		toolsPrompt := s.toolsRegistry.BuildToolsPrompt()
@@ -694,6 +876,7 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 	var fullReasoning strings.Builder
 	var retrievals []digitalocean.RetrievalInfo
 	var totalTokens int
+	var chunkCount int // Track chunks for partial response info
 
 	aiReq := digitalocean.AgentChatRequest{
 		DeploymentURL:        agentCreds.DeploymentURL,
@@ -729,6 +912,7 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		if content := chunk.GetContent(); content != "" {
 			// Always accumulate full content for internal processing (used for tool detection later)
 			fullContent.WriteString(content)
+			chunkCount++ // Track chunk count for partial response info
 
 			// Buffer content and check for tool call markers
 			contentBuffer.WriteString(content)
@@ -851,7 +1035,115 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		return nil
 	})
 
+	// Handle streaming errors - check for timeout and save partial content if available
 	if streamErr != nil {
+		partialContent := fullContent.String()
+		responseTime := time.Since(startTime).Milliseconds()
+
+		// Check if we have any content to save as partial
+		if len(partialContent) > 0 {
+			// Determine error type
+			errorType := "unknown"
+			errorMessage := streamErr.Error()
+			if digitalocean.IsTimeoutError(streamErr) {
+				errorType = "timeout"
+				errorMessage = "Response was cut off due to timeout. You can continue this response."
+			} else if strings.Contains(streamErr.Error(), "connection") {
+				errorType = "connection"
+				errorMessage = "Connection was interrupted. You can continue this response."
+			}
+
+			log.Printf("[Chat] Stream error with partial content (%d chars, %d chunks): %v", len(partialContent), chunkCount, streamErr)
+
+			// Convert retrievals to citations for the partial message
+			var citations model.Citations
+			for _, r := range retrievals {
+				filename := r.FileName
+				if filename == "" {
+					filename = r.Source
+				}
+				if filename == "" {
+					filename = r.SourceName
+				}
+				citations = append(citations, model.Citation{
+					ID:          r.ID,
+					Filename:    filename,
+					PageContent: r.Content,
+					Score:       r.Score,
+				})
+			}
+
+			// Save partial assistant message
+			tx := s.db.Begin()
+			if tx.Error == nil {
+				partialMessage := model.ChatMessage{
+					SessionID:    req.SessionID,
+					SubjectID:    session.SubjectID,
+					UserID:       req.UserID,
+					Role:         model.MessageRoleAssistant,
+					Content:      partialContent,
+					TokensUsed:   totalTokens,
+					ResponseTime: int(responseTime),
+					IsStreamed:   true,
+					Citations:    citations,
+					Status:       model.MessageStatusPartial,
+					ErrorType:    errorType,
+					ErrorMessage: errorMessage,
+				}
+
+				// Store reasoning in metadata if any
+				if fullReasoning.Len() > 0 {
+					partialMessage.Metadata = make(model.JSONMap)
+					partialMessage.Metadata["reasoning"] = fullReasoning.String()
+				}
+
+				if err := tx.Create(&partialMessage).Error; err != nil {
+					tx.Rollback()
+					log.Printf("[Chat] Failed to save partial message: %v", err)
+				} else {
+					// Update session statistics
+					now := time.Now()
+					tx.Model(&session).Updates(map[string]interface{}{
+						"message_count":   gorm.Expr("message_count + ?", 2), // user + partial assistant
+						"total_tokens":    gorm.Expr("total_tokens + ?", totalTokens),
+						"last_message_at": now,
+					})
+
+					if err := tx.Commit().Error; err != nil {
+						log.Printf("[Chat] Failed to commit partial message: %v", err)
+					} else {
+						log.Printf("[Chat] Saved partial message ID=%d with %d chars", partialMessage.ID, len(partialContent))
+
+						// Record in memory service
+						if s.memoryService != nil {
+							s.memoryService.RecordMessage(ctx, req.SessionID, partialMessage.ID)
+						}
+
+						// Call OnPartial callback to notify client
+						if callbacks.OnPartial != nil {
+							partialInfo := PartialMessageInfo{
+								MessageID:      partialMessage.ID,
+								PartialContent: partialContent,
+								Reason:         errorType,
+								ErrorType:      errorType,
+								ErrorMessage:   errorMessage,
+								CanContinue:    true,
+								ChunkCount:     chunkCount,
+							}
+							if err := callbacks.OnPartial(partialInfo); err != nil {
+								log.Printf("[Chat] OnPartial callback error: %v", err)
+							}
+						}
+
+						// Return partial response (not an error, but partial success)
+						result.AssistantMessage = &partialMessage
+						return result, nil
+					}
+				}
+			}
+		}
+
+		// No partial content or failed to save - return error
 		return nil, fmt.Errorf("failed to stream AI response: %w", streamErr)
 	}
 
@@ -994,6 +1286,25 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		return nil, fmt.Errorf("failed to save assistant message: %w", err)
 	}
 	result.AssistantMessage = &assistantMessage
+
+	// If this was a continuation, mark the original partial message as complete and link them
+	if continuingFromMsg != nil {
+		assistantMessage.ParentMessageID = &continuingFromMsg.ID
+		if err := tx.Model(&assistantMessage).Update("parent_message_id", continuingFromMsg.ID).Error; err != nil {
+			log.Printf("Warning: failed to link continuation message: %v", err)
+		}
+
+		// Mark the original partial message as complete
+		if err := tx.Model(continuingFromMsg).Updates(map[string]interface{}{
+			"status":        model.MessageStatusComplete,
+			"error_type":    "",
+			"error_message": "",
+		}).Error; err != nil {
+			log.Printf("Warning: failed to mark partial message as complete: %v", err)
+		} else {
+			log.Printf("[Continuation] Marked partial message ID=%d as complete, continuation ID=%d", continuingFromMsg.ID, assistantMessage.ID)
+		}
+	}
 
 	// Update session statistics
 	now := time.Now()

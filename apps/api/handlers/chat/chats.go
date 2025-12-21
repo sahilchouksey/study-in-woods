@@ -390,6 +390,16 @@ func (h *ChatHandler) handleStreamMessage(c *fiber.Ctx, sessionID uint, userID u
 				fmt.Fprintf(w, "data: %s\n\n", string(eventJSON))
 				return w.Flush()
 			},
+			// Send partial message notification when timeout/error occurs with content
+			OnPartial: func(info services.PartialMessageInfo) error {
+				partialJSON, jsonErr := json.Marshal(info)
+				if jsonErr != nil {
+					return nil // Don't fail on JSON error
+				}
+				fmt.Fprintf(w, "event: partial\n")
+				fmt.Fprintf(w, "data: %s\n\n", string(partialJSON))
+				return w.Flush()
+			},
 		})
 
 		if err != nil {
@@ -405,6 +415,12 @@ func (h *ChatHandler) handleStreamMessage(c *fiber.Ctx, sessionID uint, userID u
 			fmt.Fprintf(w, "event: error\n")
 			fmt.Fprintf(w, "data: {\"error\":\"incomplete response from AI service\"}\n\n")
 			w.Flush()
+			return
+		}
+
+		// Check if this is a partial response (already notified via OnPartial callback)
+		if result.AssistantMessage.IsPartial() {
+			// Partial response - don't send done event, partial event was already sent
 			return
 		}
 

@@ -18,6 +18,15 @@ const (
 	MessageRoleSystem    MessageRole = "system"
 )
 
+// MessageStatus represents the completion status of a message
+type MessageStatus string
+
+const (
+	MessageStatusComplete MessageStatus = "complete" // Message was fully generated
+	MessageStatusPartial  MessageStatus = "partial"  // Message was cut off due to timeout/error
+	MessageStatusPending  MessageStatus = "pending"  // Message is still being generated
+)
+
 // Citation represents a single citation from the knowledge base
 type Citation struct {
 	ID           string                 `json:"id"`
@@ -103,13 +112,44 @@ type ChatMessage struct {
 	IsStreamed   bool           `gorm:"default:false" json:"is_streamed"`
 	Metadata     JSONMap        `gorm:"type:jsonb;default:'{}'" json:"metadata,omitempty"`
 
+	// Partial response recovery fields
+	Status          MessageStatus `gorm:"type:varchar(20);default:'complete'" json:"status"`
+	ParentMessageID *uint         `gorm:"index" json:"parent_message_id,omitempty"` // Points to original partial message when continuing
+	ErrorType       string        `gorm:"type:varchar(100)" json:"error_type,omitempty"`
+	ErrorMessage    string        `gorm:"type:text" json:"error_message,omitempty"`
+
 	// Relationships
-	Session ChatSession `gorm:"foreignKey:SessionID;constraint:OnDelete:CASCADE" json:"session,omitempty"`
-	Subject Subject     `gorm:"foreignKey:SubjectID;constraint:OnDelete:CASCADE" json:"subject,omitempty"`
-	User    User        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+	Session       ChatSession  `gorm:"foreignKey:SessionID;constraint:OnDelete:CASCADE" json:"session,omitempty"`
+	Subject       Subject      `gorm:"foreignKey:SubjectID;constraint:OnDelete:CASCADE" json:"subject,omitempty"`
+	User          User         `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
+	ParentMessage *ChatMessage `gorm:"foreignKey:ParentMessageID" json:"parent_message,omitempty"` // Self-referential for continuation
 }
 
 // TableName specifies the table name for ChatMessage
 func (ChatMessage) TableName() string {
 	return "chat_messages"
+}
+
+// IsPartial returns true if this message was cut off due to timeout/error
+func (m *ChatMessage) IsPartial() bool {
+	return m.Status == MessageStatusPartial
+}
+
+// CanContinue returns true if this partial message can be continued
+func (m *ChatMessage) CanContinue() bool {
+	return m.IsPartial() && m.Role == MessageRoleAssistant
+}
+
+// MarkAsPartial sets the message status to partial with error info
+func (m *ChatMessage) MarkAsPartial(errorType, errorMessage string) {
+	m.Status = MessageStatusPartial
+	m.ErrorType = errorType
+	m.ErrorMessage = errorMessage
+}
+
+// MarkAsComplete sets the message status to complete
+func (m *ChatMessage) MarkAsComplete() {
+	m.Status = MessageStatusComplete
+	m.ErrorType = ""
+	m.ErrorMessage = ""
 }

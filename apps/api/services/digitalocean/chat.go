@@ -40,6 +40,28 @@ type RetrievalInfo struct {
 	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
+// StreamResult contains the result of a streaming request including any partial content on error
+type StreamResult struct {
+	PartialContent string          // Content accumulated before error occurred
+	ChunkCount     int             // Number of chunks processed
+	Retrievals     []RetrievalInfo // Any retrievals captured before error
+	Error          error           // The error that occurred, nil if successful
+	IsComplete     bool            // True if stream completed normally
+	ErrorType      string          // Type of error: "timeout", "connection", "unknown"
+}
+
+// IsTimeoutError checks if the error is a timeout-related error
+func IsTimeoutError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := strings.ToLower(err.Error())
+	return strings.Contains(errStr, "context deadline exceeded") ||
+		strings.Contains(errStr, "timeout") ||
+		strings.Contains(errStr, "i/o timeout") ||
+		strings.Contains(errStr, "client.timeout")
+}
+
 // NonStreamRetrieval represents the retrieval section in DO AI Agent non-streaming response
 type NonStreamRetrieval struct {
 	RetrievedData []RetrievedData `json:"retrieved_data,omitempty"`
@@ -552,7 +574,71 @@ func (c *Client) CreateAgentChatCompletion(ctx context.Context, req AgentChatReq
 }
 
 // StreamAgentChatCompletion creates a streaming chat completion using the agent deployment URL and API key
+// This method includes automatic retry logic with exponential backoff for transient failures
 func (c *Client) StreamAgentChatCompletion(ctx context.Context, req AgentChatRequest, callback func(StreamChunk) error) error {
+	retryConfig := c.GetRetryConfig()
+	var lastErr error
+
+	for attempt := 0; attempt <= retryConfig.MaxRetries; attempt++ {
+		if attempt > 0 {
+			backoff := CalculateBackoff(attempt-1, retryConfig)
+			fmt.Printf("[DO Stream] Retry attempt %d/%d after %v backoff\n", attempt, retryConfig.MaxRetries, backoff)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(backoff):
+			}
+		}
+
+		err := c.doStreamRequest(ctx, req, callback)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+		fmt.Printf("[DO Stream] Request failed (attempt %d/%d): %v\n", attempt+1, retryConfig.MaxRetries+1, err)
+
+		// Check if error is retryable
+		if !c.isStreamErrorRetryable(err) {
+			fmt.Printf("[DO Stream] Error is not retryable, failing immediately\n")
+			return err
+		}
+	}
+
+	return fmt.Errorf("streaming failed after %d retries: %w", retryConfig.MaxRetries+1, lastErr)
+}
+
+// isStreamErrorRetryable determines if a streaming error should trigger a retry
+func (c *Client) isStreamErrorRetryable(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errStr := err.Error()
+
+	// Connection errors are retryable
+	if strings.Contains(errStr, "connection refused") ||
+		strings.Contains(errStr, "connection reset") ||
+		strings.Contains(errStr, "EOF") ||
+		strings.Contains(errStr, "timeout") ||
+		strings.Contains(errStr, "i/o timeout") ||
+		strings.Contains(errStr, "network is unreachable") ||
+		strings.Contains(errStr, "no such host") {
+		return true
+	}
+
+	// Check for HTTP status codes in error message
+	for _, code := range []string{"408", "409", "429", "500", "502", "503", "504"} {
+		if strings.Contains(errStr, fmt.Sprintf("status %s", code)) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// doStreamRequest performs the actual streaming request
+func (c *Client) doStreamRequest(ctx context.Context, req AgentChatRequest, callback func(StreamChunk) error) error {
 	// Build the full endpoint URL
 	endpoint := fmt.Sprintf("%s/api/v1/chat/completions", strings.TrimSuffix(req.DeploymentURL, "/"))
 
@@ -576,10 +662,10 @@ func (c *Client) StreamAgentChatCompletion(ctx context.Context, req AgentChatReq
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
 
-	fmt.Printf("[DO Stream] Making HTTP request...\n")
+	fmt.Printf("[DO Stream] Making HTTP request (streaming client with transport-level timeouts)...\n")
 
-	// Make request
-	resp, err := c.httpClient.Do(httpReq)
+	// Use streaming client - NO client-level timeout, uses Transport timeouts for connection only
+	resp, err := c.GetStreamingClient().Do(httpReq)
 	if err != nil {
 		fmt.Printf("[DO Stream] HTTP error: %v\n", err)
 		return fmt.Errorf("request failed: %w", err)
@@ -590,12 +676,24 @@ func (c *Client) StreamAgentChatCompletion(ctx context.Context, req AgentChatReq
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
+		errMsg := fmt.Sprintf("streaming failed with status %d: %s", resp.StatusCode, string(body))
 		fmt.Printf("[DO Stream] Error body: %s\n", string(body))
-		return fmt.Errorf("streaming failed with status %d: %s", resp.StatusCode, string(body))
+
+		// Handle rate limiting specially - check for Retry-After header
+		if resp.StatusCode == 429 {
+			retryAfter := ParseRetryAfter(resp)
+			if retryAfter > 0 {
+				fmt.Printf("[DO Stream] Rate limited, Retry-After: %v\n", retryAfter)
+				return fmt.Errorf("rate limited (status 429), retry after %v: %s", retryAfter, string(body))
+			}
+		}
+
+		return fmt.Errorf("%s", errMsg)
 	}
 
-	// Read SSE stream
-	fmt.Printf("[DO Stream] Starting to read SSE stream...\n")
+	// Read SSE stream with application-level idle timeout
+	// This detects stalled streams where server stops sending data
+	fmt.Printf("[DO Stream] Starting to read SSE stream (no timeout - stream can run indefinitely)...\n")
 	chunkCount := 0
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {

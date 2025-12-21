@@ -6,29 +6,63 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 const (
 	// BaseURL is the DigitalOcean API base URL
 	BaseURL = "https://api.digitalocean.com"
-	// DefaultTimeout is the default HTTP client timeout
+	// DefaultTimeout is the default HTTP client timeout for regular API calls
 	DefaultTimeout = 30 * time.Second
+	// DefaultStreamingTimeout is the timeout for streaming requests (AI responses can take several minutes)
+	// NOTE: This is now used for connection/header timeouts only, NOT body reading
+	DefaultStreamingTimeout = 5 * time.Minute
+	// DefaultDialTimeout is the timeout for establishing TCP connections
+	DefaultDialTimeout = 10 * time.Second
+	// DefaultTLSTimeout is the timeout for TLS handshake
+	DefaultTLSTimeout = 10 * time.Second
+	// DefaultHeaderTimeout is the timeout for waiting for response headers
+	DefaultHeaderTimeout = 30 * time.Second
+	// DefaultIdleTimeout is the timeout for idle connections
+	DefaultIdleTimeout = 90 * time.Second
 )
 
 // Client handles all DigitalOcean API interactions
 type Client struct {
-	apiToken   string
-	baseURL    string
-	httpClient *http.Client
+	apiToken        string
+	baseURL         string
+	httpClient      *http.Client // For regular API calls
+	streamingClient *http.Client // For streaming requests (longer timeout)
+	retryConfig     RetryConfig
 }
 
 // Config holds configuration for the DigitalOcean client
 type Config struct {
-	APIToken string
-	Timeout  time.Duration
-	BaseURL  string
+	APIToken         string
+	Timeout          time.Duration
+	StreamingTimeout time.Duration
+	BaseURL          string
+	RetryConfig      *RetryConfig // Optional custom retry config
+}
+
+// RetryConfig holds retry configuration for failed requests
+type RetryConfig struct {
+	MaxRetries     int           // Maximum number of retry attempts (default: 2)
+	InitialBackoff time.Duration // Initial backoff duration (default: 500ms)
+	MaxBackoff     time.Duration // Maximum backoff duration (default: 30s)
+}
+
+// DefaultRetryConfig returns the default retry configuration
+// Matches DigitalOcean SDK behavior: 2 retries with exponential backoff
+func DefaultRetryConfig() RetryConfig {
+	return RetryConfig{
+		MaxRetries:     2,
+		InitialBackoff: 500 * time.Millisecond,
+		MaxBackoff:     30 * time.Second,
+	}
 }
 
 // NewClient creates a new DigitalOcean API client
@@ -39,6 +73,30 @@ func NewClient(config Config) *Client {
 	if config.Timeout == 0 {
 		config.Timeout = DefaultTimeout
 	}
+	if config.StreamingTimeout == 0 {
+		config.StreamingTimeout = DefaultStreamingTimeout
+	}
+
+	retryConfig := DefaultRetryConfig()
+	if config.RetryConfig != nil {
+		retryConfig = *config.RetryConfig
+	}
+
+	// Create streaming transport with proper timeouts for SSE
+	// IMPORTANT: Do NOT set http.Client.Timeout for streaming - it kills long-running streams!
+	// Instead, use Transport-level timeouts for connection establishment only
+	streamingTransport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   DefaultDialTimeout,   // TCP connection timeout
+			KeepAlive: DefaultIdleTimeout,   // Keep-alive probe interval
+		}).DialContext,
+		TLSHandshakeTimeout:   DefaultTLSTimeout,   // TLS handshake timeout
+		ResponseHeaderTimeout: DefaultHeaderTimeout, // Time to wait for response headers
+		// NO IdleConnTimeout - we want to keep streaming connections alive
+		MaxIdleConns:        100,
+		MaxIdleConnsPerHost: 10,
+		// DisableKeepAlives: false, // Keep connections alive for streaming
+	}
 
 	return &Client{
 		apiToken: config.APIToken,
@@ -46,7 +104,69 @@ func NewClient(config Config) *Client {
 		httpClient: &http.Client{
 			Timeout: config.Timeout,
 		},
+		// Streaming client: NO Timeout set on client level!
+		// This allows SSE streams to run indefinitely (or until server closes)
+		// Connection/header timeouts are handled by Transport
+		streamingClient: &http.Client{
+			Transport: streamingTransport,
+			// Timeout: 0, // Explicitly NOT setting this - streams can run as long as needed
+		},
+		retryConfig: retryConfig,
 	}
+}
+
+// GetStreamingClient returns the streaming HTTP client (for use in streaming methods)
+func (c *Client) GetStreamingClient() *http.Client {
+	return c.streamingClient
+}
+
+// GetRetryConfig returns the retry configuration
+func (c *Client) GetRetryConfig() RetryConfig {
+	return c.retryConfig
+}
+
+// IsRetryableStatusCode checks if an HTTP status code should trigger a retry
+// Retryable codes: 408 (Timeout), 409 (Conflict), 429 (Rate Limit), 5xx (Server errors)
+func IsRetryableStatusCode(statusCode int) bool {
+	return statusCode == 408 || statusCode == 409 || statusCode == 429 || statusCode >= 500
+}
+
+// CalculateBackoff returns the backoff duration for a given retry attempt
+// Uses exponential backoff: initialBackoff * 2^attempt, capped at maxBackoff
+func CalculateBackoff(attempt int, config RetryConfig) time.Duration {
+	backoff := config.InitialBackoff * time.Duration(1<<uint(attempt))
+	if backoff > config.MaxBackoff {
+		return config.MaxBackoff
+	}
+	return backoff
+}
+
+// ParseRetryAfter extracts the retry-after header value from a response
+// Returns 0 if the header is not present or cannot be parsed
+func ParseRetryAfter(resp *http.Response) time.Duration {
+	if resp == nil {
+		return 0
+	}
+
+	retryAfter := resp.Header.Get("Retry-After")
+	if retryAfter == "" {
+		return 0
+	}
+
+	// Try parsing as seconds (most common)
+	if seconds, err := strconv.Atoi(retryAfter); err == nil {
+		return time.Duration(seconds) * time.Second
+	}
+
+	// Try parsing as HTTP date
+	if t, err := http.ParseTime(retryAfter); err == nil {
+		duration := time.Until(t)
+		if duration > 0 {
+			return duration
+		}
+	}
+
+	return 0
 }
 
 // doRequest performs an HTTP request to the DigitalOcean API
