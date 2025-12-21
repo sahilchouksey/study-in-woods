@@ -137,6 +137,10 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	batchIngestService := services.NewBatchIngestService(db, notificationService, pyqService)
 	batchIngestHandler := ingest_handlers.NewBatchIngestHandler(batchIngestService)
 
+	// Initialize Batch Document Upload service and handler
+	batchDocumentService := services.NewBatchDocumentService(db, notificationService)
+	batchDocumentUploadHandler := document_handlers.NewBatchDocumentUploadHandler(batchDocumentService)
+
 	// Apply security middleware
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
 	if allowedOrigins == "" {
@@ -237,6 +241,10 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	documents.Delete("/:id", authMiddleware.Required(), documentHandler.DeleteDocument)                     // Protected: Delete document
 	documents.Get("/:id/download", documentHandler.GetDownloadURL)                                          // Public: Get download URL
 	documents.Post("/:id/refresh-status", authMiddleware.Required(), documentHandler.RefreshIndexingStatus) // Protected: Refresh indexing status
+
+	// Batch document upload routes (nested under subjects)
+	documents.Post("/batch-upload", authMiddleware.Required(), batchDocumentUploadHandler.BatchUploadDocuments)         // Protected: Start batch upload
+	documents.Get("/upload-jobs", authMiddleware.Required(), batchDocumentUploadHandler.GetDocumentUploadJobsBySubject) // Protected: List upload jobs for subject
 
 	// ==================== Syllabus Extraction ====================
 

@@ -2,9 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   notificationService,
   batchIngestService,
+  batchDocumentUploadService,
   type ListNotificationsOptions,
   type BatchIngestPaper,
   type IndexingJobStatus,
+  type DocumentType,
 } from '@/lib/api/notifications';
 
 // ============= Notification Queries =============
@@ -371,6 +373,124 @@ export function useBatchIngestManager(subjectId: string | null) {
     reset: () => {
       batchIngest.reset();
       queryClient.invalidateQueries({ queryKey: ['indexing-jobs'] });
+    },
+  };
+}
+
+// ============= Batch Document Upload Hooks =============
+
+/**
+ * Hook to start a batch document upload job
+ */
+export function useBatchUploadDocuments() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ 
+      subjectId, 
+      files, 
+      types 
+    }: { 
+      subjectId: string; 
+      files: File[]; 
+      types?: DocumentType[] 
+    }) => batchDocumentUploadService.startBatchUpload(subjectId, files, types),
+    onSuccess: (data, variables) => {
+      // Invalidate documents queries for this subject
+      queryClient.invalidateQueries({ queryKey: ['documents', 'subject', variables.subjectId] });
+      // Invalidate indexing jobs
+      queryClient.invalidateQueries({ queryKey: ['indexing-jobs', 'subject', variables.subjectId] });
+      queryClient.invalidateQueries({ queryKey: ['document-upload-jobs', 'subject', variables.subjectId] });
+      // Invalidate notifications (new notification will be created)
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+      // Return the job ID for tracking
+      return data;
+    },
+  });
+}
+
+/**
+ * Hook to get document upload jobs for a subject
+ */
+export function useDocumentUploadJobsBySubject(
+  subjectId: string | null,
+  options?: { limit?: number; offset?: number }
+) {
+  return useQuery({
+    queryKey: ['document-upload-jobs', 'subject', subjectId, options],
+    queryFn: () => batchDocumentUploadService.getUploadJobsBySubject(subjectId!, options),
+    enabled: !!subjectId,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+}
+
+/**
+ * Hook that provides batch document upload functionality with job tracking
+ */
+export function useBatchUploadManager(subjectId: string | null) {
+  const queryClient = useQueryClient();
+  const batchUpload = useBatchUploadDocuments();
+  const cancelJob = useCancelIndexingJob();
+
+  // Track active job ID
+  const activeJobId = batchUpload.data?.job_id || null;
+
+  // Determine if we should poll based on job status
+  const shouldPoll = activeJobId !== null && 
+    batchUpload.data?.status !== 'completed' && 
+    batchUpload.data?.status !== 'failed' &&
+    batchUpload.data?.status !== 'cancelled';
+
+  // Get job status with polling when there's an active job
+  const jobStatus = useIndexingJobStatus(activeJobId, shouldPoll);
+
+  // Get all upload jobs for subject
+  const subjectJobs = useDocumentUploadJobsBySubject(subjectId);
+
+  // Check if job is still in a processing state
+  const isJobActive = jobStatus.data?.status === 'pending' || 
+    jobStatus.data?.status === 'processing' || 
+    jobStatus.data?.status === 'kb_indexing';
+
+  return {
+    // Start batch upload
+    startBatchUpload: (files: File[], types?: DocumentType[]) => {
+      if (!subjectId) return;
+      return batchUpload.mutateAsync({ subjectId, files, types });
+    },
+
+    // Cancel active job
+    cancelJob: (jobId: number) => cancelJob.mutate(jobId),
+
+    // Active job info
+    activeJobId,
+    activeJob: jobStatus.data,
+    isProcessing: batchUpload.isPending || isJobActive,
+
+    // Job status
+    status: jobStatus.data?.status,
+    progress: jobStatus.data?.progress || 0,
+    completedItems: jobStatus.data?.completed_items || 0,
+    failedItems: jobStatus.data?.failed_items || 0,
+    totalItems: jobStatus.data?.total_items || 0,
+    items: jobStatus.data?.items || [],
+
+    // All jobs for subject
+    jobs: subjectJobs.data?.jobs || [],
+    totalJobs: subjectJobs.data?.total || 0,
+
+    // States
+    isStarting: batchUpload.isPending,
+    isCancelling: cancelJob.isPending,
+    isLoadingJobs: subjectJobs.isLoading,
+    error: batchUpload.error || jobStatus.error,
+
+    // Reset
+    reset: () => {
+      batchUpload.reset();
+      queryClient.invalidateQueries({ queryKey: ['indexing-jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['document-upload-jobs'] });
     },
   };
 }

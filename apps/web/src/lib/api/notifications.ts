@@ -361,3 +361,109 @@ export const batchIngestService = {
     return response.data.data || { message: 'Job cancelled' };
   },
 };
+
+// ============ BATCH DOCUMENT UPLOAD INTERFACES ============
+
+/**
+ * Document type for batch upload
+ */
+export type DocumentType = 'pyq' | 'book' | 'reference' | 'syllabus' | 'notes';
+
+/**
+ * Batch upload response
+ */
+export interface BatchUploadResponse {
+  job_id: number;
+  status: IndexingJobStatus;
+  total_items: number;
+  message: string;
+}
+
+/**
+ * Batch document upload service
+ */
+export const batchDocumentUploadService = {
+  /**
+   * Start a batch upload job for multiple documents
+   * @param subjectId - The subject ID to upload documents to
+   * @param files - Array of files to upload
+   * @param types - Optional array of document types corresponding to each file (defaults to 'notes')
+   */
+  async startBatchUpload(
+    subjectId: string,
+    files: File[],
+    types?: DocumentType[]
+  ): Promise<BatchUploadResponse> {
+    console.log('[batchDocumentUploadService] startBatchUpload called:', { 
+      subjectId, 
+      fileCount: files.length,
+      files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
+    });
+    
+    const formData = new FormData();
+    
+    // Add files to form data
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+    
+    // Add types if provided
+    if (types && types.length > 0) {
+      types.forEach((type) => {
+        formData.append('types', type);
+      });
+    }
+    
+    const response = await apiClient.post<ApiResponse<BatchUploadResponse>>(
+      `/api/v1/subjects/${subjectId}/documents/batch-upload`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    console.log('[batchDocumentUploadService] startBatchUpload response:', response.data);
+    return response.data.data!;
+  },
+
+  /**
+   * Get document upload jobs for a subject
+   */
+  async getUploadJobsBySubject(
+    subjectId: string,
+    options?: { limit?: number; offset?: number }
+  ): Promise<IndexingJobsListResponse> {
+    const params: Record<string, string> = {};
+    if (options?.limit) params.limit = options.limit.toString();
+    if (options?.offset) params.offset = options.offset.toString();
+
+    const response = await apiClient.get<ApiResponse<IndexingJobsListResponse>>(
+      `/api/v1/subjects/${subjectId}/documents/upload-jobs`,
+      { params }
+    );
+    return response.data.data || { jobs: [], total: 0 };
+  },
+
+  /**
+   * Get indexing job status (reuses the same endpoint as batch ingest)
+   */
+  async getJobStatus(jobId: number): Promise<IndexingJob> {
+    console.log('[batchDocumentUploadService] getJobStatus called for jobId:', jobId);
+    const response = await apiClient.get<ApiResponse<IndexingJob>>(
+      `/api/v1/indexing-jobs/${jobId}`
+    );
+    console.log('[batchDocumentUploadService] getJobStatus response:', response.data);
+    return response.data.data!;
+  },
+
+  /**
+   * Cancel an active upload job (reuses the same endpoint as batch ingest)
+   */
+  async cancelJob(jobId: number): Promise<{ message: string }> {
+    const response = await apiClient.post<ApiResponse<{ message: string }>>(
+      `/api/v1/indexing-jobs/${jobId}/cancel`
+    );
+    return response.data.data || { message: 'Job cancelled' };
+  },
+};

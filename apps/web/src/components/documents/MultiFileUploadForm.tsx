@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { 
   FileText, 
   Upload, 
   AlertCircle, 
   CheckCircle2,
   Plus,
-  Trash2
+  Trash2,
+  X,
+  Clock,
+  Loader2
 } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
@@ -33,14 +36,17 @@ import {
 import { useUploadDocument } from '@/lib/api/hooks/useDocuments';
 import { useExtractSyllabus } from '@/lib/api/hooks/useSyllabus';
 import { useExtractPYQ } from '@/lib/api/hooks/usePYQ';
-import { useNotifications } from '@/providers/notification-provider';
+import { useBatchUploadManager } from '@/lib/api/hooks/useNotifications';
+import { INDEXING_JOB_STATUS_CONFIG, type IndexingJobItemStatus } from '@/lib/api/notifications';
+
+type LocalFileStatus = 'pending' | 'uploading' | 'done' | 'error';
 
 interface LocalFile {
   id: string;
   file: File;
   name: string;
   size: number;
-  status: 'pending' | 'uploading' | 'done' | 'error';
+  status: LocalFileStatus;
   error?: string;
   documentType: DocumentType;
 }
@@ -52,7 +58,12 @@ interface MultiFileUploadFormProps {
   excludeTypes?: DocumentType[];
   /** Default document type for new files */
   defaultType?: DocumentType;
+  /** Use batch upload for multiple files (default: true) */
+  useBatchUpload?: boolean;
 }
+
+// Threshold for using batch upload vs sequential upload
+const BATCH_UPLOAD_THRESHOLD = 1; // Use batch upload for 2+ files
 
 export function MultiFileUploadForm({
   subjectId,
@@ -60,21 +71,61 @@ export function MultiFileUploadForm({
   onSuccess,
   excludeTypes = [],
   defaultType = 'notes',
+  useBatchUpload = true,
 }: MultiFileUploadFormProps) {
-  const { addNotification, updateNotification } = useNotifications();
-  
   const [files, setFiles] = useState<LocalFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [isSequentialUploading, setIsSequentialUploading] = useState(false);
+  const [sequentialProgress, setSequentialProgress] = useState(0);
 
   const uploadDocument = useUploadDocument();
   const extractSyllabus = useExtractSyllabus();
   const extractPYQ = useExtractPYQ();
+  
+  // Batch upload manager
+  const batchManager = useBatchUploadManager(subjectId);
 
   // Available document types (excluding specified ones)
   const availableTypes = (Object.entries(DOCUMENT_TYPE_LABELS) as [DocumentType, string][])
     .filter(([value]) => !excludeTypes.includes(value));
+
+  // Determine if we should use batch upload
+  const shouldUseBatchUpload = useBatchUpload && files.length > BATCH_UPLOAD_THRESHOLD;
+  
+  // Track batch job completion
+  useEffect(() => {
+    if (batchManager.activeJob) {
+      const status = batchManager.activeJob.status;
+      if (status === 'completed' || status === 'partially_completed') {
+        const successCount = batchManager.completedItems;
+        const errorCount = batchManager.failedItems;
+        
+        if (errorCount > 0) {
+          toast.warning(`Upload completed with errors`, {
+            description: `${successCount} succeeded, ${errorCount} failed`,
+          });
+        } else {
+          toast.success(`All ${successCount} documents uploaded`, {
+            description: 'Documents are being indexed and will be available shortly',
+          });
+        }
+        
+        // Clear files and reset after a short delay
+        setTimeout(() => {
+          setFiles([]);
+          batchManager.reset();
+          if (errorCount === 0) {
+            onSuccess?.();
+          }
+        }, 1500);
+      } else if (status === 'failed') {
+        toast.error('Batch upload failed', {
+          description: batchManager.activeJob.error_message || 'An error occurred during upload',
+        });
+        batchManager.reset();
+      }
+    }
+  }, [batchManager.activeJob?.status]);
 
   const handleFiles = useCallback((fileList: FileList | File[]) => {
     const fileArray = Array.from(fileList);
@@ -139,32 +190,20 @@ export function MultiFileUploadForm({
 
   const clearAllFiles = () => {
     setFiles([]);
+    batchManager.reset();
   };
 
-  const handleUploadAll = async () => {
+  // Sequential upload (for single file or when batch is disabled)
+  const handleSequentialUpload = async () => {
     if (files.length === 0) return;
 
-    setIsUploading(true);
-    setProgress(0);
+    setIsSequentialUploading(true);
+    setSequentialProgress(0);
 
     const totalFiles = files.length;
     let completedFiles = 0;
     let successCount = 0;
     let errorCount = 0;
-
-    // Create notification for tracking
-    const notification = addNotification(
-      'in_progress',
-      'document_upload',
-      `Uploading ${totalFiles} document${totalFiles > 1 ? 's' : ''}`,
-      `Processing documents for ${subjectName}...`,
-      {
-        subjectId,
-        subjectName,
-        totalItems: totalFiles,
-        completedItems: 0,
-      }
-    );
 
     for (const localFile of files) {
       // Update status to uploading
@@ -214,23 +253,8 @@ export function MultiFileUploadForm({
       }
 
       completedFiles++;
-      setProgress((completedFiles / totalFiles) * 100);
-
-      updateNotification(notification.id, {
-        metadata: {
-          ...notification.metadata,
-          completedItems: completedFiles,
-          progress: (completedFiles / totalFiles) * 100,
-        },
-      });
+      setSequentialProgress((completedFiles / totalFiles) * 100);
     }
-
-    // Update notification to complete
-    updateNotification(notification.id, {
-      type: errorCount > 0 ? 'warning' : 'success',
-      title: `Upload ${errorCount > 0 ? 'Partially Complete' : 'Complete'}`,
-      message: `${successCount} document${successCount !== 1 ? 's' : ''} uploaded${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
-    });
 
     // Show toast
     if (errorCount > 0) {
@@ -243,7 +267,7 @@ export function MultiFileUploadForm({
       });
     }
 
-    setIsUploading(false);
+    setIsSequentialUploading(false);
 
     // Clear successful files after a delay
     setTimeout(() => {
@@ -254,19 +278,121 @@ export function MultiFileUploadForm({
     }, 1500);
   };
 
+  // Batch upload (for multiple files)
+  const handleBatchUpload = async () => {
+    if (files.length === 0) return;
+
+    try {
+      const fileObjects = files.map(f => f.file);
+      const types = files.map(f => f.documentType);
+      
+      await batchManager.startBatchUpload(fileObjects, types);
+      
+      // Update all files to uploading status
+      setFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const })));
+      
+      toast.info('Batch upload started', {
+        description: `Processing ${files.length} documents in background...`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start batch upload';
+      toast.error('Batch upload failed', { description: errorMessage });
+    }
+  };
+
+  // Main upload handler - decides between batch and sequential
+  const handleUploadAll = async () => {
+    if (shouldUseBatchUpload) {
+      await handleBatchUpload();
+    } else {
+      await handleSequentialUpload();
+    }
+  };
+
   const pendingCount = files.filter(f => f.status === 'pending').length;
+  const isUploading = isSequentialUploading || batchManager.isProcessing;
+  const progress = batchManager.isProcessing ? batchManager.progress : sequentialProgress;
+
+  // Get item status from batch job
+  const getItemStatus = (fileName: string): IndexingJobItemStatus | null => {
+    if (!batchManager.activeJob?.items) return null;
+    const item = batchManager.activeJob.items.find(
+      i => i.title === fileName || i.source_url.includes(fileName)
+    );
+    return item?.status || null;
+  };
+
+  // Get status badge for a file during batch upload
+  const getFileBatchStatus = (localFile: LocalFile) => {
+    if (!batchManager.isProcessing && !batchManager.activeJob) return null;
+    
+    const itemStatus = getItemStatus(localFile.name);
+    if (!itemStatus) return null;
+
+    const statusConfig: Record<IndexingJobItemStatus, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+      pending: { label: 'Queued', variant: 'outline' },
+      downloading: { label: 'Processing', variant: 'secondary' },
+      uploading: { label: 'Uploading', variant: 'secondary' },
+      indexing: { label: 'Indexing', variant: 'default' },
+      completed: { label: 'Done', variant: 'default' },
+      failed: { label: 'Failed', variant: 'destructive' },
+    };
+
+    const config = statusConfig[itemStatus];
+    return (
+      <Badge variant={config.variant} className="text-xs">
+        {config.label}
+      </Badge>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full">
       {/* Scrollable Content Area */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+        {/* Batch Job Status Banner */}
+        {batchManager.isProcessing && batchManager.activeJob && (
+          <Card className="border-primary/50 bg-primary/5">
+            <CardContent className="py-3 px-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm font-medium">
+                    {INDEXING_JOB_STATUS_CONFIG[batchManager.activeJob.status]?.label || 'Processing'}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => batchManager.cancelJob(batchManager.activeJobId!)}
+                  disabled={batchManager.isCancelling}
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Cancel
+                </Button>
+              </div>
+              <Progress value={batchManager.progress} className="h-2 mb-2" />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {batchManager.completedItems} of {batchManager.totalItems} completed
+                </span>
+                {batchManager.failedItems > 0 && (
+                  <span className="text-destructive">
+                    {batchManager.failedItems} failed
+                  </span>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Drop Zone */}
         <div
           className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             dragActive
               ? 'border-primary bg-primary/5'
               : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-          }`}
+          } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -278,6 +404,7 @@ export function MultiFileUploadForm({
             multiple
             accept={ALLOWED_FILE_EXTENSIONS.join(',')}
             onChange={handleFileInput}
+            disabled={isUploading}
           />
           <label htmlFor="multi-file-upload" className="cursor-pointer">
             <Plus className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
@@ -297,9 +424,17 @@ export function MultiFileUploadForm({
         {files.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">
-                {files.length} file{files.length !== 1 ? 's' : ''} selected
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {files.length} file{files.length !== 1 ? 's' : ''} selected
+                </span>
+                {shouldUseBatchUpload && !isUploading && (
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Batch upload
+                  </Badge>
+                )}
+              </div>
               {!isUploading && (
                 <Button variant="ghost" size="sm" onClick={clearAllFiles}>
                   Clear All
@@ -323,8 +458,11 @@ export function MultiFileUploadForm({
                         {localFile.status === 'error' && (
                           <AlertCircle className="h-4 w-4 text-destructive" />
                         )}
-                        {localFile.status === 'pending' && (
+                        {localFile.status === 'pending' && !batchManager.isProcessing && (
                           <FileText className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        {localFile.status === 'pending' && batchManager.isProcessing && (
+                          <LoadingSpinner size="sm" className="text-primary" />
                         )}
                       </div>
 
@@ -343,7 +481,7 @@ export function MultiFileUploadForm({
                         </div>
                       </div>
 
-                      {/* Type Selector */}
+                      {/* Type Selector (only for pending, non-batch mode) */}
                       {localFile.status === 'pending' && !isUploading && (
                         <Select
                           value={localFile.documentType}
@@ -362,8 +500,11 @@ export function MultiFileUploadForm({
                         </Select>
                       )}
 
-                      {/* Status Badge (for non-pending) */}
-                      {localFile.status !== 'pending' && (
+                      {/* Batch Status Badge */}
+                      {batchManager.isProcessing && getFileBatchStatus(localFile)}
+
+                      {/* Status Badge (for non-pending, non-batch) */}
+                      {localFile.status !== 'pending' && !batchManager.isProcessing && (
                         <Badge
                           variant={
                             localFile.status === 'done'
@@ -401,8 +542,8 @@ export function MultiFileUploadForm({
       {/* Sticky Footer - Progress and Upload Button */}
       {files.length > 0 && (
         <div className="flex-shrink-0 pt-4 mt-4 border-t bg-background sticky bottom-0 space-y-3">
-          {/* Progress */}
-          {isUploading && (
+          {/* Progress (for sequential upload) */}
+          {isSequentialUploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span>Uploading...</span>
@@ -421,15 +562,23 @@ export function MultiFileUploadForm({
             {isUploading ? (
               <>
                 <InlineSpinner className="mr-2" />
-                Uploading...
+                {batchManager.isProcessing ? 'Processing...' : 'Uploading...'}
               </>
             ) : (
               <>
                 <Upload className="mr-2 h-4 w-4" />
                 Upload {pendingCount} Document{pendingCount !== 1 ? 's' : ''}
+                {shouldUseBatchUpload && ' (Batch)'}
               </>
             )}
           </Button>
+          
+          {/* Batch upload info */}
+          {shouldUseBatchUpload && !isUploading && (
+            <p className="text-xs text-center text-muted-foreground">
+              Multiple files will be processed in background with OCR support
+            </p>
+          )}
         </div>
       )}
     </div>
