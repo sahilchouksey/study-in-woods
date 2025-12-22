@@ -15,7 +15,12 @@ type APIServer struct {
 
 func NewAPIServer(listenAddress string) *APIServer {
 	return &APIServer{
-		app:           fiber.New(),
+		app: fiber.New(fiber.Config{
+			// Increase body limit for file uploads (100MB)
+			BodyLimit: 100 * 1024 * 1024,
+			// Increase read buffer for large multipart forms
+			ReadBufferSize: 8192,
+		}),
 		listenAddress: listenAddress,
 	}
 }
