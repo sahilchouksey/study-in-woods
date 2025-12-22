@@ -87,17 +87,17 @@ function DocumentCard({
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow !py-0 !gap-0">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
+      <Card className="hover:shadow-md transition-shadow !py-0 !gap-0 overflow-hidden">
+        <CardContent className="p-4 overflow-hidden">
+          <div className="flex items-start gap-3 overflow-hidden">
             {/* File Icon */}
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
               <FileText className="h-5 w-5 text-primary" />
             </div>
 
             {/* File Info */}
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate" title={document.filename}>
+            <div className="flex-1 min-w-0 overflow-hidden">
+              <p className="font-medium text-sm truncate max-w-full" title={document.filename}>
                 {document.filename}
               </p>
               <div className="flex flex-wrap items-center gap-2 mt-1">
