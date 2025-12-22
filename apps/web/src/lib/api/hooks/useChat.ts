@@ -410,7 +410,6 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
         },
         // Citations from knowledge base
         onCitations: (citations) => {
-          console.log('[useChat] Citations received:', citations.length, citations);
           setStreamingCitations(citations);
         },
         // Token usage info

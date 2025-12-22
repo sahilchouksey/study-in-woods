@@ -505,14 +505,12 @@ export const chatService = {
                 
                 case 'citations':
                   // Citations arrived - parse JSON array
-                  console.log('[SSE] Citations event received, data length:', eventData.length);
                   if (callbacks.onCitations) {
                     try {
                       const citations = JSON.parse(eventData) as Citation[];
-                      console.log('[SSE] Parsed citations:', citations.length);
                       callbacks.onCitations(citations);
-                    } catch (e) {
-                      console.warn('[SSE] Failed to parse citations:', e, eventData.substring(0, 200));
+                    } catch {
+                      console.warn('[SSE] Failed to parse citations:', eventData.substring(0, 200));
                     }
                   }
                   continue;

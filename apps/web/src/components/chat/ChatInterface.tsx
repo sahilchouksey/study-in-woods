@@ -770,13 +770,15 @@ function extractInlineCitations(content: string): string[] {
  * Returns an array of 0-based indices for citations that appear as [[C1]], [[C2]], etc.
  */
 function extractCitedIndices(content: string): number[] {
-  const matches = content.match(/\[\[C(\d+)\]\]/g);
+  // Match both [[C#]] and 【C#】 formats (AI may use either)
+  const matches = content.match(/(?:\[\[C|\u3010C)(\d+)(?:\]\]|\u3011)/g);
   if (!matches) return [];
   
   // Extract unique indices (convert from 1-based to 0-based)
   const indices = new Set<number>();
   for (const match of matches) {
-    const num = parseInt(match.replace(/\[\[C|\]\]/g, ''), 10);
+    // Extract number from either format
+    const num = parseInt(match.replace(/[\[\]【】C]/g, ''), 10);
     if (!isNaN(num) && num > 0) {
       indices.add(num - 1); // Convert to 0-based index
     }
@@ -1041,7 +1043,8 @@ function ContentWithCitations({ content, messageId, citations = [], onCitationCl
     const replaceCitations = (node: Node) => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent || '';
-        const citationRegex = /\[\[C(\d+)\]\]/g;
+        // Match both [[C#]] and 【C#】 formats (AI may use either)
+        const citationRegex = /(?:\[\[C|【C)(\d+)(?:\]\]|】)/g;
         
         if (citationRegex.test(text)) {
           // Reset regex
@@ -1392,9 +1395,6 @@ function StreamingMessageBubble({
   // Use a temporary ID for streaming messages
   const streamingMessageId = `streaming-${sessionId}`;
   
-  // Debug logging for citations
-  console.log('[StreamingMessageBubble] Render with citations:', citations?.length, 'isActivelyStreaming:', isActivelyStreaming);
-  
   // Local state for expanded citation during streaming - only one at a time
   const [expandedCitation, setExpandedCitation] = useState<string | null>(null);
 
@@ -1508,10 +1508,6 @@ function StreamingMessageBubble({
         {/* Content Section - show cursor only while actively streaming */}
         {content ? (
           <div className={isActivelyStreaming ? "streaming-cursor" : ""}>
-            {(() => {
-              console.log('[StreamingMessageBubble] Content section - citations check:', citations?.length, 'using ContentWithCitations:', citations && citations.length > 0);
-              return null;
-            })()}
             {citations && citations.length > 0 ? (
               <ContentWithCitations
                 content={content}
