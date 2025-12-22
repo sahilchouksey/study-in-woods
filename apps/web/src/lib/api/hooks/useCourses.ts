@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   universityService,
   courseService,
@@ -125,5 +125,30 @@ export function useSubjectsByCourse(courseId: string | null, semester: string | 
     queryFn: () => subjectService.getSubjectsByCourse(courseId!, semester!),
     enabled: !!courseId && !!semester,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * Hook to toggle subject star status (admin only)
+ */
+export function useToggleSubjectStar() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      semesterId,
+      subjectId,
+      isStarred,
+    }: {
+      semesterId: string;
+      subjectId: string;
+      isStarred: boolean;
+    }) => subjectService.toggleSubjectStar(semesterId, subjectId, isStarred),
+    onSuccess: (_, variables) => {
+      // Invalidate subjects query to refetch with new order
+      queryClient.invalidateQueries({ queryKey: ['subjects', variables.semesterId] });
+      // Also invalidate chat context since subjects are shown there too
+      queryClient.invalidateQueries({ queryKey: ['chat', 'context'] });
+    },
   });
 }

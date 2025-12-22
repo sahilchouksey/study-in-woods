@@ -52,6 +52,7 @@ type Subject struct {
 	Description       string         `gorm:"type:text" json:"description"`
 	KnowledgeBaseUUID string         `gorm:"type:varchar(100)" json:"knowledge_base_uuid"`
 	AgentUUID         string         `gorm:"type:varchar(100)" json:"agent_uuid"`
+	IsStarred         bool           `gorm:"default:false" json:"is_starred"` // Starred subjects appear first in lists
 
 	// Encrypted Agent API Key storage (AES-256-GCM)
 	// The API key is encrypted before storage and never exposed in JSON responses

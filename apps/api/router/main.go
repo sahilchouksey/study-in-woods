@@ -217,12 +217,13 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Subjects routes (nested under semesters)
 	subjects := api.Group("/semesters/:semester_id/subjects")
-	subjects.Get("/", subjectHandler.ListSubjects)                                        // Public: List subjects for a semester
-	subjects.Get("/:id", subjectHandler.GetSubject)                                       // Public: Get subject by ID
-	subjects.Post("/", authMiddleware.Required(), subjectHandler.CreateSubject)           // Protected: Create subject with AI
-	subjects.Put("/:id", authMiddleware.Required(), subjectHandler.UpdateSubject)         // Protected: Update subject
-	subjects.Delete("/", authMiddleware.RequireAdmin(), subjectHandler.DeleteAllSubjects) // Admin: Delete all subjects in semester
-	subjects.Delete("/:id", authMiddleware.Required(), subjectHandler.DeleteSubject)      // Protected: Delete subject with cleanup
+	subjects.Get("/", subjectHandler.ListSubjects)                                               // Public: List subjects for a semester
+	subjects.Get("/:id", subjectHandler.GetSubject)                                              // Public: Get subject by ID
+	subjects.Post("/", authMiddleware.Required(), subjectHandler.CreateSubject)                  // Protected: Create subject with AI
+	subjects.Put("/:id", authMiddleware.Required(), subjectHandler.UpdateSubject)                // Protected: Update subject
+	subjects.Patch("/:id/star", authMiddleware.RequireAdmin(), subjectHandler.ToggleSubjectStar) // Admin: Toggle subject star status
+	subjects.Delete("/", authMiddleware.RequireAdmin(), subjectHandler.DeleteAllSubjects)        // Admin: Delete all subjects in semester
+	subjects.Delete("/:id", authMiddleware.Required(), subjectHandler.DeleteSubject)             // Protected: Delete subject with cleanup
 
 	// Semester-level syllabus upload (creates subjects automatically)
 	semesterSyllabus := api.Group("/semesters/:semester_id/syllabus")

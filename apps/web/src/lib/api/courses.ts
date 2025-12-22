@@ -70,6 +70,7 @@ export interface Subject {
   code: string;
   description?: string;
   credits?: number;
+  is_starred?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -405,5 +406,20 @@ export const subjectService = {
       { params: { semester } }
     );
     return response.data.data || [];
+  },
+
+  /**
+   * Toggle subject star status (admin only)
+   */
+  async toggleSubjectStar(
+    semesterId: string,
+    subjectId: string,
+    isStarred: boolean
+  ): Promise<Subject> {
+    const response = await apiClient.patch<ApiResponse<Subject>>(
+      `/api/v1/semesters/${semesterId}/subjects/${subjectId}/star`,
+      { is_starred: isStarred }
+    );
+    return response.data.data!;
   },
 };

@@ -177,6 +177,7 @@ export interface SubjectOption {
   knowledge_base_uuid: string;
   agent_uuid: string;
   has_syllabus: boolean;
+  is_starred: boolean;
 }
 
 /**

@@ -44,6 +44,11 @@ type UpdateSubjectRequest struct {
 	Description string `json:"description" validate:"omitempty,max=1000"`
 }
 
+// ToggleStarRequest represents the request body for toggling subject star status
+type ToggleStarRequest struct {
+	IsStarred bool `json:"is_starred"`
+}
+
 // ListSubjects handles GET /api/v1/semesters/:semester_id/subjects
 func (h *SubjectHandler) ListSubjects(c *fiber.Ctx) error {
 	semesterID := c.Params("semester_id")
@@ -81,10 +86,10 @@ func (h *SubjectHandler) ListSubjects(c *fiber.Ctx) error {
 	offset := (page - 1) * limit
 	pagination := response.CalculatePagination(page, limit, total)
 
-	// Get subjects with pagination
+	// Get subjects with pagination (starred subjects first, then by code)
 	var subjects []model.Subject
 	if err := query.Preload("Semester.Course").
-		Order("code ASC").
+		Order("is_starred DESC, code ASC").
 		Limit(limit).
 		Offset(offset).
 		Find(&subjects).Error; err != nil {
@@ -373,4 +378,51 @@ func (h *SubjectHandler) DeleteAllSubjects(c *fiber.Ctx) error {
 
 	responseMsg["message"] = "All subjects deleted successfully"
 	return response.Success(c, responseMsg)
+}
+
+// ToggleSubjectStar handles PATCH /api/v1/semesters/:semester_id/subjects/:id/star
+// Only administrators can toggle star status
+func (h *SubjectHandler) ToggleSubjectStar(c *fiber.Ctx) error {
+	semesterID := c.Params("semester_id")
+	id := c.Params("id")
+
+	// Get user from context
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+
+	// Authorization: Admin only
+	if user.Role != "admin" {
+		return response.Forbidden(c, "Only administrators can star/unstar subjects")
+	}
+
+	// Parse request
+	var req ToggleStarRequest
+	if err := c.BodyParser(&req); err != nil {
+		return response.BadRequest(c, "Invalid request body")
+	}
+
+	// Find subject
+	var subject model.Subject
+	if err := h.db.Where("semester_id = ? AND id = ?", semesterID, id).
+		First(&subject).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return response.NotFound(c, "Subject not found")
+		}
+		return response.InternalServerError(c, "Failed to fetch subject")
+	}
+
+	// Update star status
+	subject.IsStarred = req.IsStarred
+	if err := h.db.Save(&subject).Error; err != nil {
+		return response.InternalServerError(c, "Failed to update subject star status")
+	}
+
+	// Preload relationships for response
+	if err := h.db.Preload("Semester.Course").First(&subject, subject.ID).Error; err != nil {
+		return response.InternalServerError(c, "Failed to load subject details")
+	}
+
+	return response.Success(c, subject)
 }

@@ -3,14 +3,14 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useQueryState, parseAsString, parseAsInteger } from 'nuqs';
 import { useQueryClient } from '@tanstack/react-query';
-import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { BookOpen, GraduationCap, MapPin, CheckCircle, BookMarked, FileText, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Star } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUniversities, useCoursesByUniversity, useSemesters, useSubjects } from '@/lib/api/hooks/useCourses';
+import { useUniversities, useCoursesByUniversity, useSemesters, useSubjects, useToggleSubjectStar } from '@/lib/api/hooks/useCourses';
 import { useAuth } from '@/providers/auth-provider';
 import { useUpdateProfile } from '@/lib/api/hooks/useAuth';
 import { useDeleteUniversity, useDeleteCourse, useDeleteSemester, useDeleteSubject, useDeleteAllSubjects } from '@/lib/api/hooks/useAdminMutations';
@@ -86,6 +86,7 @@ export function CoursesTab() {
   const deleteSemesterMutation = useDeleteSemester();
   const deleteSubjectMutation = useDeleteSubject();
   const deleteAllSubjectsMutation = useDeleteAllSubjects();
+  const toggleSubjectStarMutation = useToggleSubjectStar();
 
   // Dialog states
   const [universityDialog, setUniversityDialog] = useState<{ open: boolean; university: University | null }>({
@@ -815,15 +816,45 @@ export function CoursesTab() {
                       >
                         <CardHeader>
                           <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <CardTitle className="text-lg">{subject.name}</CardTitle>
-                              <CardDescription className="mt-1">
-                                {subject.code && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {subject.code}
-                                  </Badge>
-                                )}
-                              </CardDescription>
+                            <div className="flex-1 flex items-start gap-2">
+                              {/* Star indicator for all users */}
+                              {subject.is_starred && !isAdmin && (
+                                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-0.5" />
+                              )}
+                              {/* Star toggle button for admin */}
+                              {isAdmin && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-7 w-7 flex-shrink-0 ${
+                                    subject.is_starred 
+                                      ? 'text-yellow-500 hover:text-yellow-600' 
+                                      : 'text-muted-foreground hover:text-yellow-500'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleSubjectStarMutation.mutate({
+                                      semesterId: selectedSemesterId!,
+                                      subjectId: subject.id,
+                                      isStarred: !subject.is_starred,
+                                    });
+                                  }}
+                                  disabled={toggleSubjectStarMutation.isPending}
+                                  title={subject.is_starred ? 'Remove from starred' : 'Add to starred'}
+                                >
+                                  <Star className={`h-4 w-4 ${subject.is_starred ? 'fill-current' : ''}`} />
+                                </Button>
+                              )}
+                              <div>
+                                <CardTitle className="text-lg">{subject.name}</CardTitle>
+                                <CardDescription className="mt-1">
+                                  {subject.code && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {subject.code}
+                                    </Badge>
+                                  )}
+                                </CardDescription>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               <Button

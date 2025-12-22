@@ -9,7 +9,8 @@ import {
   FileText, 
   MessageSquare, 
   AlertCircle,
-  Sparkles 
+  Sparkles,
+  Star
 } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Button } from '@/components/ui/button';
@@ -269,6 +270,9 @@ export function ChatSetup({ onSessionCreated }: ChatSetupProps) {
                 {subjects.map((subject) => (
                   <SelectItem key={subject.id} value={subject.id.toString()}>
                     <span className="flex items-center gap-2">
+                      {subject.is_starred && (
+                        <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                      )}
                       {subject.name}
                       <span className="text-muted-foreground">({subject.code})</span>
                       {subject.has_syllabus && (
@@ -292,9 +296,14 @@ export function ChatSetup({ onSessionCreated }: ChatSetupProps) {
           {selectedSubject && (
             <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
               <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-semibold">{selectedSubject.name}</h4>
-                  <p className="text-sm text-muted-foreground">Code: {selectedSubject.code}</p>
+                <div className="flex items-start gap-2">
+                  {selectedSubject.is_starred && (
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <h4 className="font-semibold">{selectedSubject.name}</h4>
+                    <p className="text-sm text-muted-foreground">Code: {selectedSubject.code}</p>
+                  </div>
                 </div>
                 <Badge variant="outline">{selectedSubject.credits} Credits</Badge>
               </div>

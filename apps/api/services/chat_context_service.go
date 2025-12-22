@@ -55,6 +55,7 @@ type SubjectOption struct {
 	KnowledgeBaseUUID string `json:"knowledge_base_uuid"`
 	AgentUUID         string `json:"agent_uuid"`
 	HasSyllabus       bool   `json:"has_syllabus"`
+	IsStarred         bool   `json:"is_starred"`
 }
 
 // ChatContextResponse contains all dropdown data for chat setup
@@ -123,10 +124,11 @@ func (s *ChatContextService) GetChatContext(ctx context.Context) (*ChatContextRe
 	}
 
 	// Get subjects that have BOTH KnowledgeBaseUUID AND AgentUUID set (non-empty)
+	// Sort by starred first, then by name
 	var subjects []model.Subject
 	if err := s.db.Where("knowledge_base_uuid != '' AND knowledge_base_uuid IS NOT NULL").
 		Where("agent_uuid != '' AND agent_uuid IS NOT NULL").
-		Order("semester_id ASC, name ASC").
+		Order("semester_id ASC, is_starred DESC, name ASC").
 		Find(&subjects).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch subjects: %w", err)
 	}
@@ -166,6 +168,7 @@ func (s *ChatContextService) GetChatContext(ctx context.Context) (*ChatContextRe
 			KnowledgeBaseUUID: sub.KnowledgeBaseUUID,
 			AgentUUID:         sub.AgentUUID,
 			HasSyllabus:       hasSyllabusMap[sub.ID],
+			IsStarred:         sub.IsStarred,
 		})
 	}
 
@@ -240,12 +243,13 @@ func (s *ChatContextService) GetSemestersByCourse(ctx context.Context, courseID 
 
 // GetSubjectsBySemester retrieves subjects for a specific semester
 // Only returns subjects that have both KnowledgeBaseUUID and AgentUUID set
+// Starred subjects are sorted first
 func (s *ChatContextService) GetSubjectsBySemester(ctx context.Context, semesterID uint) ([]SubjectOption, error) {
 	var subjects []model.Subject
 	if err := s.db.Where("semester_id = ?", semesterID).
 		Where("knowledge_base_uuid != '' AND knowledge_base_uuid IS NOT NULL").
 		Where("agent_uuid != '' AND agent_uuid IS NOT NULL").
-		Order("name ASC").
+		Order("is_starred DESC, name ASC").
 		Find(&subjects).Error; err != nil {
 		return nil, fmt.Errorf("failed to fetch subjects: %w", err)
 	}
@@ -284,6 +288,7 @@ func (s *ChatContextService) GetSubjectsBySemester(ctx context.Context, semester
 			KnowledgeBaseUUID: sub.KnowledgeBaseUUID,
 			AgentUUID:         sub.AgentUUID,
 			HasSyllabus:       hasSyllabusMap[sub.ID],
+			IsStarred:         sub.IsStarred,
 		}
 	}
 
