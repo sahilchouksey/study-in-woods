@@ -400,44 +400,12 @@ export const batchDocumentUploadService = {
       files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
     });
     
-    // Enhanced file validation - check if files are valid and readable
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      console.log(`[batchDocumentUploadService] Validating file ${i}:`, {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        lastModified: file.lastModified,
-        isBlob: file instanceof Blob,
-        isFile: file instanceof File,
-      });
-      
-      // Verify file has content by reading first few bytes
-      if (file.size === 0) {
-        console.error(`[batchDocumentUploadService] File ${file.name} has zero size!`);
-        throw new Error(`File "${file.name}" is empty (0 bytes)`);
-      }
-      
-      // Try to read a slice to verify file is still accessible
-      try {
-        const slice = file.slice(0, Math.min(100, file.size));
-        const buffer = await slice.arrayBuffer();
-        console.log(`[batchDocumentUploadService] File ${file.name} readable check:`, {
-          sliceSize: slice.size,
-          bufferBytes: buffer.byteLength,
-          firstBytes: Array.from(new Uint8Array(buffer.slice(0, 10))).map(b => b.toString(16).padStart(2, '0')).join(' ')
-        });
-      } catch (readError) {
-        console.error(`[batchDocumentUploadService] File ${file.name} is not readable:`, readError);
-        throw new Error(`File "${file.name}" is no longer accessible. Please re-select the file.`);
-      }
-    }
-    
+    // Build FormData immediately - don't do any async operations before this
     const formData = new FormData();
     
     // Add files to form data
     files.forEach((file, index) => {
-      console.log(`[batchDocumentUploadService] Appending file ${index} to FormData:`, file.name, file.size);
+      console.log(`[batchDocumentUploadService] Appending file ${index}:`, file.name, file.size);
       formData.append('files', file, file.name);
     });
     
@@ -446,16 +414,6 @@ export const batchDocumentUploadService = {
       types.forEach((type) => {
         formData.append('types', type);
       });
-    }
-    
-    // Debug FormData contents
-    console.log('[batchDocumentUploadService] FormData entries:');
-    for (const [key, value] of formData.entries()) {
-      if (value instanceof File) {
-        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
-      } else {
-        console.log(`  ${key}: ${value}`);
-      }
     }
     
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
