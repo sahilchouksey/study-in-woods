@@ -42,6 +42,12 @@ var (
 		MaxPages:         2000,
 		DocumentTypeName: "notes",
 	}
+
+	BookLimits = PDFLimits{
+		MaxFileSizeMB:    100,
+		MaxPages:         2000,
+		DocumentTypeName: "textbook",
+	}
 )
 
 // ValidationResult contains the result of PDF validation

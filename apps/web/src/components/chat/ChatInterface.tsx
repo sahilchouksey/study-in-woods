@@ -46,6 +46,31 @@ import {
 } from '@/lib/ai-settings-storage';
 
 /**
+ * Escape pipe characters inside math expressions to prevent breaking markdown tables.
+ * In math, | is used for conditional probability (P(A|B)) but conflicts with table syntax.
+ * This replaces | with \mid inside math delimiters.
+ */
+function escapePipesInMath(content: string): string {
+  if (!content) return content;
+  
+  // Process $$ ... $$ blocks (display math)
+  let result = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, inner) => {
+    // Replace standalone | with \mid (but not \| which is already escaped)
+    const escaped = inner.replace(/(?<!\\)\|/g, '\\mid ');
+    return `$$${escaped}$$`;
+  });
+  
+  // Process single $ ... $ inline math (be careful not to match $$)
+  // Match $...$ where the content doesn't start or end with $
+  result = result.replace(/\$(?!\$)((?:[^$]|\\\$)+?)\$(?!\$)/g, (match, inner) => {
+    const escaped = inner.replace(/(?<!\\)\|/g, '\\mid ');
+    return `$${escaped}$`;
+  });
+  
+  return result;
+}
+
+/**
  * Process LaTeX math expressions for Streamdown compatibility
  * 
  * Streamdown requires $$ (double dollar) for math delimiters.
@@ -53,6 +78,7 @@ import {
  * - Single $ delimiters → $$ (double dollar)
  * - \[...\] → $$...$$ (display math notation)
  * - \(...\) → $$...$$ (inline math notation)
+ * - Escapes | inside math to prevent table breakage
  */
 function processLatexForStreamdown(content: string): string {
   if (!content) return content;
@@ -88,6 +114,9 @@ function processLatexForStreamdown(content: string): string {
     /\[\s*(\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})\s*\]/g, 
     (_, inner) => `\n$$\n${inner}\n$$\n`
   );
+  
+  // Escape pipe characters inside math expressions to prevent table breakage
+  processed = escapePipesInMath(processed);
   
   return processed;
 }
@@ -1160,12 +1189,12 @@ function ContentWithCitations({ content, messageId, citations = [], onCitationCl
   }, [content, messageId, citations, onCitationClick]);
   
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="overflow-hidden max-w-full">
       <Streamdown 
         mode={isStreaming ? "streaming" : "static"}
         parseIncompleteMarkdown
         controls={{ table: true, code: true }}
-        className="w-full text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+        className="w-full max-w-full overflow-hidden text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
         remarkPlugins={[
           remarkGfm,
           [remarkMath, { singleDollarTextMath: false }]
@@ -1265,7 +1294,7 @@ function MessageBubble({
               mode={isStreaming ? "streaming" : "static"}
               parseIncompleteMarkdown
               controls={{ table: true, code: true }}
-              className="w-full text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+              className="w-full max-w-full overflow-hidden text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
               remarkPlugins={[
                 remarkGfm,
                 [remarkMath, { singleDollarTextMath: false }]
@@ -1362,6 +1391,9 @@ function StreamingMessageBubble({
 }: StreamingMessageBubbleProps) {
   // Use a temporary ID for streaming messages
   const streamingMessageId = `streaming-${sessionId}`;
+  
+  // Debug logging for citations
+  console.log('[StreamingMessageBubble] Render with citations:', citations?.length, 'isActivelyStreaming:', isActivelyStreaming);
   
   // Local state for expanded citation during streaming - only one at a time
   const [expandedCitation, setExpandedCitation] = useState<string | null>(null);
@@ -1476,6 +1508,10 @@ function StreamingMessageBubble({
         {/* Content Section - show cursor only while actively streaming */}
         {content ? (
           <div className={isActivelyStreaming ? "streaming-cursor" : ""}>
+            {(() => {
+              console.log('[StreamingMessageBubble] Content section - citations check:', citations?.length, 'using ContentWithCitations:', citations && citations.length > 0);
+              return null;
+            })()}
             {citations && citations.length > 0 ? (
               <ContentWithCitations
                 content={content}
@@ -1489,7 +1525,7 @@ function StreamingMessageBubble({
                 mode="streaming"
                 parseIncompleteMarkdown
                 controls={{ table: true, code: true }}
-                className="w-full text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
+                className="w-full max-w-full overflow-hidden text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0"
                 remarkPlugins={[
                   remarkGfm,
                   [remarkMath, { singleDollarTextMath: false }]

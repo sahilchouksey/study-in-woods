@@ -394,6 +394,46 @@
   letter-spacing: 0;
 }
 
+/* KaTeX Math Rendering - Overflow Handling */
+/* Display math (block equations) */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  padding: 0.5rem 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Inline math */
+.katex {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* Streamdown container overflow handling during streaming */
+[data-streamdown] {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Handle raw math text that hasn't been parsed yet during streaming */
+.streaming-markdown,
+[data-streamdown="root"] {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+/* Fallback for incomplete/unparsed math expressions during streaming */
+.streaming-markdown p,
+[data-streamdown="paragraph"] {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
 /* Table wrapper for horizontal scroll on mobile */
 .streaming-markdown [data-streamdown="table-wrapper"] {
   overflow-x: auto;

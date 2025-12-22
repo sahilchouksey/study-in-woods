@@ -25,6 +25,75 @@ type ChatHandler struct {
 	chatService *services.ChatService
 }
 
+// CitationSummary is a lightweight version of Citation for list views
+// Truncates page_content to reduce payload size
+type CitationSummary struct {
+	ID           string  `json:"id"`
+	PageContent  string  `json:"page_content"` // Truncated to ~200 chars
+	Score        float64 `json:"score"`
+	Filename     string  `json:"filename"`
+	DataSourceID string  `json:"data_source_id"`
+}
+
+// MessageResponse is a lightweight message DTO for list views
+type MessageResponse struct {
+	ID            uint              `json:"id"`
+	CreatedAt     string            `json:"created_at"`
+	UpdatedAt     string            `json:"updated_at"`
+	SessionID     uint              `json:"session_id"`
+	SubjectID     uint              `json:"subject_id"`
+	UserID        uint              `json:"user_id"`
+	Role          string            `json:"role"`
+	Content       string            `json:"content"`
+	Citations     []CitationSummary `json:"citations,omitempty"`
+	TokensUsed    int               `json:"tokens_used"`
+	ModelUsed     string            `json:"model_used"`
+	ResponseTime  int               `json:"response_time_ms"`
+	IsStreamed    bool              `json:"is_streamed"`
+	Status        string            `json:"status"`
+	CitationCount int               `json:"citation_count"` // Total citations (for UI to know if more available)
+}
+
+// truncateString truncates a string to maxLen and adds "..." if truncated
+func truncateString(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen] + "..."
+}
+
+// toMessageResponse converts a ChatMessage to a lightweight MessageResponse
+func toMessageResponse(m model.ChatMessage) MessageResponse {
+	citations := make([]CitationSummary, 0, len(m.Citations))
+	for _, c := range m.Citations {
+		citations = append(citations, CitationSummary{
+			ID:           c.ID,
+			PageContent:  truncateString(c.PageContent, 200), // Truncate to 200 chars
+			Score:        c.Score,
+			Filename:     c.Filename,
+			DataSourceID: c.DataSourceID,
+		})
+	}
+
+	return MessageResponse{
+		ID:            m.ID,
+		CreatedAt:     m.CreatedAt.Format("2006-01-02T15:04:05.999999Z07:00"),
+		UpdatedAt:     m.UpdatedAt.Format("2006-01-02T15:04:05.999999Z07:00"),
+		SessionID:     m.SessionID,
+		SubjectID:     m.SubjectID,
+		UserID:        m.UserID,
+		Role:          string(m.Role),
+		Content:       m.Content,
+		Citations:     citations,
+		TokensUsed:    m.TokensUsed,
+		ModelUsed:     m.ModelUsed,
+		ResponseTime:  m.ResponseTime,
+		IsStreamed:    m.IsStreamed,
+		Status:        string(m.Status),
+		CitationCount: len(m.Citations),
+	}
+}
+
 // NewChatHandler creates a new chat handler
 func NewChatHandler(db *gorm.DB, chatService *services.ChatService) *ChatHandler {
 	return &ChatHandler{
@@ -212,6 +281,8 @@ func (h *ChatHandler) ArchiveSession(c *fiber.Ctx) error {
 }
 
 // GetMessages handles GET /api/v1/chat/sessions/:id/messages
+// Returns messages with truncated citation content for performance
+// Use full=true query param to get full citation content (slower)
 func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -224,6 +295,9 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	// Parse pagination
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
+
+	// Parse full flag - if true, return full citation content
+	fullContent := c.Query("full", "false") == "true"
 
 	// Parse session ID
 	sessionID, err := strconv.ParseUint(id, 10, 32)
@@ -241,7 +315,62 @@ func (h *ChatHandler) GetMessages(c *fiber.Ctx) error {
 	// Calculate pagination
 	pagination := response.CalculatePagination(page, limit, total)
 
-	return response.Paginated(c, messages, pagination)
+	// Return full messages or lightweight responses
+	if fullContent {
+		return response.Paginated(c, messages, pagination)
+	}
+
+	// Convert to lightweight response with truncated citations
+	lightweightMessages := make([]MessageResponse, 0, len(messages))
+	for _, m := range messages {
+		lightweightMessages = append(lightweightMessages, toMessageResponse(m))
+	}
+
+	return response.Paginated(c, lightweightMessages, pagination)
+}
+
+// GetMessageCitations handles GET /api/v1/chat/sessions/:sessionId/messages/:messageId/citations
+// Returns full citation content for a specific message
+func (h *ChatHandler) GetMessageCitations(c *fiber.Ctx) error {
+	sessionID := c.Params("id")
+	messageID := c.Params("messageId")
+
+	// Get user from context
+	user, ok := middleware.GetUser(c)
+	if !ok || user == nil {
+		return response.Unauthorized(c, "User not authenticated")
+	}
+
+	// Parse IDs
+	sessID, err := strconv.ParseUint(sessionID, 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "Invalid session ID")
+	}
+
+	msgID, err := strconv.ParseUint(messageID, 10, 32)
+	if err != nil {
+		return response.BadRequest(c, "Invalid message ID")
+	}
+
+	// Get message with full citations
+	var message model.ChatMessage
+	if err := h.db.Where("id = ? AND session_id = ?", msgID, sessID).First(&message).Error; err != nil {
+		return response.NotFound(c, "Message not found")
+	}
+
+	// Verify user owns the session
+	var session model.ChatSession
+	if err := h.db.First(&session, sessID).Error; err != nil {
+		return response.NotFound(c, "Session not found")
+	}
+	if session.UserID != user.ID {
+		return response.Forbidden(c, "Access denied")
+	}
+
+	return response.Success(c, fiber.Map{
+		"message_id": message.ID,
+		"citations":  message.Citations,
+	})
 }
 
 // SendMessage handles POST /api/v1/chat/sessions/:id/messages

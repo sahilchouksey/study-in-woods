@@ -125,6 +125,19 @@ export function useInfiniteChatMessages(sessionId: string | null, pageSize: numb
 }
 
 /**
+ * Hook to fetch full citations for a specific message
+ * Citations are truncated by default in message list for performance
+ */
+export function useMessageCitations(sessionId: string | null, messageId: string | null) {
+  return useQuery({
+    queryKey: ['chat', 'citations', sessionId, messageId],
+    queryFn: () => chatService.getMessageCitations(sessionId!, messageId!),
+    enabled: !!sessionId && !!messageId,
+    staleTime: 60000, // Cache for 1 minute
+  });
+}
+
+/**
  * Hook to create a new chat session
  */
 export function useCreateChatSession() {
@@ -397,6 +410,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
         },
         // Citations from knowledge base
         onCitations: (citations) => {
+          console.log('[useChat] Citations received:', citations.length, citations);
           setStreamingCitations(citations);
         },
         // Token usage info

@@ -90,9 +90,23 @@ export const ALLOWED_FILE_EXTENSIONS = [
 ];
 
 /**
- * Maximum file size (50MB)
+ * Maximum file size by document type
+ * Notes and Books: 100MB, 2000 pages (for textbooks)
+ * PYQ and Syllabus: 50MB, 50 pages
  */
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;
+export const MAX_FILE_SIZE_BY_TYPE: Record<DocumentType, number> = {
+  notes: 100 * 1024 * 1024,    // 100MB
+  book: 100 * 1024 * 1024,     // 100MB
+  pyq: 50 * 1024 * 1024,       // 50MB
+  syllabus: 50 * 1024 * 1024,  // 50MB
+  reference: 100 * 1024 * 1024, // 100MB
+};
+
+/**
+ * Maximum file size (100MB) - default for general use
+ * @deprecated Use MAX_FILE_SIZE_BY_TYPE for type-specific limits
+ */
+export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 /**
  * Document type display labels

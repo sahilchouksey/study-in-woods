@@ -1347,6 +1347,8 @@ func (s *ChatService) StreamMessageEnhancedWithKeys(ctx context.Context, req Enh
 
 // GetSessionMessages retrieves all messages for a session
 func (s *ChatService) GetSessionMessages(ctx context.Context, sessionID uint, userID uint, limit int, offset int) ([]model.ChatMessage, int64, error) {
+	start := time.Now()
+
 	// Verify session exists and belongs to user
 	var session model.ChatSession
 	if err := s.db.First(&session, sessionID).Error; err != nil {
@@ -1355,20 +1357,25 @@ func (s *ChatService) GetSessionMessages(ctx context.Context, sessionID uint, us
 		}
 		return nil, 0, fmt.Errorf("failed to fetch session: %w", err)
 	}
+	log.Printf("[GetSessionMessages] Session check took %v for session %d", time.Since(start), sessionID)
 
 	if session.UserID != userID {
 		return nil, 0, fmt.Errorf("unauthorized: session does not belong to user")
 	}
 
 	// Get total count
+	countStart := time.Now()
 	var total int64
 	if err := s.db.Model(&model.ChatMessage{}).
 		Where("session_id = ?", sessionID).
 		Count(&total).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to count messages: %w", err)
 	}
+	log.Printf("[GetSessionMessages] Count took %v, total: %d", time.Since(countStart), total)
 
-	// Get messages
+	// Get messages - select all fields but be aware of large JSONB
+	// For production, consider pagination-aware loading or lazy loading citations
+	queryStart := time.Now()
 	var messages []model.ChatMessage
 	query := s.db.Where("session_id = ?", sessionID).
 		Order("created_at ASC")
@@ -1380,6 +1387,16 @@ func (s *ChatService) GetSessionMessages(ctx context.Context, sessionID uint, us
 	if err := query.Find(&messages).Error; err != nil {
 		return nil, 0, fmt.Errorf("failed to fetch messages: %w", err)
 	}
+
+	// Log sizes for debugging
+	totalCitationSize := 0
+	for _, m := range messages {
+		if m.Citations != nil {
+			totalCitationSize += len(m.Citations)
+		}
+	}
+	log.Printf("[GetSessionMessages] Query took %v, returned %d messages with %d total citations", time.Since(queryStart), len(messages), totalCitationSize)
+	log.Printf("[GetSessionMessages] Total time: %v for session %d", time.Since(start), sessionID)
 
 	return messages, total, nil
 }

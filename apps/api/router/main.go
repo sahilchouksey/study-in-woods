@@ -343,8 +343,9 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	chat.Post("/sessions/:id/archive", chatHandler.ArchiveSession) // Protected: Archive session
 
 	// Message management
-	chat.Get("/sessions/:id/messages", chatHandler.GetMessages)                   // Protected: Get session messages
-	chat.Post("/sessions/:id/messages", chatRateLimiter, chatHandler.SendMessage) // Protected: Send message (rate limited)
+	chat.Get("/sessions/:id/messages", chatHandler.GetMessages)                              // Protected: Get session messages (truncated citations by default)
+	chat.Get("/sessions/:id/messages/:messageId/citations", chatHandler.GetMessageCitations) // Protected: Get full citations for a message
+	chat.Post("/sessions/:id/messages", chatRateLimiter, chatHandler.SendMessage)            // Protected: Send message (rate limited)
 
 	// Chat history routes (for history page with infinite scroll)
 	chatHistory := chat.Group("/history")

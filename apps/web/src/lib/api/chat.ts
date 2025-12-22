@@ -14,6 +14,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   citations?: Citation[];
+  citation_count?: number; // Total citations count (citations may be truncated)
   tokens_used?: number;
   model_used?: string;
   response_time?: number;
@@ -373,6 +374,16 @@ export const chatService = {
   },
 
   /**
+   * Get full citations for a specific message
+   * Use this when user wants to see full citation content
+   */
+  async getMessageCitations(sessionId: string, messageId: string): Promise<Citation[]> {
+    const url = `/api/v1/chat/sessions/${sessionId}/messages/${messageId}/citations`;
+    const response = await apiClient.get<ApiResponse<{ message_id: number; citations: Citation[] }>>(url);
+    return response.data.data?.citations || [];
+  },
+
+  /**
    * Send a message (non-streaming)
    */
   async sendMessage(sessionId: string, content: string): Promise<SendMessageResponse> {
@@ -494,12 +505,14 @@ export const chatService = {
                 
                 case 'citations':
                   // Citations arrived - parse JSON array
+                  console.log('[SSE] Citations event received, data length:', eventData.length);
                   if (callbacks.onCitations) {
                     try {
                       const citations = JSON.parse(eventData) as Citation[];
+                      console.log('[SSE] Parsed citations:', citations.length);
                       callbacks.onCitations(citations);
-                    } catch {
-                      console.warn('[SSE] Failed to parse citations:', eventData);
+                    } catch (e) {
+                      console.warn('[SSE] Failed to parse citations:', e, eventData.substring(0, 200));
                     }
                   }
                   continue;
