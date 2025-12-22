@@ -1064,6 +1064,16 @@ function ContentWithCitations({ content, messageId, citations = [], onCitationCl
             const citationNum = parseInt(match[1], 10);
             const citationIndex = citationNum - 1;
             
+            // Check if citation exists (AI may hallucinate non-existent citations)
+            const isValidCitation = citationIndex >= 0 && citationIndex < citations.length;
+            
+            // If invalid citation, just show as plain text and skip
+            if (!isValidCitation) {
+              fragment.appendChild(document.createTextNode(match[0]));
+              lastIndex = match.index + match[0].length;
+              continue;
+            }
+            
             // Get citation info for tooltip
             const citation = citations[citationIndex];
             const citationTitle = citation?.filename || citation?.source || `Citation ${citationNum}`;
