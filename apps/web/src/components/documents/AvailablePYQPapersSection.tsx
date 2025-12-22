@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { AlertCircle, RefreshCw, Filter, FileSearch, CheckCircle2, Clock, Check, Upload } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { AlertCircle, RefreshCw, Filter, FileSearch, CheckCircle2, Clock, Check, Upload, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,20 +80,45 @@ export function AvailablePYQPapersSection({
   
   // Multi-select state
   const [selectedPapers, setSelectedPapers] = useState<Map<string, AvailablePYQPaper>>(new Map());
+  
+  // Search input state (for UI) and debounced search (for API)
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  
+  // Debounce search input - wait 400ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   const course = extractCourseFromCode(subjectCode);
   const semester = extractSemesterFromCode(subjectCode);
+  
+  // Build API filters - include search query if provided
+  const apiFilters = useMemo(() => ({
+    ...filters,
+    course,
+    semester,
+    // Only include search if user has typed something
+    ...(debouncedSearch.trim() ? { search: debouncedSearch.trim() } : {}),
+  }), [filters, course, semester, debouncedSearch]);
 
   const {
     data: searchData,
     isLoading,
+    isFetching,
     error,
     refetch,
   } = useSearchAvailablePYQs(
     subjectId, 
-    { ...filters, course, semester }, 
+    apiFilters, 
     true
   );
+  
+  // Check if we're in "universal search" mode (searching across all PYQs)
+  const isUniversalSearch = debouncedSearch.trim().length > 0;
 
   const handleRefresh = () => {
     refetch();
@@ -140,6 +165,7 @@ export function AvailablePYQPapersSection({
     }
   };
 
+  // Papers from API (already filtered by backend if search query provided)
   const matchedPapers = searchData?.matched_papers || [];
   const unmatchedPapers = searchData?.unmatched_papers || [];
   const totalPapers = matchedPapers.length + unmatchedPapers.length;
@@ -199,6 +225,39 @@ export function AvailablePYQPapersSection({
           </Button>
         </div>
       </div>
+
+      {/* Universal Search - searches across ALL available PYQs via API */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search all PYQs by subject name, code, year..."
+          className="pl-9 h-9 pr-9"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
+        {searchInput && (
+          <button
+            onClick={() => setSearchInput('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Clear search</span>
+          </button>
+        )}
+        {isFetching && searchInput && (
+          <div className="absolute right-10 top-1/2 -translate-y-1/2">
+            <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />
+          </div>
+        )}
+      </div>
+      
+      {/* Search mode indicator */}
+      {isUniversalSearch && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Search className="h-3 w-3" />
+          <span>Searching all PYQs for "{debouncedSearch}"</span>
+        </div>
+      )}
 
       {/* Filters (collapsible) */}
       {showFilters && (
@@ -301,8 +360,8 @@ export function AvailablePYQPapersSection({
           </Card>
         )}
 
-        {/* Empty state */}
-        {!isLoading && !error && totalPapers === 0 && (
+        {/* Empty state - no papers for this subject */}
+        {!isLoading && !error && totalPapers === 0 && !isUniversalSearch && (
           <Card>
             <CardContent className="py-8 text-center">
               <FileSearch className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
@@ -310,6 +369,30 @@ export function AvailablePYQPapersSection({
               <p className="text-xs text-muted-foreground mt-1">
                 No PYQ papers available for {subjectName} ({subjectCode})
               </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Try searching for papers by name above
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* No search results */}
+        {!isLoading && !error && totalPapers === 0 && isUniversalSearch && (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Search className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+              <p className="text-sm font-medium text-muted-foreground">No matching papers</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                No papers found matching "{debouncedSearch}"
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSearchInput('')}
+                className="mt-3"
+              >
+                Clear search
+              </Button>
             </CardContent>
           </Card>
         )}
@@ -320,8 +403,12 @@ export function AvailablePYQPapersSection({
             {/* Summary */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                Found {totalPapers} papers{' '}
-                {searchData?.ingested_count ? `(${searchData.ingested_count} already added)` : ''}
+                {isUniversalSearch ? (
+                  <>Found {totalPapers} papers matching "{debouncedSearch}"</>
+                ) : (
+                  <>Found {totalPapers} papers{' '}
+                  {searchData?.ingested_count ? `(${searchData.ingested_count} already added)` : ''}</>
+                )}
               </span>
               {selectedPapers.size > 0 && (
                 <Badge variant="default" className="text-xs">
