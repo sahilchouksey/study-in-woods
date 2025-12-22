@@ -63,7 +63,7 @@ export function SubjectDocumentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         <DialogHeader className="pb-4 border-b">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
@@ -137,9 +137,9 @@ export function SubjectDocumentsDialog({
             )}
           </TabsList>
 
-          <div className="flex-1 min-h-0 mt-4">
-            <TabsContent value="documents" className="h-full m-0">
-              <ScrollArea className="h-[350px] pr-4">
+          <div className="flex-1 min-h-0 mt-4 overflow-hidden">
+            <TabsContent value="documents" className="h-full m-0 overflow-hidden">
+              <ScrollArea className="h-full max-h-[350px] pr-4">
                 <DocumentList
                   subjectId={subject.id}
                   userId={userId}
@@ -148,19 +148,19 @@ export function SubjectDocumentsDialog({
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="syllabus" className="h-full m-0">
+            <TabsContent value="syllabus" className="h-full m-0 overflow-auto">
               <SyllabusTab subjectId={subject.id} />
             </TabsContent>
 
-            <TabsContent value="pyqs" className="h-full m-0">
+            <TabsContent value="pyqs" className="h-full m-0 overflow-auto">
               <PYQTab subjectId={subject.id} subjectCode={subject.code} subjectName={subject.name} isAdmin={isAdmin} />
             </TabsContent>
 
             {/* Upload tab content - Admin only */}
             {isAdmin && (
-              <TabsContent value="upload" className="h-full m-0">
+              <TabsContent value="upload" className="h-full m-0 overflow-auto">
                 {isAuthenticated ? (
-                  <div className="h-[350px]">
+                  <div className="h-full max-h-[350px] overflow-auto">
                     <MultiFileUploadForm
                       subjectId={subject.id}
                       subjectName={subject.name}
