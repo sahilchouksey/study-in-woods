@@ -87,7 +87,7 @@ function DocumentCard({
 
   return (
     <>
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className="hover:shadow-md transition-shadow !py-0 !gap-0">
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* File Icon */}
