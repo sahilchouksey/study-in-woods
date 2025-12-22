@@ -400,11 +400,45 @@ export const batchDocumentUploadService = {
       files: files.map(f => ({ name: f.name, size: f.size, type: f.type }))
     });
     
+    // Enhanced file validation - check if files are valid and readable
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(`[batchDocumentUploadService] Validating file ${i}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified,
+        isBlob: file instanceof Blob,
+        isFile: file instanceof File,
+      });
+      
+      // Verify file has content by reading first few bytes
+      if (file.size === 0) {
+        console.error(`[batchDocumentUploadService] File ${file.name} has zero size!`);
+        throw new Error(`File "${file.name}" is empty (0 bytes)`);
+      }
+      
+      // Try to read a slice to verify file is still accessible
+      try {
+        const slice = file.slice(0, Math.min(100, file.size));
+        const buffer = await slice.arrayBuffer();
+        console.log(`[batchDocumentUploadService] File ${file.name} readable check:`, {
+          sliceSize: slice.size,
+          bufferBytes: buffer.byteLength,
+          firstBytes: Array.from(new Uint8Array(buffer.slice(0, 10))).map(b => b.toString(16).padStart(2, '0')).join(' ')
+        });
+      } catch (readError) {
+        console.error(`[batchDocumentUploadService] File ${file.name} is not readable:`, readError);
+        throw new Error(`File "${file.name}" is no longer accessible. Please re-select the file.`);
+      }
+    }
+    
     const formData = new FormData();
     
     // Add files to form data
-    files.forEach((file) => {
-      formData.append('files', file);
+    files.forEach((file, index) => {
+      console.log(`[batchDocumentUploadService] Appending file ${index} to FormData:`, file.name, file.size);
+      formData.append('files', file, file.name);
     });
     
     // Add types if provided
@@ -414,23 +448,47 @@ export const batchDocumentUploadService = {
       });
     }
     
-    // IMPORTANT: Don't set Content-Type manually for FormData!
-    // Axios will automatically set it with the correct boundary parameter.
-    // Setting it manually breaks the multipart parsing on the server.
-    const response = await apiClient.post<ApiResponse<BatchUploadResponse>>(
-      `/api/v1/subjects/${subjectId}/documents/batch-upload`,
-      formData,
+    // Debug FormData contents
+    console.log('[batchDocumentUploadService] FormData entries:');
+    for (const [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`  ${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.log(`  ${key}: ${value}`);
+      }
+    }
+    
+    // Use native fetch instead of Axios for file uploads
+    // This avoids potential issues with Axios interceptors/transforms
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    
+    console.log('[batchDocumentUploadService] Using native fetch to upload');
+    console.log('[batchDocumentUploadService] API URL:', `${API_URL}/api/v1/subjects/${subjectId}/documents/batch-upload`);
+    
+    const fetchResponse = await fetch(
+      `${API_URL}/api/v1/subjects/${subjectId}/documents/batch-upload`,
       {
-        // Increase timeout for large file uploads (5 minutes)
-        timeout: 300000,
-        // Let axios set the Content-Type automatically for FormData
+        method: 'POST',
         headers: {
-          'Content-Type': undefined as unknown as string,
+          // Don't set Content-Type - browser will set it automatically with boundary
+          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
         },
+        body: formData,
       }
     );
-    console.log('[batchDocumentUploadService] startBatchUpload response:', response.data);
-    return response.data.data!;
+    
+    console.log('[batchDocumentUploadService] Fetch response status:', fetchResponse.status);
+    
+    if (!fetchResponse.ok) {
+      const errorText = await fetchResponse.text();
+      console.error('[batchDocumentUploadService] Upload failed:', fetchResponse.status, errorText);
+      throw new Error(`Upload failed: ${fetchResponse.status} - ${errorText}`);
+    }
+    
+    const responseData = await fetchResponse.json() as ApiResponse<BatchUploadResponse>;
+    console.log('[batchDocumentUploadService] startBatchUpload response:', responseData);
+    return responseData.data!;
   },
 
   /**
