@@ -63,8 +63,8 @@ export function SubjectDocumentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent className="sm:max-w-2xl !max-h-[80vh] !flex !flex-col">
+        <DialogHeader className="pb-4 border-b shrink-0">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 shrink-0">
               <BookOpen className="h-5 w-5 text-primary" />
@@ -100,9 +100,9 @@ export function SubjectDocumentsDialog({
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as 'documents' | 'syllabus' | 'pyqs' | 'upload')}
-          className="flex-1 flex flex-col min-h-0"
+          className="flex-1 flex flex-col min-h-0 overflow-hidden"
         >
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
+          <TabsList className={`grid w-full shrink-0 ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'}`}>
             <TabsTrigger value="documents" className="gap-1.5">
               <List className="h-4 w-4" />
               <span className="hidden sm:inline">Docs</span>
@@ -138,38 +138,44 @@ export function SubjectDocumentsDialog({
           </TabsList>
 
           <div className="flex-1 min-h-0 mt-4 overflow-hidden">
-            <TabsContent value="documents" className="h-full m-0 overflow-hidden">
-              <ScrollArea className="h-full max-h-[350px] pr-4">
-                <DocumentList
-                  subjectId={subject.id}
-                  userId={userId}
-                  isAdmin={isAdmin}
-                />
+            <TabsContent value="documents" className="mt-0 h-full data-[state=active]:flex data-[state=active]:flex-col">
+              <ScrollArea className="h-[300px]">
+                <div className="pr-4">
+                  <DocumentList
+                    subjectId={subject.id}
+                    userId={userId}
+                    isAdmin={isAdmin}
+                  />
+                </div>
               </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="syllabus" className="h-full m-0 overflow-auto">
-              <SyllabusTab subjectId={subject.id} />
+            <TabsContent value="syllabus" className="mt-0 h-full">
+              <ScrollArea className="h-[300px]">
+                <SyllabusTab subjectId={subject.id} />
+              </ScrollArea>
             </TabsContent>
 
-            <TabsContent value="pyqs" className="h-full m-0 overflow-auto">
-              <PYQTab subjectId={subject.id} subjectCode={subject.code} subjectName={subject.name} isAdmin={isAdmin} />
+            <TabsContent value="pyqs" className="mt-0 h-full">
+              <ScrollArea className="h-[300px]">
+                <PYQTab subjectId={subject.id} subjectCode={subject.code} subjectName={subject.name} isAdmin={isAdmin} />
+              </ScrollArea>
             </TabsContent>
 
             {/* Upload tab content - Admin only */}
             {isAdmin && (
-              <TabsContent value="upload" className="h-full m-0 overflow-auto">
+              <TabsContent value="upload" className="mt-0 h-full">
                 {isAuthenticated ? (
-                  <div className="h-full max-h-[350px] overflow-auto">
+                  <ScrollArea className="h-[300px]">
                     <MultiFileUploadForm
                       subjectId={subject.id}
                       subjectName={subject.name}
                       onSuccess={() => setActiveTab('documents')}
                       excludeTypes={['syllabus']}
                     />
-                  </div>
+                  </ScrollArea>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-[350px] text-center text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center h-[300px] text-center text-muted-foreground">
                     <FolderOpen className="h-12 w-12 mb-3 opacity-50" />
                     <p className="font-medium">Login Required</p>
                     <p className="text-sm mt-1">
