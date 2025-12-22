@@ -76,10 +76,31 @@ func (h *BatchDocumentUploadHandler) BatchUploadDocuments(c *fiber.Ctx) error {
 			return response.BadRequest(c, "Invalid file type: "+fileHeader.Filename+". Supported: PDF, DOCX, DOC, TXT, MD, CSV, XLSX, XLS, PPTX, PPT, HTML, JSON")
 		}
 
+		// Get document type for this file FIRST (needed for validation limits)
+		docType := model.DocumentTypeNotes // Default to notes
+		if i < len(typeValues) && typeValues[i] != "" {
+			parsedType := model.DocumentType(typeValues[i])
+			if isValidDocumentType(parsedType) {
+				docType = parsedType
+			}
+		}
+
 		// For PDF files, validate size and page count
 		if strings.HasSuffix(filename, ".pdf") {
-			// Use default limits for batch uploads (can be customized based on type)
-			validation, err := pdfvalidation.ValidatePDFFile(fileHeader, pdfvalidation.DefaultLimits)
+			// Select appropriate limits based on document type
+			var limits pdfvalidation.PDFLimits
+			switch docType {
+			case model.DocumentTypeSyllabus:
+				limits = pdfvalidation.SyllabusLimits
+			case model.DocumentTypePYQ:
+				limits = pdfvalidation.PYQLimits
+			case model.DocumentTypeNotes, model.DocumentTypeBook:
+				limits = pdfvalidation.NotesLimits // 2000 pages for notes/books
+			default:
+				limits = pdfvalidation.DefaultLimits
+			}
+
+			validation, err := pdfvalidation.ValidatePDFFile(fileHeader, limits)
 			if err != nil {
 				return response.BadRequest(c, "Failed to validate PDF "+fileHeader.Filename+": "+err.Error())
 			}
@@ -87,19 +108,13 @@ func (h *BatchDocumentUploadHandler) BatchUploadDocuments(c *fiber.Ctx) error {
 				return response.BadRequest(c, "Invalid PDF "+fileHeader.Filename+": "+validation.Error)
 			}
 		} else {
-			// Non-PDF files: validate file size (max 50MB)
-			const maxFileSize = 50 * 1024 * 1024 // 50MB
-			if fileHeader.Size > maxFileSize {
-				return response.BadRequest(c, "File "+fileHeader.Filename+" exceeds maximum size of 50MB")
+			// Non-PDF files: validate file size (max 100MB for notes, 50MB for others)
+			maxFileSize := int64(50 * 1024 * 1024) // 50MB default
+			if docType == model.DocumentTypeNotes || docType == model.DocumentTypeBook {
+				maxFileSize = 100 * 1024 * 1024 // 100MB for notes/books
 			}
-		}
-
-		// Get document type for this file
-		docType := model.DocumentTypeNotes // Default to notes
-		if i < len(typeValues) && typeValues[i] != "" {
-			parsedType := model.DocumentType(typeValues[i])
-			if isValidDocumentType(parsedType) {
-				docType = parsedType
+			if fileHeader.Size > maxFileSize {
+				return response.BadRequest(c, "File "+fileHeader.Filename+" exceeds maximum size")
 			}
 		}
 
