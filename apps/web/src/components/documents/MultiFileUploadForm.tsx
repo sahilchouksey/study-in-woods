@@ -444,9 +444,9 @@ export function MultiFileUploadForm({
 
             <div className="space-y-2">
               {files.map((localFile) => (
-                <Card key={localFile.id} className="overflow-hidden">
+                <Card key={localFile.id} className="overflow-hidden !py-0 !gap-0">
                   <CardContent className="py-2 px-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 w-full overflow-hidden">
                       {/* Status Icon */}
                       <div className="shrink-0">
                         {localFile.status === 'uploading' && (
@@ -466,10 +466,10 @@ export function MultiFileUploadForm({
                         )}
                       </div>
 
-                      {/* File Info */}
-                      <div className="flex-1 min-w-0">
+                      {/* File Info - use w-0 flex-1 trick for truncation */}
+                      <div className="flex-1 w-0 min-w-0">
                         <p className="text-sm font-medium truncate">{localFile.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-xs text-muted-foreground">
                             {formatFileSize(localFile.size)}
                           </span>
@@ -487,7 +487,7 @@ export function MultiFileUploadForm({
                           value={localFile.documentType}
                           onValueChange={(v) => updateFileType(localFile.id, v as DocumentType)}
                         >
-                          <SelectTrigger className="w-[130px] h-8 text-xs">
+                          <SelectTrigger className="w-[100px] h-7 text-xs shrink-0">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>

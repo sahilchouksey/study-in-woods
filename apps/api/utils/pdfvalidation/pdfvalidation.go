@@ -38,8 +38,8 @@ var (
 	}
 
 	NotesLimits = PDFLimits{
-		MaxFileSizeMB:    50,
-		MaxPages:         50,
+		MaxFileSizeMB:    100,
+		MaxPages:         2000,
 		DocumentTypeName: "notes",
 	}
 )
