@@ -458,37 +458,98 @@ export const batchDocumentUploadService = {
       }
     }
     
-    // Use native fetch instead of Axios for file uploads
-    // This avoids potential issues with Axios interceptors/transforms
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
     const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const url = `${API_URL}/api/v1/subjects/${subjectId}/documents/batch-upload`;
     
-    console.log('[batchDocumentUploadService] Using native fetch to upload');
-    console.log('[batchDocumentUploadService] API URL:', `${API_URL}/api/v1/subjects/${subjectId}/documents/batch-upload`);
+    console.log('[batchDocumentUploadService] Using XMLHttpRequest to upload');
+    console.log('[batchDocumentUploadService] API URL:', url);
     
-    const fetchResponse = await fetch(
-      `${API_URL}/api/v1/subjects/${subjectId}/documents/batch-upload`,
-      {
-        method: 'POST',
-        headers: {
-          // Don't set Content-Type - browser will set it automatically with boundary
-          ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-        },
-        body: formData,
+    // Use XMLHttpRequest for better control over file uploads
+    // This avoids issues with fetch() and large file uploads being cancelled
+    return new Promise<BatchUploadResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('POST', url, true);
+      
+      // Set auth header
+      if (accessToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
       }
-    );
-    
-    console.log('[batchDocumentUploadService] Fetch response status:', fetchResponse.status);
-    
-    if (!fetchResponse.ok) {
-      const errorText = await fetchResponse.text();
-      console.error('[batchDocumentUploadService] Upload failed:', fetchResponse.status, errorText);
-      throw new Error(`Upload failed: ${fetchResponse.status} - ${errorText}`);
-    }
-    
-    const responseData = await fetchResponse.json() as ApiResponse<BatchUploadResponse>;
-    console.log('[batchDocumentUploadService] startBatchUpload response:', responseData);
-    return responseData.data!;
+      // Don't set Content-Type - browser will set it with boundary for FormData
+      
+      // Track upload progress
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          console.log(`[batchDocumentUploadService] Upload progress: ${percentComplete}% (${event.loaded}/${event.total} bytes)`);
+        }
+      };
+      
+      xhr.upload.onloadstart = () => {
+        console.log('[batchDocumentUploadService] Upload started');
+      };
+      
+      xhr.upload.onloadend = () => {
+        console.log('[batchDocumentUploadService] Upload ended');
+      };
+      
+      xhr.upload.onerror = (event) => {
+        console.error('[batchDocumentUploadService] Upload error:', event);
+        reject(new Error('Upload failed: Network error'));
+      };
+      
+      xhr.upload.onabort = () => {
+        console.error('[batchDocumentUploadService] Upload aborted!');
+        reject(new Error('Upload was aborted'));
+      };
+      
+      xhr.onreadystatechange = () => {
+        console.log(`[batchDocumentUploadService] XHR readyState: ${xhr.readyState}, status: ${xhr.status}`);
+        
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          console.log('[batchDocumentUploadService] XHR completed, status:', xhr.status);
+          console.log('[batchDocumentUploadService] Response:', xhr.responseText);
+          
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const responseData = JSON.parse(xhr.responseText) as ApiResponse<BatchUploadResponse>;
+              console.log('[batchDocumentUploadService] Parsed response:', responseData);
+              resolve(responseData.data!);
+            } catch (e) {
+              reject(new Error(`Failed to parse response: ${xhr.responseText}`));
+            }
+          } else if (xhr.status === 0) {
+            // Status 0 means request was cancelled/aborted
+            reject(new Error('Request was cancelled or blocked (status 0). Check CORS or network.'));
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+          }
+        }
+      };
+      
+      xhr.onerror = () => {
+        console.error('[batchDocumentUploadService] XHR error event');
+        reject(new Error('Network error during upload'));
+      };
+      
+      xhr.onabort = () => {
+        console.error('[batchDocumentUploadService] XHR abort event');
+        reject(new Error('Upload was aborted'));
+      };
+      
+      xhr.ontimeout = () => {
+        console.error('[batchDocumentUploadService] XHR timeout');
+        reject(new Error('Upload timed out'));
+      };
+      
+      // Set a long timeout for large files (10 minutes)
+      xhr.timeout = 600000;
+      
+      console.log('[batchDocumentUploadService] Sending XHR request...');
+      xhr.send(formData);
+      console.log('[batchDocumentUploadService] XHR.send() called');
+    });
   },
 
   /**

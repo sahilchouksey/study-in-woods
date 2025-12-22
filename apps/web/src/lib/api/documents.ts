@@ -167,19 +167,53 @@ export const documentService = {
     formData.append('file', file);
     formData.append('type', type);
 
-    // IMPORTANT: Don't set Content-Type manually for FormData!
-    // Axios will automatically set it with the correct boundary parameter.
-    const response = await apiClient.post<ApiResponse<UploadDocumentResponse>>(
-      `/api/v1/subjects/${subjectId}/documents`,
-      formData,
-      {
-        headers: {
-          'Content-Type': undefined as unknown as string,
-        },
-        timeout: 120000, // 2 minutes for upload
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+    const url = `${API_URL}/api/v1/subjects/${subjectId}/documents`;
+
+    console.log('[documentService] uploadDocument called:', { subjectId, fileName: file.name, fileSize: file.size, type });
+
+    // Use XMLHttpRequest for reliable file uploads
+    return new Promise<UploadDocumentResponse>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      
+      if (accessToken) {
+        xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
       }
-    );
-    return response.data.data!;
+      
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          console.log(`[documentService] Upload progress: ${percent}%`);
+        }
+      };
+      
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+          console.log('[documentService] XHR done, status:', xhr.status);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText) as ApiResponse<UploadDocumentResponse>;
+              resolve(data.data!);
+            } catch (e) {
+              reject(new Error(`Failed to parse response: ${xhr.responseText}`));
+            }
+          } else if (xhr.status === 0) {
+            reject(new Error('Request cancelled or network error'));
+          } else {
+            reject(new Error(`Upload failed: ${xhr.status} - ${xhr.responseText}`));
+          }
+        }
+      };
+      
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.onabort = () => reject(new Error('Upload aborted'));
+      xhr.ontimeout = () => reject(new Error('Upload timed out'));
+      xhr.timeout = 300000; // 5 minutes
+      
+      xhr.send(formData);
+    });
   },
 
   /**
