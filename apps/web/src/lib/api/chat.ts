@@ -571,6 +571,29 @@ export const chatService = {
                   }
                   continue;
                 
+                case 'partial':
+                  // Partial event - contains accumulated state, check for errors
+                  try {
+                    const partialData = JSON.parse(eventData);
+                    // Check if partial contains an error (backend stream error)
+                    if (partialData.error_message && partialData.error_message !== '') {
+                      console.warn('[SSE] Stream error in partial event:', partialData.error_message);
+                      // If we have content, complete with what we have
+                      if (partialData.message_id) {
+                        callbacks.onComplete({ 
+                          user_message_id: 0, 
+                          assistant_message_id: partialData.message_id 
+                        });
+                      } else {
+                        callbacks.onError(partialData.error_message);
+                      }
+                    }
+                    // Otherwise ignore partial events (they're just state updates)
+                  } catch {
+                    console.warn('[SSE] Failed to parse partial event:', eventData.substring(0, 200));
+                  }
+                  continue;
+                
                 default:
                   // Fallback: try to parse as JSON for legacy support
                   try {

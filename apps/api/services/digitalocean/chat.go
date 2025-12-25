@@ -385,6 +385,10 @@ func (c *Client) StreamChatCompletion(ctx context.Context, req ChatCompletionReq
 
 	// Read SSE stream
 	scanner := bufio.NewScanner(resp.Body)
+	// Increase buffer size to 4MB to handle large JSON payloads from DO API
+	// Default 64KB is too small and causes "token too long" errors
+	const maxScannerBuffer = 4 * 1024 * 1024 // 4MB
+	scanner.Buffer(make([]byte, 0, maxScannerBuffer), maxScannerBuffer)
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -698,6 +702,10 @@ func (c *Client) doStreamRequest(ctx context.Context, req AgentChatRequest, call
 	fmt.Printf("[DO Stream] Starting to read SSE stream (no timeout - stream can run indefinitely)...\n")
 	chunkCount := 0
 	scanner := bufio.NewScanner(resp.Body)
+	// Increase buffer size to 4MB to handle large JSON payloads from DO API
+	// Default 64KB is too small and causes "token too long" errors
+	const maxScannerBuffer = 4 * 1024 * 1024 // 4MB
+	scanner.Buffer(make([]byte, 0, maxScannerBuffer), maxScannerBuffer)
 	for scanner.Scan() {
 		line := scanner.Text()
 
