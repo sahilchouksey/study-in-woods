@@ -7,6 +7,113 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
+import { ChevronDown, Search, Zap, BookOpen } from 'lucide-react';
+
+// FAQ Data
+// Note: Add images to /public/faq/ directory when available:
+// - settings-tavily-setup.png, settings-tavily-connected.png (for enable-search)
+// - retrieval-dropdown.png (for retrieval-methods)
+const faqData = [
+  {
+    id: 'enable-search',
+    icon: Search,
+    question: 'How do I enable web search for real-time information?',
+    answer: `To enable web search capabilities in your chat:
+
+1. Go to **Settings** from the sidebar
+2. Navigate to the **Search Providers** tab
+3. Add your **Tavily API Key** (get one free at tavily.com)
+4. Click **Save Key** and then **Test Connection**
+5. Once connected, you'll see "Valid" status with available capabilities
+
+When enabled, the AI can search the web for latest information, news, and real-time data to supplement your course materials.`,
+    images: [] as string[], // Add: ['/faq/settings-tavily-setup.png', '/faq/settings-tavily-connected.png']
+  },
+  {
+    id: 'retrieval-methods',
+    icon: Zap,
+    question: 'What are the different retrieval methods and when should I use them?',
+    answer: `Study in Woods offers multiple retrieval methods accessible via the dropdown next to the send button:
+
+• **Auto** (Recommended) - Automatically chooses the best method based on your query
+• **Semantic Search** - Best for conceptual questions and understanding topics
+• **Hybrid Search** - Combines keyword and semantic search for balanced results
+• **Full-Text Search** - Best for finding exact terms or specific definitions
+
+For most study questions, "Auto" works great. Use "Full-Text" when looking for specific terms mentioned in your materials.`,
+    images: [] as string[], // Add: ['/faq/retrieval-dropdown.png']
+  },
+  {
+    id: 'response-quality',
+    icon: BookOpen,
+    question: 'How accurate are the AI responses? What sources are used?',
+    answer: `We've prioritized response quality and accuracy:
+
+• **Comprehensive Knowledge Base** - We've indexed almost all recommended textbooks and course materials for each subject
+• **Citation-Based Responses** - Every response includes clickable citations [[C1]], [[C2]] etc. linking to the exact source passages
+• **Page Numbers** - Citations show the exact page number from the source document
+• **Multiple Sources** - Responses synthesize information from multiple textbooks for comprehensive answers
+
+The AI draws from standard DBMS textbooks (Silberschatz, Ramakrishnan, Date), official course materials, and past year question papers to provide exam-focused, accurate responses.`,
+    images: [] as string[],
+  },
+];
+
+// FAQ Item Component
+function FAQItem({ item, isOpen, onToggle }: { 
+  item: typeof faqData[0]; 
+  isOpen: boolean; 
+  onToggle: () => void;
+}) {
+  const Icon = item.icon;
+  
+  return (
+    <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-4 p-5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+      >
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
+        </div>
+        <span className="flex-1 font-medium text-neutral-900 dark:text-neutral-100">
+          {item.question}
+        </span>
+        <ChevronDown 
+          className={`w-5 h-5 text-neutral-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        />
+      </button>
+      
+      <div 
+        className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
+      >
+        <div className="px-5 pb-5 pt-2 space-y-4">
+          <div className="text-neutral-600 dark:text-neutral-400 whitespace-pre-line leading-relaxed">
+            {item.answer.split('**').map((part, i) => 
+              i % 2 === 1 ? <strong key={i} className="text-neutral-900 dark:text-neutral-100">{part}</strong> : part
+            )}
+          </div>
+          
+          {item.images.length > 0 && (
+            <div className={`grid gap-4 ${item.images.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+              {item.images.map((src, idx) => (
+                <div key={idx} className="relative rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                  <Image
+                    src={src}
+                    alt={`${item.question} - Screenshot ${idx + 1}`}
+                    width={600}
+                    height={400}
+                    className="w-full h-auto object-contain bg-neutral-100 dark:bg-neutral-800"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Google Fonts URL for Cedarville Cursive - using woff2 for better performance
 const CEDARVILLE_FONT_URL = 'https://fonts.gstatic.com/s/cedarvillecursive/v17/yYL00g_a2veiudhUmxjo5VKkoqA-B_neJbBxw8BeTg.woff2';
@@ -42,6 +149,7 @@ export default function HomePage() {
   const [showRayquaza, setShowRayquaza] = useState(false);
   const [fontLoaded, setFontLoaded] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [openFAQ, setOpenFAQ] = useState<string | null>(null);
   const fontLoadAttempted = useRef(false);
 
   const { isAuthenticated, isLoading } = useAuth();
@@ -292,6 +400,29 @@ export default function HomePage() {
 
           </div>
         </div>
+
+        {/* FAQ Section */}
+        <section className="py-16 sm:py-24">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 dark:text-neutral-100 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+              Learn how to get the most out of Study in Woods with these common questions about features and capabilities.
+            </p>
+          </div>
+          
+          <div className="max-w-3xl mx-auto space-y-4">
+            {faqData.map((item) => (
+              <FAQItem
+                key={item.id}
+                item={item}
+                isOpen={openFAQ === item.id}
+                onToggle={() => setOpenFAQ(openFAQ === item.id ? null : item.id)}
+              />
+            ))}
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="border-t border-neutral-200 dark:border-neutral-800 py-8">
