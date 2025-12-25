@@ -357,7 +357,8 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
   const effectiveAISettings = useMemo((): AISettings => {
     if (retrievalMethod === 'none') {
       // Don't include retrieval_method when set to 'none'
-      const { retrieval_method: _, ...rest } = aiSettings;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { retrieval_method, ...rest } = aiSettings;
       return rest;
     }
     return { ...aiSettings, retrieval_method: retrievalMethod };
