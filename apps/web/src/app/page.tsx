@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/providers/auth-provider';
 import Link from 'next/link';
-import { ChevronDown, Search, Zap, BookOpen } from 'lucide-react';
+import { ChevronDown, Search, Zap, BookOpen, ZoomIn, X } from 'lucide-react';
 
 // FAQ Data
 // Note: Add images to /public/faq/ directory when available:
@@ -27,7 +27,7 @@ const faqData = [
 5. Once connected, you'll see "Valid" status with available capabilities
 
 When enabled, the AI can search the web for latest information, news, and real-time data to supplement your course materials.`,
-    images: [] as string[], // Add: ['/faq/settings-tavily-setup.png', '/faq/settings-tavily-connected.png']
+    images: ['/faq/settings-tavily-setup.png', '/faq/settings-tavily-connected.png', '/faq/web-search-tool.png'],
   },
   {
     id: 'retrieval-methods',
@@ -35,13 +35,13 @@ When enabled, the AI can search the web for latest information, news, and real-t
     question: 'What are the different retrieval methods and when should I use them?',
     answer: `Study in Woods offers multiple retrieval methods accessible via the dropdown next to the send button:
 
-• **Auto** (Recommended) - Automatically chooses the best method based on your query
-• **Semantic Search** - Best for conceptual questions and understanding topics
-• **Hybrid Search** - Combines keyword and semantic search for balanced results
-• **Full-Text Search** - Best for finding exact terms or specific definitions
+• **Default** - Standard retrieval using course materials
+• **Rewrite** - Rewrites your query for better search results
+• **Step Back** - Breaks down complex questions into simpler parts
+• **Sub Queries** - Generates multiple sub-queries for comprehensive answers
 
-For most study questions, "Auto" works great. Use "Full-Text" when looking for specific terms mentioned in your materials.`,
-    images: [] as string[], // Add: ['/faq/retrieval-dropdown.png']
+For most study questions, "Default" works great. Use "Sub Queries" for complex topics that need information from multiple sources.`,
+    images: ['/faq/retrieval-dropdown.png'],
   },
   {
     id: 'response-quality',
@@ -59,6 +59,67 @@ The AI draws from standard DBMS textbooks (Silberschatz, Ramakrishnan, Date), of
   },
 ];
 
+// Image Lightbox Component
+function ImageLightbox({ 
+  src, 
+  alt, 
+  isOpen, 
+  onClose 
+}: { 
+  src: string; 
+  alt: string; 
+  isOpen: boolean; 
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = '';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+        aria-label="Close"
+      >
+        <X className="w-6 h-6" />
+      </button>
+      
+      {/* Image container */}
+      <div 
+        className="relative max-w-[90vw] max-h-[90vh] animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Image
+          src={src}
+          alt={alt}
+          width={1200}
+          height={800}
+          className="w-auto h-auto max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          priority
+        />
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // FAQ Item Component
 function FAQItem({ item, isOpen, onToggle }: { 
   item: typeof faqData[0]; 
@@ -66,52 +127,75 @@ function FAQItem({ item, isOpen, onToggle }: {
   onToggle: () => void;
 }) {
   const Icon = item.icon;
+  const [lightboxImage, setLightboxImage] = useState<{ src: string; alt: string } | null>(null);
   
   return (
-    <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-4 p-5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-      >
-        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
-        </div>
-        <span className="flex-1 font-medium text-neutral-900 dark:text-neutral-100">
-          {item.question}
-        </span>
-        <ChevronDown 
-          className={`w-5 h-5 text-neutral-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
-        />
-      </button>
-      
-      <div 
-        className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
-      >
-        <div className="px-5 pb-5 pt-2 space-y-4">
-          <div className="text-neutral-600 dark:text-neutral-400 whitespace-pre-line leading-relaxed">
-            {item.answer.split('**').map((part, i) => 
-              i % 2 === 1 ? <strong key={i} className="text-neutral-900 dark:text-neutral-100">{part}</strong> : part
+    <>
+      <div className="border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
+        <button
+          onClick={onToggle}
+          className="w-full flex items-center gap-4 p-5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
+        >
+          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+            <Icon className="w-5 h-5 text-green-600 dark:text-green-400" />
+          </div>
+          <span className="flex-1 font-medium text-neutral-900 dark:text-neutral-100">
+            {item.question}
+          </span>
+          <ChevronDown 
+            className={`w-5 h-5 text-neutral-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          />
+        </button>
+        
+        <div 
+          className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
+        >
+          <div className="px-5 pb-5 pt-2 space-y-4">
+            <div className="text-neutral-600 dark:text-neutral-400 whitespace-pre-line leading-relaxed">
+              {item.answer.split('**').map((part, i) => 
+                i % 2 === 1 ? <strong key={i} className="text-neutral-900 dark:text-neutral-100">{part}</strong> : part
+              )}
+            </div>
+            
+            {item.images.length > 0 && (
+              <div className={`grid gap-4 ${item.images.length === 1 ? 'grid-cols-1' : item.images.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'}`}>
+                {item.images.map((src, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setLightboxImage({ src, alt: `${item.question} - Screenshot ${idx + 1}` })}
+                    className="relative group rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  >
+                    <Image
+                      src={src}
+                      alt={`${item.question} - Screenshot ${idx + 1}`}
+                      width={600}
+                      height={400}
+                      className="w-full h-auto object-contain bg-neutral-100 dark:bg-neutral-800 transition-transform duration-300 group-hover:scale-[1.02]"
+                    />
+                    {/* Hover overlay with zoom icon */}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-neutral-800/90 p-3 rounded-full shadow-lg">
+                        <ZoomIn className="w-6 h-6 text-neutral-700 dark:text-neutral-200" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-          
-          {item.images.length > 0 && (
-            <div className={`grid gap-4 ${item.images.length > 1 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
-              {item.images.map((src, idx) => (
-                <div key={idx} className="relative rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 shadow-sm">
-                  <Image
-                    src={src}
-                    alt={`${item.question} - Screenshot ${idx + 1}`}
-                    width={600}
-                    height={400}
-                    className="w-full h-auto object-contain bg-neutral-100 dark:bg-neutral-800"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
-    </div>
+      
+      {/* Lightbox */}
+      {lightboxImage && (
+        <ImageLightbox
+          src={lightboxImage.src}
+          alt={lightboxImage.alt}
+          isOpen={!!lightboxImage}
+          onClose={() => setLightboxImage(null)}
+        />
+      )}
+    </>
   );
 }
 
