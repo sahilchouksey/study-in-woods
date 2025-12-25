@@ -737,54 +737,6 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
               disabled={isStreaming}
               className="flex-1"
             />
-            {/* Retrieval Method Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  className={cn(
-                    "shrink-0",
-                    retrievalMethod !== 'none' && "border-primary text-primary"
-                  )}
-                  disabled={isStreaming}
-                  title={`Retrieval: ${retrievalMethod === 'none' ? 'Default' : retrievalMethod.replace('_', ' ')}`}
-                >
-                  <Library className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem 
-                  onClick={() => setRetrievalMethod('none')}
-                  className={cn(retrievalMethod === 'none' && "bg-accent")}
-                >
-                  <span className="flex-1">Default</span>
-                  {retrievalMethod === 'none' && <span className="text-xs text-muted-foreground">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setRetrievalMethod('rewrite')}
-                  className={cn(retrievalMethod === 'rewrite' && "bg-accent")}
-                >
-                  <span className="flex-1">Rewrite</span>
-                  {retrievalMethod === 'rewrite' && <span className="text-xs text-muted-foreground">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setRetrievalMethod('step_back')}
-                  className={cn(retrievalMethod === 'step_back' && "bg-accent")}
-                >
-                  <span className="flex-1">Step Back</span>
-                  {retrievalMethod === 'step_back' && <span className="text-xs text-muted-foreground">✓</span>}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setRetrievalMethod('sub_queries')}
-                  className={cn(retrievalMethod === 'sub_queries' && "bg-accent")}
-                >
-                  <span className="flex-1">Sub Queries</span>
-                  {retrievalMethod === 'sub_queries' && <span className="text-xs text-muted-foreground">✓</span>}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             {isStreaming ? (
               <Button 
                 onClick={cancelStream} 
@@ -795,13 +747,64 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
                 <StopCircle className="h-4 w-4" />
               </Button>
             ) : (
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim()}
-                size="icon"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
+              /* Send button group with retrieval method dropdown */
+              <div className="flex items-center">
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  size="icon"
+                  className="rounded-r-none"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+                {/* Retrieval Method Dropdown - attached to send button */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="default"
+                      size="icon"
+                      className={cn(
+                        "rounded-l-none border-l border-primary-foreground/20 w-6 px-0",
+                        retrievalMethod !== 'none' && "bg-primary/80"
+                      )}
+                      disabled={!input.trim()}
+                      title={`Retrieval: ${retrievalMethod === 'none' ? 'Default' : retrievalMethod.replace('_', ' ')}`}
+                    >
+                      <ChevronDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem 
+                      onClick={() => setRetrievalMethod('none')}
+                      className={cn(retrievalMethod === 'none' && "bg-accent")}
+                    >
+                      <span className="flex-1">Default</span>
+                      {retrievalMethod === 'none' && <span className="text-xs text-muted-foreground">✓</span>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setRetrievalMethod('rewrite')}
+                      className={cn(retrievalMethod === 'rewrite' && "bg-accent")}
+                    >
+                      <span className="flex-1">Rewrite</span>
+                      {retrievalMethod === 'rewrite' && <span className="text-xs text-muted-foreground">✓</span>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setRetrievalMethod('step_back')}
+                      className={cn(retrievalMethod === 'step_back' && "bg-accent")}
+                    >
+                      <span className="flex-1">Step Back</span>
+                      {retrievalMethod === 'step_back' && <span className="text-xs text-muted-foreground">✓</span>}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setRetrievalMethod('sub_queries')}
+                      className={cn(retrievalMethod === 'sub_queries' && "bg-accent")}
+                    >
+                      <span className="flex-1">Sub Queries</span>
+                      {retrievalMethod === 'sub_queries' && <span className="text-xs text-muted-foreground">✓</span>}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             )}
           </div>
           <p className="text-xs text-muted-foreground mt-2 text-center">
