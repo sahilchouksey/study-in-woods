@@ -950,8 +950,10 @@ function CitationItem({ citation, index, messageId, isExpanded, onToggle }: Cita
   const content = citation.page_content || citation.content;
   const hasContent = content && content.trim().length > 0;
   
-  // Extract page number from metadata if available (DO API stores it there)
-  const pageNumber = citation.page || 
+  // Extract page number - check all possible field locations
+  // Priority: page_number (new backend field) > page (legacy) > metadata.page_number > metadata.page
+  const pageNumber = citation.page_number || 
+    citation.page || 
     (citation.metadata?.page_number as number | undefined) ||
     (citation.metadata?.page as number | undefined);
   

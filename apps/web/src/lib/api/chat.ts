@@ -33,11 +33,12 @@ export interface Citation {
   page_content?: string;
   score?: number;
   data_source_id?: string;
+  page_number?: number; // Page number within the document (from backend)
   metadata?: Record<string, unknown>;
   // Legacy/alternative field names (for compatibility)
   source?: string;
   content?: string;
-  page?: number;
+  page?: number; // Alternative field name for page_number
 }
 
 /**

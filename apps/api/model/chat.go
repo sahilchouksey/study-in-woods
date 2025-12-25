@@ -34,6 +34,7 @@ type Citation struct {
 	Score        float64                `json:"score"`
 	Filename     string                 `json:"filename"`
 	DataSourceID string                 `json:"data_source_id"`
+	PageNumber   int                    `json:"page_number,omitempty"` // Page number within the document
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 

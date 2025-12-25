@@ -101,17 +101,77 @@ type ChatCompletionResponse struct {
 	CreatedAt       time.Time       `json:"created_at"`
 }
 
-// GetAllRetrievals returns all retrievals merged and deduplicated for non-streaming response
+// GetAllRetrievals returns all retrievals preserving original order for citation indexing.
+// IMPORTANT: The AI model uses 1-based indexes from retrieval.retrieved_data (e.g., [[C1]], [[C11]], [[C27]]).
+// We must NOT deduplicate or reorder these items, as it would break citation references.
 func (r *ChatCompletionResponse) GetAllRetrievals() []RetrievalInfo {
+	// Helper to extract page number from metadata
+	getPageNumber := func(metadata map[string]interface{}) int {
+		if metadata == nil {
+			return 0
+		}
+		if page, ok := metadata["page_number"]; ok {
+			switch v := page.(type) {
+			case float64:
+				return int(v)
+			case int:
+				return v
+			case int64:
+				return int(v)
+			}
+		}
+		return 0
+	}
+
+	// Priority 1: Use retrieval.retrieved_data if available (this is what AI uses for [[C1]], [[C11]] etc.)
+	// DO NOT deduplicate - the AI references items by their original index position
+	if r.Retrieval != nil && len(r.Retrieval.RetrievedData) > 0 {
+		all := make([]RetrievalInfo, 0, len(r.Retrieval.RetrievedData))
+		for _, rd := range r.Retrieval.RetrievedData {
+			info := RetrievalInfo{
+				ID:       rd.ID,
+				Content:  rd.PageContent,
+				FileName: rd.Filename,
+				Score:    rd.Score,
+				Metadata: rd.Metadata,
+			}
+			info.Page = getPageNumber(rd.Metadata)
+			all = append(all, info)
+		}
+		return all
+	}
+
+	// Priority 2: Fall back to citations.citations if no retrieved_data
+	if r.Citations != nil && len(r.Citations.Citations) > 0 {
+		all := make([]RetrievalInfo, 0, len(r.Citations.Citations))
+		for _, rd := range r.Citations.Citations {
+			info := RetrievalInfo{
+				ID:       rd.ID,
+				Content:  rd.PageContent,
+				FileName: rd.Filename,
+				Score:    rd.Score,
+				Metadata: rd.Metadata,
+			}
+			info.Page = getPageNumber(rd.Metadata)
+			all = append(all, info)
+		}
+		return all
+	}
+
+	// Priority 3: Legacy fields (with deduplication since these may overlap)
 	var all []RetrievalInfo
 	seen := make(map[string]bool)
 
 	addUnique := func(info RetrievalInfo) {
-		key := info.FileName
-		if key == "" {
-			key = info.ID
+		if info.Page == 0 {
+			info.Page = getPageNumber(info.Metadata)
 		}
-		if key == "" && len(info.Content) > 0 {
+		key := ""
+		if info.ID != "" {
+			key = info.ID
+		} else if info.FileName != "" {
+			key = fmt.Sprintf("%s:page:%d", info.FileName, info.Page)
+		} else if len(info.Content) > 0 {
 			key = info.Content[:min(100, len(info.Content))]
 		}
 		if key != "" && !seen[key] {
@@ -120,32 +180,6 @@ func (r *ChatCompletionResponse) GetAllRetrievals() []RetrievalInfo {
 		}
 	}
 
-	// Add from new DO AI Agent format (nested)
-	if r.Retrieval != nil {
-		for _, rd := range r.Retrieval.RetrievedData {
-			addUnique(RetrievalInfo{
-				ID:       rd.ID,
-				Content:  rd.PageContent,
-				FileName: rd.Filename,
-				Score:    rd.Score,
-				Metadata: rd.Metadata,
-			})
-		}
-	}
-
-	if r.Citations != nil {
-		for _, rd := range r.Citations.Citations {
-			addUnique(RetrievalInfo{
-				ID:       rd.ID,
-				Content:  rd.PageContent,
-				FileName: rd.Filename,
-				Score:    rd.Score,
-				Metadata: rd.Metadata,
-			})
-		}
-	}
-
-	// Add from legacy flat arrays
 	for _, ri := range r.Retrievals {
 		addUnique(ri)
 	}
@@ -271,20 +305,79 @@ func (c *StreamChunk) IsDone() bool {
 	return c.GetFinishReason() == "stop"
 }
 
-// GetAllRetrievals returns all retrievals from various sources merged and deduplicated
+// GetAllRetrievals returns all retrievals preserving original order for citation indexing.
+// IMPORTANT: The AI model uses 1-based indexes from retrieval.retrieved_data (e.g., [[C1]], [[C11]], [[C27]]).
+// We must NOT deduplicate or reorder these items, as it would break citation references.
 func (c *StreamChunk) GetAllRetrievals() []RetrievalInfo {
+	// Helper to extract page number from metadata
+	getPageNumber := func(metadata map[string]interface{}) int {
+		if metadata == nil {
+			return 0
+		}
+		if page, ok := metadata["page_number"]; ok {
+			switch v := page.(type) {
+			case float64:
+				return int(v)
+			case int:
+				return v
+			case int64:
+				return int(v)
+			}
+		}
+		return 0
+	}
+
+	// Priority 1: Use retrieval.retrieved_data if available (this is what AI uses for [[C1]], [[C11]] etc.)
+	// DO NOT deduplicate - the AI references items by their original index position
+	if c.Retrieval != nil && len(c.Retrieval.RetrievedData) > 0 {
+		all := make([]RetrievalInfo, 0, len(c.Retrieval.RetrievedData))
+		for _, r := range c.Retrieval.RetrievedData {
+			info := RetrievalInfo{
+				ID:       r.ID,
+				Content:  r.PageContent,
+				FileName: r.Filename,
+				Score:    r.Score,
+				Metadata: r.Metadata,
+			}
+			// Extract page number from metadata
+			info.Page = getPageNumber(r.Metadata)
+			all = append(all, info)
+		}
+		return all
+	}
+
+	// Priority 2: Fall back to citations.citations if no retrieved_data
+	if c.Citations != nil && len(c.Citations.Citations) > 0 {
+		all := make([]RetrievalInfo, 0, len(c.Citations.Citations))
+		for _, r := range c.Citations.Citations {
+			info := RetrievalInfo{
+				ID:       r.ID,
+				Content:  r.PageContent,
+				FileName: r.Filename,
+				Score:    r.Score,
+				Metadata: r.Metadata,
+			}
+			info.Page = getPageNumber(r.Metadata)
+			all = append(all, info)
+		}
+		return all
+	}
+
+	// Priority 3: Legacy fields (with deduplication since these may overlap)
 	var all []RetrievalInfo
 	seen := make(map[string]bool)
 
-	// Helper to add with deduplication by filename or ID
 	addUnique := func(r RetrievalInfo) {
-		// Create a unique key based on filename (primary) or ID (fallback)
-		key := r.FileName
-		if key == "" {
-			key = r.ID
+		if r.Page == 0 {
+			r.Page = getPageNumber(r.Metadata)
 		}
-		if key == "" {
-			key = r.Content[:min(100, len(r.Content))] // Use content prefix as fallback
+		key := ""
+		if r.ID != "" {
+			key = r.ID
+		} else if r.FileName != "" {
+			key = fmt.Sprintf("%s:page:%d", r.FileName, r.Page)
+		} else if len(r.Content) > 0 {
+			key = r.Content[:min(100, len(r.Content))]
 		}
 		if key != "" && !seen[key] {
 			seen[key] = true
@@ -292,33 +385,6 @@ func (c *StreamChunk) GetAllRetrievals() []RetrievalInfo {
 		}
 	}
 
-	// Add from new DO AI Agent format
-	if c.Retrieval != nil {
-		for _, r := range c.Retrieval.RetrievedData {
-			addUnique(RetrievalInfo{
-				ID:       r.ID,
-				Content:  r.PageContent,
-				FileName: r.Filename,
-				Score:    r.Score,
-				Metadata: r.Metadata,
-			})
-		}
-	}
-
-	// Add from citations field
-	if c.Citations != nil {
-		for _, r := range c.Citations.Citations {
-			addUnique(RetrievalInfo{
-				ID:       r.ID,
-				Content:  r.PageContent,
-				FileName: r.Filename,
-				Score:    r.Score,
-				Metadata: r.Metadata,
-			})
-		}
-	}
-
-	// Add from legacy fields
 	for _, r := range c.Retrievals {
 		addUnique(r)
 	}

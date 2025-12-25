@@ -1066,7 +1066,7 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 
 			log.Printf("[Chat] Stream error with partial content (%d chars, %d chunks): %v", len(partialContent), chunkCount, streamErr)
 
-			// Convert retrievals to citations for the partial message
+			// Convert retrievals to citations for the partial message - preserve original order
 			var citations model.Citations
 			for _, r := range retrievals {
 				filename := r.FileName
@@ -1081,6 +1081,8 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 					Filename:    filename,
 					PageContent: r.Content,
 					Score:       r.Score,
+					PageNumber:  r.Page,
+					Metadata:    r.Metadata,
 				})
 			}
 
@@ -1244,7 +1246,7 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		}
 	}
 
-	// Convert retrievals to citations
+	// Convert retrievals to citations - preserve original order for [[C1]], [[C11]] etc. references
 	var citations model.Citations
 	for _, r := range retrievals {
 		filename := r.FileName
@@ -1259,6 +1261,8 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 			Filename:    filename,
 			PageContent: r.Content,
 			Score:       r.Score,
+			PageNumber:  r.Page,
+			Metadata:    r.Metadata,
 		})
 	}
 
