@@ -379,7 +379,7 @@ export function CoursesTab() {
               </div>
             )}
           </div>
-          {hasChanges && (
+          {isAuthenticated && hasChanges && (
             <Button
               onClick={handleSaveProfile}
               disabled={
@@ -1002,7 +1002,7 @@ export function CoursesTab() {
                     <span className="font-medium">{selectedSemester?.name}</span>
                   </div>
                 </div>
-                {hasChanges && (
+                {isAuthenticated && hasChanges && (
                   <p className="text-sm text-muted-foreground mt-4">
                     Don't forget to save your changes!
                   </p>
