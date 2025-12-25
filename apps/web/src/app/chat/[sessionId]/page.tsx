@@ -53,6 +53,7 @@ export default function ChatSessionPage() {
     knowledge_base_uuid: '', // Not available from session API
     agent_uuid: '', // Not available from session API
     has_syllabus: false, // Not available from session API
+    is_starred: false, // Not available from session API
   } : undefined;
 
   return (

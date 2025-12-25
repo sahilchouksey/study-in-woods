@@ -31,6 +31,7 @@ import {
   useStreamingChat,
   useChatSession,
 } from '@/lib/api/hooks/useChat';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePYQs, usePYQById } from '@/lib/api/hooks/usePYQ';
 import type { SubjectOption, ChatMessage, Citation, AISettings, ToolEvent, RetrievalMethod } from '@/lib/api/chat';
 import { DEFAULT_AI_SETTINGS } from '@/lib/api/chat';
@@ -202,6 +203,7 @@ export interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatInterfaceProps) {
+  const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -471,19 +473,18 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
     }
   };
 
-  // Handle regenerating the last response
-  const handleRegenerate = useCallback(() => {
+  // Handle refreshing messages - clears streaming state and refetches from server
+  const handleRefreshMessages = useCallback(() => {
     if (isStreaming) return;
     
-    // Find the last user message in the conversation
-    const lastUserMessage = [...allMessages].reverse().find(m => m.role === 'user');
-    if (lastUserMessage) {
-      // Force scroll to bottom
-      setShouldAutoScroll(true);
-      // Resend the last user message to regenerate response
-      sendMessage(lastUserMessage.content);
-    }
-  }, [isStreaming, allMessages, sendMessage]);
+    // Clear the streaming state to hide the StreamingMessageBubble
+    // This will show the persisted messages from the server instead
+    cancelStream();
+    
+    // Refetch messages from the server
+    queryClient.invalidateQueries({ queryKey: ['chat', 'messages', sessionId] });
+    queryClient.invalidateQueries({ queryKey: ['chat', 'messages', 'infinite', sessionId], exact: false });
+  }, [isStreaming, sessionId, queryClient, cancelStream]);
 
   // Handle selecting a question from resources drawer
   const handleSelectQuestion = (question: string) => {
@@ -688,7 +689,7 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
                   isActivelyStreaming={isStreaming}
                   sessionId={sessionId}
                   onCitationClick={handleCitationClick}
-                  onRegenerate={!isStreaming ? handleRegenerate : undefined}
+                  onRegenerate={!isStreaming ? handleRefreshMessages : undefined}
                 />
               )}
               
@@ -895,10 +896,10 @@ function filterCitedCitations(
     }
   }
   
-  // Then, add citations with valid scores (>= 0.50) that weren't already added
+  // Then, add citations with valid scores that weren't already added
   // This ensures sources are shown even when AI doesn't use [[C#]] markers
-  // PYQ sources typically have scores around 0.5-0.6 which are still relevant
-  const CONFIDENCE_THRESHOLD = 0.50;
+  // Note: DO API returns raw relevance scores (higher = more relevant, often > 1)
+  // We include citations with positive scores as they indicate relevance
   
   for (let i = 0; i < citations.length; i++) {
     if (addedIndices.has(i)) continue;
@@ -906,15 +907,18 @@ function filterCitedCitations(
     const citation = citations[i];
     const score = citation.score;
     const filename = citation.filename || '';
+    const hasContent = citation.page_content || citation.content;
     
     // Check if this is a PYQ/syllabus source (always show these as they're course materials)
     const isPYQSource = filename.includes('/pyqs/') || filename.includes('/syllabus/');
     
-    // Check if score is a valid confidence value (between 0 and 1)
-    const hasValidScore = typeof score === 'number' && score >= CONFIDENCE_THRESHOLD && score <= 1;
+    // Check if score is a positive relevance score
+    // DO API uses raw scores where higher = more relevant (not normalized 0-1)
+    // Positive scores indicate the citation is relevant
+    const hasValidScore = typeof score === 'number' && score > 0;
     
-    // Show citation if: has valid score OR is a PYQ/syllabus source
-    if (hasValidScore || isPYQSource) {
+    // Show citation if: has positive score OR is a PYQ/syllabus source OR has content
+    if (hasValidScore || isPYQSource || hasContent) {
       indexMap.set(i, filteredCitations.length);
       filteredCitations.push(citation);
       addedIndices.add(i);
@@ -945,6 +949,11 @@ function CitationItem({ citation, index, messageId, isExpanded, onToggle }: Cita
   const [dialogOpen, setDialogOpen] = useState(false);
   const content = citation.page_content || citation.content;
   const hasContent = content && content.trim().length > 0;
+  
+  // Extract page number from metadata if available (DO API stores it there)
+  const pageNumber = citation.page || 
+    (citation.metadata?.page_number as number | undefined) ||
+    (citation.metadata?.page as number | undefined);
   
   // Use controlled expansion if provided, otherwise use local state
   const expanded = isExpanded !== undefined ? isExpanded : localExpanded;
@@ -989,14 +998,18 @@ function CitationItem({ citation, index, messageId, isExpanded, onToggle }: Cita
               <span className="text-xs font-medium truncate text-foreground">
                 {citation.filename || citation.source || 'Knowledge Base'}
               </span>
-              {citation.page && (
+              {pageNumber && (
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  p. {citation.page}
+                  p. {pageNumber}
                 </Badge>
               )}
-              {citation.score != null && citation.score > 0 && citation.score <= 1 && (
+              {citation.score != null && citation.score > 0 && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                  {(citation.score * 100).toFixed(0)}% match
+                  {/* Display normalized score if 0-1 range, otherwise just show as relevance indicator */}
+                  {citation.score <= 1 
+                    ? `${(citation.score * 100).toFixed(0)}% match`
+                    : `relevance: ${citation.score.toFixed(1)}`
+                  }
                 </Badge>
               )}
             </div>
@@ -1063,14 +1076,17 @@ function CitationItem({ citation, index, messageId, isExpanded, onToggle }: Cita
               </span>
             </DialogTitle>
             <DialogDescription className="flex items-center gap-2 flex-wrap">
-              {citation.page && (
+              {pageNumber && (
                 <Badge variant="outline" className="text-xs">
-                  Page {citation.page}
+                  Page {pageNumber}
                 </Badge>
               )}
-              {citation.score != null && citation.score > 0 && citation.score <= 1 && (
+              {citation.score != null && citation.score > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {(citation.score * 100).toFixed(0)}% relevance match
+                  {citation.score <= 1 
+                    ? `${(citation.score * 100).toFixed(0)}% relevance match`
+                    : `Relevance: ${citation.score.toFixed(1)}`
+                  }
                 </Badge>
               )}
               <span className="text-muted-foreground">
