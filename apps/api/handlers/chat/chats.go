@@ -112,9 +112,10 @@ type CreateSessionRequest struct {
 
 // AISettings represents user-configurable AI settings sent from the client
 type AISettings struct {
-	SystemPrompt     string `json:"system_prompt" validate:"omitempty,max=10000"`
-	IncludeCitations *bool  `json:"include_citations"` // Pointer to distinguish between false and not set
-	MaxTokens        *int   `json:"max_tokens" validate:"omitempty,min=256,max=8192"`
+	SystemPrompt     string  `json:"system_prompt" validate:"omitempty,max=10000"`
+	IncludeCitations *bool   `json:"include_citations"` // Pointer to distinguish between false and not set
+	MaxTokens        *int    `json:"max_tokens" validate:"omitempty,min=256,max=8192"`
+	RetrievalMethod  *string `json:"retrieval_method" validate:"omitempty,oneof=rewrite step_back sub_queries"`
 }
 
 // SendMessageRequest represents the request to send a chat message
@@ -409,6 +410,7 @@ func (h *ChatHandler) SendMessage(c *fiber.Ctx) error {
 			SystemPrompt:     req.Settings.SystemPrompt,
 			IncludeCitations: req.Settings.IncludeCitations,
 			MaxTokens:        req.Settings.MaxTokens,
+			RetrievalMethod:  req.Settings.RetrievalMethod,
 		}
 	}
 

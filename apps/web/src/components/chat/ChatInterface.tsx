@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Send, Sparkles, ArrowLeft, StopCircle, ChevronUp, ChevronDown, BookOpen, FileQuestion, Library, FileText, Quote, Settings2, Maximize2 } from 'lucide-react';
+import { Send, Sparkles, ArrowLeft, StopCircle, ChevronUp, ChevronDown, BookOpen, FileQuestion, Library, FileText, Quote, Settings2, Maximize2, RefreshCw } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { Streamdown } from 'streamdown';
 import remarkMath from 'remark-math';
@@ -32,7 +32,7 @@ import {
   useChatSession,
 } from '@/lib/api/hooks/useChat';
 import { usePYQs, usePYQById } from '@/lib/api/hooks/usePYQ';
-import type { SubjectOption, ChatMessage, Citation, AISettings, ToolEvent } from '@/lib/api/chat';
+import type { SubjectOption, ChatMessage, Citation, AISettings, ToolEvent, RetrievalMethod } from '@/lib/api/chat';
 import { DEFAULT_AI_SETTINGS } from '@/lib/api/chat';
 import { cn } from '@/lib/utils';
 import { ResourcesDrawer } from './ResourcesDrawer';
@@ -216,6 +216,9 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const loadedSubjectIdRef = useRef<string | null>(null);
   
+  // Retrieval method state - 'none' means don't send the field
+  const [retrievalMethod, setRetrievalMethod] = useState<RetrievalMethod | 'none'>('none');
+  
   // Scroll-to-bottom button visibility
   const [showScrollButton, setShowScrollButton] = useState(false);
   
@@ -350,6 +353,16 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
     }
   }, [subject?.id]);
 
+  // Merge retrieval method into AI settings for the hook
+  const effectiveAISettings = useMemo((): AISettings => {
+    if (retrievalMethod === 'none') {
+      // Don't include retrieval_method when set to 'none'
+      const { retrieval_method: _, ...rest } = aiSettings;
+      return rest;
+    }
+    return { ...aiSettings, retrieval_method: retrievalMethod };
+  }, [aiSettings, retrievalMethod]);
+
   // Streaming chat hook with enhanced reasoning, citations, and tool support
   const { 
     sendMessage, 
@@ -369,7 +382,7 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
       // Focus input after response completes
       inputRef.current?.focus();
     },
-    aiSettings: aiSettings,
+    aiSettings: effectiveAISettings,
   });
 
   // Filter messages to avoid duplicate display when streaming completes
@@ -456,6 +469,20 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
       handleSend();
     }
   };
+
+  // Handle regenerating the last response
+  const handleRegenerate = useCallback(() => {
+    if (isStreaming) return;
+    
+    // Find the last user message in the conversation
+    const lastUserMessage = [...allMessages].reverse().find(m => m.role === 'user');
+    if (lastUserMessage) {
+      // Force scroll to bottom
+      setShouldAutoScroll(true);
+      // Resend the last user message to regenerate response
+      sendMessage(lastUserMessage.content);
+    }
+  }, [isStreaming, allMessages, sendMessage]);
 
   // Handle selecting a question from resources drawer
   const handleSelectQuestion = (question: string) => {
@@ -660,6 +687,7 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
                   isActivelyStreaming={isStreaming}
                   sessionId={sessionId}
                   onCitationClick={handleCitationClick}
+                  onRegenerate={!isStreaming ? handleRegenerate : undefined}
                 />
               )}
               
@@ -709,6 +737,54 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
               disabled={isStreaming}
               className="flex-1"
             />
+            {/* Retrieval Method Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className={cn(
+                    "shrink-0",
+                    retrievalMethod !== 'none' && "border-primary text-primary"
+                  )}
+                  disabled={isStreaming}
+                  title={`Retrieval: ${retrievalMethod === 'none' ? 'Default' : retrievalMethod.replace('_', ' ')}`}
+                >
+                  <Library className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem 
+                  onClick={() => setRetrievalMethod('none')}
+                  className={cn(retrievalMethod === 'none' && "bg-accent")}
+                >
+                  <span className="flex-1">Default</span>
+                  {retrievalMethod === 'none' && <span className="text-xs text-muted-foreground">✓</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setRetrievalMethod('rewrite')}
+                  className={cn(retrievalMethod === 'rewrite' && "bg-accent")}
+                >
+                  <span className="flex-1">Rewrite</span>
+                  {retrievalMethod === 'rewrite' && <span className="text-xs text-muted-foreground">✓</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setRetrievalMethod('step_back')}
+                  className={cn(retrievalMethod === 'step_back' && "bg-accent")}
+                >
+                  <span className="flex-1">Step Back</span>
+                  {retrievalMethod === 'step_back' && <span className="text-xs text-muted-foreground">✓</span>}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setRetrievalMethod('sub_queries')}
+                  className={cn(retrievalMethod === 'sub_queries' && "bg-accent")}
+                >
+                  <span className="flex-1">Sub Queries</span>
+                  {retrievalMethod === 'sub_queries' && <span className="text-xs text-muted-foreground">✓</span>}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {isStreaming ? (
               <Button 
                 onClick={cancelStream} 
@@ -1387,6 +1463,7 @@ interface StreamingMessageBubbleProps {
   isActivelyStreaming: boolean; // True only while streaming, false after completion
   sessionId: string;
   onCitationClick: (messageId: string | number, citationIndex: number) => void;
+  onRegenerate?: () => void; // Called when user clicks regenerate button
 }
 
 
@@ -1400,7 +1477,8 @@ function StreamingMessageBubble({
   isToolRunning,
   isActivelyStreaming,
   sessionId,
-  onCitationClick
+  onCitationClick,
+  onRegenerate
 }: StreamingMessageBubbleProps) {
   // Use a temporary ID for streaming messages
   const streamingMessageId = `streaming-${sessionId}`;
@@ -1463,9 +1541,19 @@ function StreamingMessageBubble({
           <span className="text-xs font-semibold text-primary">
             AI Assistant
           </span>
-          <Badge variant="secondary" className="text-xs animate-pulse">
-            {isReasoning ? 'Thinking' : 'Streaming'}
-          </Badge>
+          {isActivelyStreaming ? (
+            <Badge variant="secondary" className="text-xs animate-pulse">
+              {isReasoning ? 'Thinking' : 'Streaming'}
+            </Badge>
+          ) : onRegenerate ? (
+            <button
+              onClick={onRegenerate}
+              className="ml-auto p-1 rounded hover:bg-accent transition-colors"
+              title="Regenerate response"
+            >
+              <RefreshCw className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+            </button>
+          ) : null}
         </div>
         
         {/* Reasoning Section - Collapsible */}

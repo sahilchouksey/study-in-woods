@@ -495,6 +495,8 @@ type AgentChatRequest struct {
 	IncludeRetrievalInfo bool           `json:"include_retrieval_info,omitempty"`
 	ProvideCitations     bool           `json:"provide_citations,omitempty"`
 	StreamOptions        *StreamOptions `json:"stream_options,omitempty"`
+	// Retrieval method for knowledge base queries: rewrite, step_back, sub_queries
+	RetrievalMethod string `json:"retrieval_method,omitempty"`
 }
 
 // CreateAgentChatCompletion creates a chat completion using the agent deployment URL and API key

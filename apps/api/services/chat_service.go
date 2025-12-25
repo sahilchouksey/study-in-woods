@@ -239,9 +239,10 @@ func (s *ChatService) CreateSession(ctx context.Context, req CreateSessionReques
 
 // AISettings represents user-configurable AI settings from the client
 type AISettings struct {
-	SystemPrompt     string // Custom system prompt (empty = use default)
-	IncludeCitations *bool  // Whether to include citations (nil = default true)
-	MaxTokens        *int   // Max response tokens (nil = default 2048)
+	SystemPrompt     string  // Custom system prompt (empty = use default)
+	IncludeCitations *bool   // Whether to include citations (nil = default true)
+	MaxTokens        *int    // Max response tokens (nil = default 2048)
+	RetrievalMethod  *string // Retrieval method: rewrite, step_back, sub_queries (nil = none)
 }
 
 // GetIncludeCitations returns the include citations setting with default
@@ -555,6 +556,11 @@ func (s *ChatService) SendMessage(ctx context.Context, req SendMessageRequest) (
 		MaxTokens:            8192, // Increased max output tokens for longer responses
 		IncludeRetrievalInfo: true,
 		ProvideCitations:     true,
+	}
+
+	// Set retrieval method if specified in settings
+	if req.Settings != nil && req.Settings.RetrievalMethod != nil {
+		aiReq.RetrievalMethod = *req.Settings.RetrievalMethod
 	}
 
 	aiResp, err := s.doClient.CreateAgentChatCompletion(ctx, aiReq)
@@ -888,6 +894,11 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 		StreamOptions:        &digitalocean.StreamOptions{IncludeUsage: true},
 	}
 
+	// Set retrieval method if specified in settings
+	if req.Settings != nil && req.Settings.RetrievalMethod != nil {
+		aiReq.RetrievalMethod = *req.Settings.RetrievalMethod
+	}
+
 	// State for filtering tool call chunks
 	// We buffer content when we might be inside a tool call block
 	var contentBuffer strings.Builder
@@ -1203,6 +1214,7 @@ func (s *ChatService) StreamMessageEnhanced(ctx context.Context, req EnhancedStr
 				IncludeRetrievalInfo: true,
 				ProvideCitations:     true,
 				StreamOptions:        &digitalocean.StreamOptions{IncludeUsage: true},
+				RetrievalMethod:      aiReq.RetrievalMethod, // Inherit from original request
 			}
 
 			var followUpContent strings.Builder

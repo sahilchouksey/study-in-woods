@@ -74,6 +74,14 @@ export interface CreateSessionRequest {
 }
 
 /**
+ * Retrieval method for knowledge base queries
+ * - rewrite: Refines the query for better retrieval
+ * - step_back: Broadens the query for more context
+ * - sub_queries: Splits into multiple focused queries
+ */
+export type RetrievalMethod = 'rewrite' | 'step_back' | 'sub_queries';
+
+/**
  * AI Settings that can be configured by the user
  */
 export interface AISettings {
@@ -83,6 +91,8 @@ export interface AISettings {
   include_citations?: boolean;
   /** Maximum tokens for the response (256-8192) */
   max_tokens?: number;
+  /** Retrieval method for knowledge base queries - only sent if not "none" */
+  retrieval_method?: RetrievalMethod;
 }
 
 /**
