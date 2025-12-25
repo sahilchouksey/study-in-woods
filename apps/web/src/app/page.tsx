@@ -47,14 +47,29 @@ For most study questions, "Default" works great. Use "Sub Queries" for complex t
     id: 'response-quality',
     icon: BookOpen,
     question: 'How accurate are the AI responses? What sources are used?',
-    answer: `We've prioritized response quality and accuracy:
+    answer: `We've indexed **22 textbooks** across all MCA Semester 3 subjects:
 
-• **Comprehensive Knowledge Base** - We've indexed almost all recommended textbooks and course materials for each subject
-• **Citation-Based Responses** - Every response includes clickable citations [[C1]], [[C2]] etc. linking to the exact source passages
-• **Page Numbers** - Citations show the exact page number from the source document
-• **Multiple Sources** - Responses synthesize information from multiple textbooks for comprehensive answers
+**Data Mining (MCA-301):**
+• Data Mining: Concepts and Techniques - Jiawei Han, Micheline Kamber
+• Building the Data Warehouse - W.H. Inmon
 
-The AI draws from standard DBMS textbooks (Silberschatz, Ramakrishnan, Date), official course materials, and past year question papers to provide exam-focused, accurate responses.`,
+**Artificial Intelligence (MCA-302):**
+• Artificial Intelligence - Elaine Rich, Kevin Knight
+• Introduction to AI and Expert Systems - Dan W. Patterson
+• Programming in Prolog - W.F. Clocksin, C.S. Mellish
+
+**Python Programming (MCA-303-1):**
+• Think Python (2nd Edition) - Allen B. Downey
+
+**Internet of Things (MCA-304-3):**
+• Internet of Things: A Hands-On Approach - Arshdeep Bahga, Vijay Madisetti
+• The Internet of Things: Connecting Objects - Hakima Chaouchi
+
+**Distributed Systems (MCA-305-3):**
+• Distributed Systems: Concepts and Design - George Coulouris et al.
+• Distributed Systems - Andrew S. Tanenbaum, Maarten Van Steen
+
+Every response includes **clickable citations** [[C1]], [[C2]] with exact **page numbers** from source documents.`,
     images: [] as string[],
   },
 ];
