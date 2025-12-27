@@ -82,9 +82,13 @@ func (m *CronManager) CheckBatchIngestKBIndexing() {
 		} else {
 			// Case 2: No explicit indexing job UUID - check data source status directly
 			// Get subject's KB UUID
+			if job.SubjectID == nil {
+				log.Printf("[CRON] Job %d has no subject ID, skipping", job.ID)
+				continue
+			}
 			var subject model.Subject
-			if err := m.db.First(&subject, job.SubjectID).Error; err != nil {
-				log.Printf("[CRON] Failed to get subject %d: %v", job.SubjectID, err)
+			if err := m.db.First(&subject, *job.SubjectID).Error; err != nil {
+				log.Printf("[CRON] Failed to get subject %d: %v", *job.SubjectID, err)
 				continue
 			}
 
@@ -333,7 +337,9 @@ func (m *CronManager) CheckBatchIngestKBIndexing() {
 
 		// Get subject for notification
 		var subject model.Subject
-		m.db.First(&subject, job.SubjectID)
+		if job.SubjectID != nil {
+			m.db.First(&subject, *job.SubjectID)
+		}
 
 		// Update notification to final status
 		var title, message string

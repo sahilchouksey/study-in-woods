@@ -41,7 +41,15 @@ func main() {
 	fmt.Printf("\n📋 JOB METADATA:\n")
 	fmt.Printf("   Type:        %s\n", job.JobType)
 	fmt.Printf("   Status:      %s\n", job.Status)
-	fmt.Printf("   Subject:     %s (ID: %d)\n", job.Subject.Name, job.SubjectID)
+	subjectIDStr := "nil"
+	if job.SubjectID != nil {
+		subjectIDStr = fmt.Sprintf("%d", *job.SubjectID)
+	}
+	subjectName := "N/A"
+	if job.Subject != nil {
+		subjectName = job.Subject.Name
+	}
+	fmt.Printf("   Subject:     %s (ID: %s)\n", subjectName, subjectIDStr)
 	fmt.Printf("   User ID:     %d\n", job.CreatedByUserID)
 	fmt.Printf("   Total Items: %d\n", job.TotalItems)
 	fmt.Printf("   Completed:   %d\n", job.CompletedItems)

@@ -17,7 +17,7 @@ type IndexingJob struct {
 	ID                uint `gorm:"primaryKey"`
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
-	SubjectID         uint
+	SubjectID         *uint
 	JobType           string
 	Status            string
 	TotalItems        int
@@ -140,7 +140,11 @@ func main() {
 			fmt.Printf("%s Job ID: %d\n", statusIcon, job.ID)
 			fmt.Printf("   Type: %s\n", job.JobType)
 			fmt.Printf("   Status: %s\n", job.Status)
-			fmt.Printf("   Subject ID: %d\n", job.SubjectID)
+			if job.SubjectID != nil {
+				fmt.Printf("   Subject ID: %d\n", *job.SubjectID)
+			} else {
+				fmt.Printf("   Subject ID: N/A (multi-subject job)\n")
+			}
 			fmt.Printf("   User ID: %d\n", job.CreatedByUserID)
 			fmt.Printf("   Progress: %d%% (%d/%d completed, %d failed)\n",
 				progress, job.CompletedItems, job.TotalItems, job.FailedItems)
@@ -189,8 +193,12 @@ func main() {
 
 	if len(activeJobs) > 0 {
 		for _, job := range activeJobs {
-			fmt.Printf("🔄 Job %d - %s (Subject: %d, User: %d)\n",
-				job.ID, job.Status, job.SubjectID, job.CreatedByUserID)
+			subjectStr := "N/A"
+			if job.SubjectID != nil {
+				subjectStr = fmt.Sprintf("%d", *job.SubjectID)
+			}
+			fmt.Printf("🔄 Job %d - %s (Subject: %s, User: %d)\n",
+				job.ID, job.Status, subjectStr, job.CreatedByUserID)
 		}
 	} else {
 		fmt.Println("No active jobs currently running")

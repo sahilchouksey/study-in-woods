@@ -3,6 +3,7 @@ import {
   notificationService,
   batchIngestService,
   batchDocumentUploadService,
+  aiSetupService,
   type ListNotificationsOptions,
   type BatchIngestPaper,
   type IndexingJobStatus,
@@ -491,6 +492,100 @@ export function useBatchUploadManager(subjectId: string | null) {
       batchUpload.reset();
       queryClient.invalidateQueries({ queryKey: ['indexing-jobs'] });
       queryClient.invalidateQueries({ queryKey: ['document-upload-jobs'] });
+    },
+  };
+}
+
+// ============= AI Setup Job Hooks =============
+
+/**
+ * Hook to get AI setup job status with polling
+ */
+export function useAISetupJobStatus(jobId: number | null, shouldPoll: boolean = false) {
+  const isEnabled = !!jobId && shouldPoll;
+  
+  console.log('[useAISetupJobStatus] Hook called:', { 
+    jobId, 
+    shouldPoll, 
+    isEnabled,
+    willPoll: isEnabled ? 'every 3s' : 'disabled'
+  });
+  
+  return useQuery({
+    queryKey: ['ai-setup-jobs', jobId],
+    queryFn: async () => {
+      console.log('[useAISetupJobStatus] Fetching job status for:', jobId);
+      const result = await aiSetupService.getJobStatus(jobId!);
+      console.log('[useAISetupJobStatus] Got result:', result);
+      return result;
+    },
+    enabled: isEnabled,
+    staleTime: 2000, // 2 seconds
+    refetchInterval: isEnabled ? 3000 : false, // Poll every 3 seconds when active
+    refetchIntervalInBackground: true,
+  });
+}
+
+/**
+ * Hook to get user's active AI setup job
+ */
+export function useActiveAISetupJob(enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['ai-setup-jobs', 'active'],
+    queryFn: () => aiSetupService.getActiveJob(),
+    enabled,
+    staleTime: 10 * 1000, // 10 seconds
+    refetchInterval: 30 * 1000, // Poll every 30 seconds
+  });
+}
+
+/**
+ * Hook that provides AI setup job tracking functionality
+ */
+export function useAISetupJobManager() {
+  // Get active job
+  const activeJobQuery = useActiveAISetupJob();
+  const activeJobId = activeJobQuery.data?.id || null;
+  
+  // Determine if we should poll based on job status
+  const shouldPoll = activeJobId !== null && 
+    activeJobQuery.data?.status !== 'completed' && 
+    activeJobQuery.data?.status !== 'failed' &&
+    activeJobQuery.data?.status !== 'cancelled';
+  
+  // Get detailed job status with polling when there's an active job
+  const jobStatus = useAISetupJobStatus(activeJobId, shouldPoll);
+  
+  // Check if job is still in a processing state
+  const isJobActive = jobStatus.data?.status === 'pending' || 
+    jobStatus.data?.status === 'processing' || 
+    jobStatus.data?.status === 'kb_indexing';
+  
+  return {
+    // Active job info
+    activeJobId,
+    activeJob: jobStatus.data || activeJobQuery.data,
+    hasActiveJob: activeJobId !== null,
+    isProcessing: isJobActive,
+    
+    // Job status
+    status: jobStatus.data?.status || activeJobQuery.data?.status,
+    completedItems: jobStatus.data?.completed_items || 0,
+    failedItems: jobStatus.data?.failed_items || 0,
+    totalItems: jobStatus.data?.total_items || 0,
+    items: jobStatus.data?.items || [],
+    
+    // Loading states
+    isLoading: activeJobQuery.isLoading,
+    isPolling: shouldPoll && jobStatus.isFetching,
+    error: activeJobQuery.error || jobStatus.error,
+    
+    // Refetch
+    refetch: () => {
+      activeJobQuery.refetch();
+      if (activeJobId) {
+        jobStatus.refetch();
+      }
     },
   };
 }

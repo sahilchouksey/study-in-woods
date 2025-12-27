@@ -151,8 +151,9 @@ func (s *BatchDocumentService) StartBatchUpload(ctx context.Context, req BatchUp
 
 	// Create indexing job
 	now := time.Now()
+	subjectID := req.SubjectID
 	job := &model.IndexingJob{
-		SubjectID:       req.SubjectID,
+		SubjectID:       &subjectID,
 		JobType:         model.IndexingJobTypeDocumentUpload,
 		Status:          model.IndexingJobStatusPending,
 		TotalItems:      len(filesData),

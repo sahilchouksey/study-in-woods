@@ -19,6 +19,8 @@ import { PYQTab } from './PYQTab';
 import { useDocuments } from '@/lib/api/hooks/useDocuments';
 import { useSyllabus } from '@/lib/api/hooks/useSyllabus';
 import { usePYQs } from '@/lib/api/hooks/usePYQ';
+import { AIReadyBadge, SubjectAIStatus } from '@/components/ai-setup/SubjectAIStatus';
+import type { AISetupStatus } from '@/lib/api/courses';
 
 interface Subject {
   id: string;
@@ -26,6 +28,7 @@ interface Subject {
   code: string;
   credits?: number;
   description?: string;
+  ai_setup_status?: AISetupStatus;
 }
 
 interface SubjectDocumentsDialogProps {
@@ -86,6 +89,10 @@ export function SubjectDocumentsDialog({
                   <Badge variant="secondary" className="text-xs">
                     {documentCount} document{documentCount !== 1 ? 's' : ''}
                   </Badge>
+                )}
+                <AIReadyBadge status={subject.ai_setup_status || 'none'} />
+                {(subject.ai_setup_status === 'pending' || subject.ai_setup_status === 'in_progress') && (
+                  <SubjectAIStatus status={subject.ai_setup_status} compact={false} />
                 )}
               </div>
               {subject.description && (

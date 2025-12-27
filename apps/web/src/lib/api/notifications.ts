@@ -9,7 +9,7 @@ export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'in_pr
 /**
  * Notification category
  */
-export type NotificationCategory = 'pyq_ingest' | 'document_upload' | 'syllabus_extraction' | 'general';
+export type NotificationCategory = 'pyq_ingest' | 'document_upload' | 'syllabus_extraction' | 'ai_setup' | 'general';
 
 /**
  * Notification metadata
@@ -548,5 +548,125 @@ export const batchDocumentUploadService = {
       `/api/v1/indexing-jobs/${jobId}/cancel`
     );
     return response.data.data || { message: 'Job cancelled' };
+  },
+};
+
+// ============ AI SETUP JOB INTERFACES ============
+
+/**
+ * AI setup status for subjects
+ */
+export type AISetupStatus = 'none' | 'pending' | 'in_progress' | 'completed' | 'failed';
+
+/**
+ * AI setup item metadata
+ */
+export interface AISetupItemMetadata {
+  subject_name?: string;
+  subject_code?: string;
+  phase?: string;
+  knowledge_base_uuid?: string;
+  agent_uuid?: string;
+  agent_deployment_url?: string;
+  has_api_key?: boolean;
+}
+
+/**
+ * AI setup job item interface
+ */
+export interface AISetupJobItem {
+  id: number;
+  job_id?: number;
+  item_type: string;
+  subject_id?: number;
+  status: IndexingJobItemStatus | 'kb_creating' | 'kb_indexing' | 'agent_creating' | 'apikey_creating';
+  error_message?: string;
+  metadata?: AISetupItemMetadata;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * AI setup job interface
+ */
+export interface AISetupJob {
+  id: number;
+  job_type: string;
+  status: IndexingJobStatus;
+  total_items: number;
+  completed_items: number;
+  failed_items: number;
+  started_at?: string;
+  completed_at?: string;
+  items?: AISetupJobItem[];
+}
+
+/**
+ * AI setup job status display configuration
+ */
+export const AI_SETUP_STATUS_CONFIG: Record<AISetupStatus, {
+  label: string;
+  color: string;
+  bgColor: string;
+  description: string;
+}> = {
+  none: {
+    label: 'No AI',
+    color: 'text-gray-500',
+    bgColor: 'bg-gray-100',
+    description: 'AI assistant not set up for this subject',
+  },
+  pending: {
+    label: 'Pending',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100',
+    description: 'AI setup is queued',
+  },
+  in_progress: {
+    label: 'Setting Up...',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
+    description: 'AI resources are being created',
+  },
+  completed: {
+    label: 'AI Ready',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    description: 'AI assistant is ready to use',
+  },
+  failed: {
+    label: 'AI Setup Failed',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
+    description: 'Failed to set up AI resources',
+  },
+};
+
+/**
+ * AI setup service
+ */
+export const aiSetupService = {
+  /**
+   * Get status of an AI setup job
+   */
+  async getJobStatus(jobId: number): Promise<AISetupJob> {
+    console.log('[aiSetupService] getJobStatus called for jobId:', jobId);
+    const response = await apiClient.get<ApiResponse<AISetupJob>>(
+      `/api/v1/ai-setup-jobs/${jobId}`
+    );
+    console.log('[aiSetupService] getJobStatus response:', response.data);
+    return response.data.data!;
+  },
+
+  /**
+   * Get user's active AI setup job
+   */
+  async getActiveJob(): Promise<AISetupJob | null> {
+    console.log('[aiSetupService] getActiveJob called');
+    const response = await apiClient.get<ApiResponse<{ active_job: AISetupJob | null }>>(
+      '/api/v1/ai-setup-jobs/active'
+    );
+    console.log('[aiSetupService] getActiveJob response:', response.data);
+    return response.data.data?.active_job || null;
   },
 };

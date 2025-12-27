@@ -61,6 +61,11 @@ export interface Semester {
 }
 
 /**
+ * AI setup status type
+ */
+export type AISetupStatus = 'none' | 'pending' | 'in_progress' | 'completed' | 'failed';
+
+/**
  * Subject type
  */
 export interface Subject {
@@ -71,6 +76,9 @@ export interface Subject {
   description?: string;
   credits?: number;
   is_starred?: boolean;
+  ai_setup_status?: AISetupStatus;
+  knowledge_base_uuid?: string;
+  agent_uuid?: string;
   created_at: string;
   updated_at: string;
 }

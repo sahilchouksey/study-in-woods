@@ -147,8 +147,9 @@ func (s *BatchIngestService) StartBatchIngest(ctx context.Context, req BatchInge
 
 	// Create indexing job
 	now := time.Now()
+	subjectID := req.SubjectID
 	job := &model.IndexingJob{
-		SubjectID:       req.SubjectID,
+		SubjectID:       &subjectID,
 		JobType:         model.IndexingJobTypeBatchPYQIngest,
 		Status:          model.IndexingJobStatusPending,
 		TotalItems:      len(validPapers),

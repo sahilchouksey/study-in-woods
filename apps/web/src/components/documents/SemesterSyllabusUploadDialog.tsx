@@ -343,7 +343,7 @@ export function SemesterSyllabusUploadDialog({
                     headers: {
                         'Content-Type': undefined as unknown as string,
                     },
-                    timeout: 60000, // 1 minute for upload only
+                    timeout: 300000, // 5 minutes for upload + OCR processing
                 }
             );
 

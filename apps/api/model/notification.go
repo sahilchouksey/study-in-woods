@@ -25,6 +25,7 @@ const (
 	NotificationCategoryPYQIngest       NotificationCategory = "pyq_ingest"
 	NotificationCategoryDocumentUpload  NotificationCategory = "document_upload"
 	NotificationCategorySyllabusExtract NotificationCategory = "syllabus_extraction"
+	NotificationCategoryAISetup         NotificationCategory = "ai_setup" // AI setup (KB + Agent) for subjects
 	NotificationCategoryGeneral         NotificationCategory = "general"
 )
 

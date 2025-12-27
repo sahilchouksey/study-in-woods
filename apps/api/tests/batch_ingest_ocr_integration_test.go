@@ -699,7 +699,7 @@ func TestSingleSubjectDeepVerification(t *testing.T) {
 
 	log.Printf("  Job Fields:")
 	log.Printf("    ID: %d", job.ID)
-	log.Printf("    SubjectID: %d", job.SubjectID)
+	log.Printf("    SubjectID: %v", job.SubjectID)
 	log.Printf("    JobType: %s", job.JobType)
 	log.Printf("    Status: %s", job.Status)
 	log.Printf("    TotalItems: %d", job.TotalItems)

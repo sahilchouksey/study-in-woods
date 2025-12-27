@@ -39,6 +39,17 @@ type Semester struct {
 	Subjects []Subject `gorm:"foreignKey:SemesterID;constraint:OnDelete:CASCADE" json:"subjects,omitempty"`
 }
 
+// AISetupStatus represents the status of AI resource setup for a subject
+type AISetupStatus string
+
+const (
+	AISetupStatusNone       AISetupStatus = ""            // No AI setup attempted
+	AISetupStatusPending    AISetupStatus = "pending"     // Waiting to start
+	AISetupStatusInProgress AISetupStatus = "in_progress" // Currently setting up
+	AISetupStatusCompleted  AISetupStatus = "completed"   // All AI resources ready
+	AISetupStatusFailed     AISetupStatus = "failed"      // Setup failed
+)
+
 // Subject represents an individual academic subject
 type Subject struct {
 	ID                uint           `gorm:"primaryKey" json:"id"`
@@ -53,6 +64,9 @@ type Subject struct {
 	KnowledgeBaseUUID string         `gorm:"type:varchar(100)" json:"knowledge_base_uuid"`
 	AgentUUID         string         `gorm:"type:varchar(100)" json:"agent_uuid"`
 	IsStarred         bool           `gorm:"default:false" json:"is_starred"` // Starred subjects appear first in lists
+
+	// AI Setup tracking
+	AISetupStatus AISetupStatus `gorm:"type:varchar(20);default:''" json:"ai_setup_status"` // Status of AI resource setup
 
 	// Encrypted Agent API Key storage (AES-256-GCM)
 	// The API key is encrypted before storage and never exposed in JSON responses

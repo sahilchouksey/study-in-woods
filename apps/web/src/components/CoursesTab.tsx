@@ -22,6 +22,7 @@ import { SubjectFormDialog } from '@/components/admin/SubjectFormDialog';
 import { DeleteConfirmationDialog } from '@/components/admin/DeleteConfirmationDialog';
 import { SubjectDocumentsDialog, SemesterSyllabusUploadDialog } from '@/components/documents';
 import { CoursesBreadcrumb } from '@/components/CoursesBreadcrumb';
+import { AIReadyBadge, SubjectAIStatus } from '@/components/ai-setup/SubjectAIStatus';
 import { toast } from 'sonner';
 import type { University, Course, Semester, Subject } from '@/lib/api/courses';
 
@@ -847,11 +848,15 @@ export function CoursesTab() {
                               )}
                               <div>
                                 <CardTitle className="text-lg">{subject.name}</CardTitle>
-                                <CardDescription className="mt-1">
+                                <CardDescription className="mt-1 flex items-center gap-2">
                                   {subject.code && (
                                     <Badge variant="outline" className="text-xs">
                                       {subject.code}
                                     </Badge>
+                                  )}
+                                  <AIReadyBadge status={subject.ai_setup_status || 'none'} />
+                                  {(subject.ai_setup_status === 'pending' || subject.ai_setup_status === 'in_progress') && (
+                                    <SubjectAIStatus status={subject.ai_setup_status} compact={false} />
                                   )}
                                 </CardDescription>
                               </div>

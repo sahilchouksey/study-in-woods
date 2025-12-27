@@ -9,6 +9,7 @@ import (
 	"github.com/sahilchouksey/go-init-setup/database"
 	"github.com/sahilchouksey/go-init-setup/handlers"
 	admin_handlers "github.com/sahilchouksey/go-init-setup/handlers/admin"
+	aisetup_handlers "github.com/sahilchouksey/go-init-setup/handlers/aisetup"
 	analytics_handlers "github.com/sahilchouksey/go-init-setup/handlers/analytics"
 	apikey_handlers "github.com/sahilchouksey/go-init-setup/handlers/apikey"
 	auth_handlers "github.com/sahilchouksey/go-init-setup/handlers/auth"
@@ -140,6 +141,12 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// Initialize Batch Document Upload service and handler
 	batchDocumentService := services.NewBatchDocumentService(db, notificationService)
 	batchDocumentUploadHandler := document_handlers.NewBatchDocumentUploadHandler(batchDocumentService)
+
+	// Initialize AI Setup service and handler
+	aiSetupService := services.NewAISetupService(db, subjectService, notificationService)
+	aiSetupHandler := aisetup_handlers.NewAISetupHandler(aiSetupService)
+	// Connect AI setup service to syllabus service for automatic AI setup after extraction
+	syllabusService.SetAISetupService(aiSetupService)
 
 	// Apply security middleware
 	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
@@ -314,6 +321,13 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	notifications.Post("/read-all", notificationHandler.MarkAllAsRead)     // Protected: Mark all as read
 	notifications.Delete("/:id", notificationHandler.DeleteNotification)   // Protected: Delete notification
 	notifications.Delete("/", notificationHandler.DeleteAllNotifications)  // Protected: Delete all notifications
+
+	// ==================== AI Setup Jobs ====================
+
+	// AI setup job routes (all protected - require authentication)
+	aiSetupJobs := api.Group("/ai-setup-jobs", authMiddleware.Required())
+	aiSetupJobs.Get("/active", aiSetupHandler.GetActiveJob)  // Protected: Get user's active AI setup job
+	aiSetupJobs.Get("/:job_id", aiSetupHandler.GetJobStatus) // Protected: Get AI setup job status
 
 	// ======================================================================
 

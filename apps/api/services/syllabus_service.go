@@ -22,6 +22,7 @@ type SyllabusService struct {
 	pdfExtractor     *PDFExtractor
 	chunkedExtractor *ChunkedSyllabusExtractor
 	subjectService   *SubjectService
+	aiSetupService   *AISetupService
 	enableAI         bool
 	enableSpaces     bool
 }
@@ -59,22 +60,32 @@ func NewSyllabusService(db *gorm.DB) *SyllabusService {
 		service.enableSpaces = true
 	}
 
-	// Initialize chunked extractor if AI and Spaces are available
-	if service.enableAI && service.enableSpaces {
-		service.chunkedExtractor = NewChunkedSyllabusExtractor(
-			db,
-			service.inferenceClient,
-			service.spacesClient,
-			service.pdfExtractor,
-			DefaultChunkedExtractorConfig(),
-		)
-		log.Println("ChunkedSyllabusExtractor initialized for parallel PDF processing")
-	}
-
 	// Initialize subject service for AI resource creation
 	service.subjectService = NewSubjectService(db)
 
+	// Note: chunkedExtractor is initialized later via SetAISetupService() once AISetupService is available
+	// This breaks a circular dependency since AISetupService needs SubjectService which is created above
+
 	return service
+}
+
+// SetAISetupService sets the AI setup service and initializes the chunked extractor
+// This must be called after AISetupService is created to break circular dependency
+func (s *SyllabusService) SetAISetupService(aiSetupService *AISetupService) {
+	s.aiSetupService = aiSetupService
+
+	// Initialize chunked extractor now that we have AISetupService
+	if s.enableAI && s.enableSpaces {
+		s.chunkedExtractor = NewChunkedSyllabusExtractor(
+			s.db,
+			s.inferenceClient,
+			s.spacesClient,
+			s.pdfExtractor,
+			aiSetupService,
+			DefaultChunkedExtractorConfig(),
+		)
+		log.Println("ChunkedSyllabusExtractor initialized for parallel PDF processing (with AISetupService)")
+	}
 }
 
 // SyllabusExtractionResult holds the result of syllabus extraction (multiple subjects)
@@ -938,87 +949,23 @@ func (s *SyllabusService) saveMultiSubjectSyllabusData(ctx context.Context, docu
 	}
 
 	// Setup AI resources for subjects AFTER transaction commits (so subjects are visible)
-	// Process sequentially with rate limiting and retry to avoid DigitalOcean API 429 errors
-	if s.subjectService != nil && len(subjectsNeedingAISetup) > 0 {
-		log.Printf("SyllabusService: Starting AI setup for %d subjects after transaction commit (sequential with rate limiting)", len(subjectsNeedingAISetup))
+	// Use AISetupService to create a tracked job with proper rate limiting and notifications
+	if s.aiSetupService != nil && len(subjectsNeedingAISetup) > 0 {
+		log.Printf("SyllabusService: Queuing AI setup for %d subjects via AISetupService", len(subjectsNeedingAISetup))
 
-		// Single goroutine processes all subjects sequentially to avoid rate limits
-		go func() {
-			// Initial delay to let any previous DO API calls settle
-			log.Printf("SyllabusService: Waiting 5s before starting AI setup to avoid rate limits...")
-			time.Sleep(5 * time.Second)
-
-			// Backoff durations: 5s, 15s, 30s, 60s, 120s (total ~4 min max wait per subject)
-			backoffDurations := []time.Duration{
-				5 * time.Second,
-				15 * time.Second,
-				30 * time.Second,
-				60 * time.Second,
-				120 * time.Second,
-			}
-
-			for i, subjectID := range subjectsNeedingAISetup {
-				var lastErr error
-				maxRetries := len(backoffDurations)
-
-				// Retry loop with exponential backoff for rate limit errors
-				for attempt := 0; attempt < maxRetries; attempt++ {
-					if attempt > 0 {
-						backoff := backoffDurations[attempt-1]
-						log.Printf("SyllabusService: Retrying AI setup for subject %d (attempt %d/%d) after %v backoff",
-							subjectID, attempt+1, maxRetries, backoff)
-						time.Sleep(backoff)
-					}
-
-					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-					result, err := s.subjectService.SetupSubjectAI(ctx, subjectID)
-					cancel()
-
-					if err == nil {
-						log.Printf("SyllabusService: AI setup complete for subject %d (KB: %v, Agent: %v, APIKey: %v)",
-							subjectID, result.KnowledgeBaseCreated, result.AgentCreated, result.APIKeyCreated)
-						lastErr = nil
-						break
-					}
-
-					lastErr = err
-					if !isSyllabusRateLimitError(err) {
-						// Non-retriable error, log and move on
-						log.Printf("Warning: SyllabusService failed to setup AI for subject %d: %v", subjectID, err)
-						break
-					}
-					// Rate limit error - will retry
-					log.Printf("SyllabusService: Rate limit hit for subject %d, will retry...", subjectID)
-				}
-
-				if lastErr != nil && isSyllabusRateLimitError(lastErr) {
-					log.Printf("Warning: SyllabusService exhausted retries for subject %d due to rate limiting: %v", subjectID, lastErr)
-				}
-
-				// Rate limit delay between subjects (except after last one)
-				// Use 5s to stay well under DO's rate limit window
-				if i < len(subjectsNeedingAISetup)-1 {
-					log.Printf("SyllabusService: Waiting 5s before next subject...")
-					time.Sleep(5 * time.Second)
-				}
-			}
-			log.Printf("SyllabusService: Completed AI setup for all %d subjects", len(subjectsNeedingAISetup))
-		}()
+		result, err := s.aiSetupService.StartOrQueueAISetup(ctx, AISetupRequest{
+			SubjectIDs: subjectsNeedingAISetup,
+			UserID:     document.UploadedByUserID,
+		})
+		if err != nil {
+			log.Printf("Warning: SyllabusService failed to start AI setup job: %v", err)
+		} else {
+			log.Printf("SyllabusService: AI setup job created/queued (job_id=%d, total_items=%d, is_new=%v)",
+				result.JobID, result.TotalItems, result.IsNewJob)
+		}
 	}
 
 	return syllabuses, nil
-}
-
-// isSyllabusRateLimitError checks if an error is a DigitalOcean rate limit error (HTTP 429)
-func isSyllabusRateLimitError(err error) bool {
-	if err == nil {
-		return false
-	}
-	errStr := err.Error()
-	return strings.Contains(errStr, "429") ||
-		strings.Contains(errStr, "too_many_requests") ||
-		strings.Contains(errStr, "rate limit") ||
-		strings.Contains(errStr, "failed to check limits")
 }
 
 // GetSyllabusBySubject retrieves the first/primary syllabus for a subject
