@@ -144,6 +144,7 @@ func (c *Client) GetAgent(ctx context.Context, uuid string) (*Agent, error) {
 }
 
 // CreateAgent creates a new agent
+// Uses GenAI rate limiting since this is a resource-intensive operation
 func (c *Client) CreateAgent(ctx context.Context, req CreateAgentRequest) (*Agent, error) {
 	endpoint := "/v2/gen-ai/agents"
 
@@ -151,7 +152,8 @@ func (c *Client) CreateAgent(ctx context.Context, req CreateAgentRequest) (*Agen
 		Agent Agent `json:"agent"`
 	}
 
-	if err := c.doRequest(ctx, "POST", endpoint, req, &result); err != nil {
+	// Use GenAI rate limiting for agent creation (more conservative)
+	if err := c.doRequestGenAI(ctx, "POST", endpoint, req, &result); err != nil {
 		return nil, err
 	}
 
@@ -240,6 +242,7 @@ type CreateAgentAPIKeyRequest struct {
 
 // CreateAgentAPIKey creates an API key for an agent
 // The secret key is only returned on creation and cannot be retrieved later
+// Uses GenAI rate limiting since this is a resource-intensive operation
 func (c *Client) CreateAgentAPIKey(ctx context.Context, agentUUID, name string) (*AgentAPIKey, error) {
 	endpoint := fmt.Sprintf("/v2/gen-ai/agents/%s/api_keys", agentUUID)
 
@@ -252,7 +255,8 @@ func (c *Client) CreateAgentAPIKey(ctx context.Context, agentUUID, name string) 
 		APIKeyInfo AgentAPIKey `json:"api_key_info"`
 	}
 
-	if err := c.doRequest(ctx, "POST", endpoint, req, &result); err != nil {
+	// Use GenAI rate limiting for API key creation (more conservative)
+	if err := c.doRequestGenAI(ctx, "POST", endpoint, req, &result); err != nil {
 		return nil, err
 	}
 
@@ -322,6 +326,7 @@ type UpdateAgentDeploymentVisibilityResponse struct {
 
 // DeployAgent deploys an agent by setting its visibility to public or private
 // This triggers DO to provision the agent and generate a deployment URL
+// Uses GenAI rate limiting since this is a resource-intensive operation
 func (c *Client) DeployAgent(ctx context.Context, agentUUID string, visibility DeploymentVisibility) (*Agent, error) {
 	endpoint := fmt.Sprintf("/v2/gen-ai/agents/%s/deployment_visibility", agentUUID)
 
@@ -331,7 +336,8 @@ func (c *Client) DeployAgent(ctx context.Context, agentUUID string, visibility D
 	}
 
 	var result UpdateAgentDeploymentVisibilityResponse
-	if err := c.doRequest(ctx, "PUT", endpoint, req, &result); err != nil {
+	// Use GenAI rate limiting for agent deployment (more conservative)
+	if err := c.doRequestGenAI(ctx, "PUT", endpoint, req, &result); err != nil {
 		return nil, err
 	}
 

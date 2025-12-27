@@ -270,6 +270,7 @@ CRITICAL: You MUST output ONLY raw JSON without any markdown, explanation or com
 
 // deleteExistingSyllabusDataForSubject deletes all existing syllabus data for a subject
 // This ensures a clean slate when uploading a new syllabus
+// It also cleans up DigitalOcean AI resources (Knowledge Base, Agent) so they can be recreated
 func (s *SyllabusService) deleteExistingSyllabusDataForSubject(ctx context.Context, subjectID uint) error {
 	if subjectID == 0 {
 		return nil // No subject to clean up
@@ -288,6 +289,14 @@ func (s *SyllabusService) deleteExistingSyllabusDataForSubject(ctx context.Conte
 
 	log.Printf("SyllabusService: Deleting %d existing syllabus(es) for subject %d", len(syllabuses), subjectID)
 
+	// Clean up DigitalOcean AI resources if subject service is available
+	if s.subjectService != nil {
+		if err := s.subjectService.CleanupAIResources(ctx, subjectID); err != nil {
+			log.Printf("Warning: Failed to cleanup AI resources for subject %d: %v", subjectID, err)
+			// Continue anyway - we still want to delete the syllabus data
+		}
+	}
+
 	// Delete all syllabuses (cascade will delete units, topics, and books)
 	// Using Unscoped() to permanently delete, not soft delete
 	if err := s.db.Unscoped().Where("subject_id = ?", subjectID).Delete(&model.Syllabus{}).Error; err != nil {
@@ -300,6 +309,7 @@ func (s *SyllabusService) deleteExistingSyllabusDataForSubject(ctx context.Conte
 
 // DeleteExistingSyllabusDataForSemester deletes all existing syllabus data for all subjects in a semester
 // This is used when uploading a new semester-level syllabus to ensure clean data
+// It also cleans up DigitalOcean AI resources for all affected subjects
 func (s *SyllabusService) DeleteExistingSyllabusDataForSemester(ctx context.Context, semesterID uint) error {
 	if semesterID == 0 {
 		return nil // No semester to clean up
@@ -334,6 +344,19 @@ func (s *SyllabusService) DeleteExistingSyllabusDataForSemester(ctx context.Cont
 	}
 
 	log.Printf("SyllabusService: Deleting %d existing syllabus(es) for semester %d (%d subjects)", count, semesterID, len(subjects))
+
+	// Clean up DigitalOcean AI resources for all subjects if subject service is available
+	if s.subjectService != nil {
+		for _, subject := range subjects {
+			// Only cleanup if subject has AI resources
+			if subject.KnowledgeBaseUUID != "" || subject.AgentUUID != "" {
+				if err := s.subjectService.CleanupAIResources(ctx, subject.ID); err != nil {
+					log.Printf("Warning: Failed to cleanup AI resources for subject %d: %v", subject.ID, err)
+					// Continue anyway - we still want to delete the syllabus data
+				}
+			}
+		}
+	}
 
 	// Delete all syllabuses for these subjects (cascade will delete units, topics, and books)
 	// Using Unscoped() to permanently delete, not soft delete
@@ -1055,7 +1078,22 @@ func (s *SyllabusService) RetryExtraction(ctx context.Context, syllabusID uint) 
 }
 
 // DeleteSyllabus deletes a syllabus and all related data
+// It also cleans up DigitalOcean AI resources for the associated subject
 func (s *SyllabusService) DeleteSyllabus(ctx context.Context, syllabusID uint) error {
+	// Get the syllabus to find its subject ID
+	var syllabus model.Syllabus
+	if err := s.db.First(&syllabus, syllabusID).Error; err != nil {
+		return fmt.Errorf("failed to find syllabus: %w", err)
+	}
+
+	// Clean up AI resources for the subject if available
+	if s.subjectService != nil && syllabus.SubjectID > 0 {
+		if err := s.subjectService.CleanupAIResources(ctx, syllabus.SubjectID); err != nil {
+			log.Printf("Warning: Failed to cleanup AI resources for subject %d: %v", syllabus.SubjectID, err)
+			// Continue anyway - we still want to delete the syllabus
+		}
+	}
+
 	// Cascading delete is handled by GORM constraints
 	return s.db.Delete(&model.Syllabus{}, syllabusID).Error
 }

@@ -37,15 +37,17 @@ type Client struct {
 	httpClient      *http.Client // For regular API calls
 	streamingClient *http.Client // For streaming requests (longer timeout)
 	retryConfig     RetryConfig
+	rateLimiter     *RateLimiter // Rate limiter for API requests
 }
 
 // Config holds configuration for the DigitalOcean client
 type Config struct {
-	APIToken         string
-	Timeout          time.Duration
-	StreamingTimeout time.Duration
-	BaseURL          string
-	RetryConfig      *RetryConfig // Optional custom retry config
+	APIToken          string
+	Timeout           time.Duration
+	StreamingTimeout  time.Duration
+	BaseURL           string
+	RetryConfig       *RetryConfig       // Optional custom retry config
+	RateLimiterConfig *RateLimiterConfig // Optional rate limiter config
 }
 
 // RetryConfig holds retry configuration for failed requests
@@ -82,15 +84,21 @@ func NewClient(config Config) *Client {
 		retryConfig = *config.RetryConfig
 	}
 
+	rateLimiterConfig := DefaultRateLimiterConfig()
+	if config.RateLimiterConfig != nil {
+		rateLimiterConfig = *config.RateLimiterConfig
+	}
+	rateLimiter := NewRateLimiter(rateLimiterConfig)
+
 	// Create streaming transport with proper timeouts for SSE
 	// IMPORTANT: Do NOT set http.Client.Timeout for streaming - it kills long-running streams!
 	// Instead, use Transport-level timeouts for connection establishment only
 	streamingTransport := &http.Transport{
 		DialContext: (&net.Dialer{
-			Timeout:   DefaultDialTimeout,   // TCP connection timeout
-			KeepAlive: DefaultIdleTimeout,   // Keep-alive probe interval
+			Timeout:   DefaultDialTimeout, // TCP connection timeout
+			KeepAlive: DefaultIdleTimeout, // Keep-alive probe interval
 		}).DialContext,
-		TLSHandshakeTimeout:   DefaultTLSTimeout,   // TLS handshake timeout
+		TLSHandshakeTimeout:   DefaultTLSTimeout,    // TLS handshake timeout
 		ResponseHeaderTimeout: DefaultHeaderTimeout, // Time to wait for response headers
 		// NO IdleConnTimeout - we want to keep streaming connections alive
 		MaxIdleConns:        100,
@@ -112,6 +120,7 @@ func NewClient(config Config) *Client {
 			// Timeout: 0, // Explicitly NOT setting this - streams can run as long as needed
 		},
 		retryConfig: retryConfig,
+		rateLimiter: rateLimiter,
 	}
 }
 
@@ -123,6 +132,11 @@ func (c *Client) GetStreamingClient() *http.Client {
 // GetRetryConfig returns the retry configuration
 func (c *Client) GetRetryConfig() RetryConfig {
 	return c.retryConfig
+}
+
+// GetRateLimiter returns the rate limiter
+func (c *Client) GetRateLimiter() *RateLimiter {
+	return c.rateLimiter
 }
 
 // IsRetryableStatusCode checks if an HTTP status code should trigger a retry
@@ -171,6 +185,29 @@ func ParseRetryAfter(resp *http.Response) time.Duration {
 
 // doRequest performs an HTTP request to the DigitalOcean API
 func (c *Client) doRequest(ctx context.Context, method, endpoint string, body interface{}, result interface{}) error {
+	return c.doRequestWithRateLimit(ctx, method, endpoint, body, result, false)
+}
+
+// doRequestGenAI performs an HTTP request using GenAI rate limiting (more conservative)
+func (c *Client) doRequestGenAI(ctx context.Context, method, endpoint string, body interface{}, result interface{}) error {
+	return c.doRequestWithRateLimit(ctx, method, endpoint, body, result, true)
+}
+
+// doRequestWithRateLimit performs an HTTP request with rate limiting
+func (c *Client) doRequestWithRateLimit(ctx context.Context, method, endpoint string, body interface{}, result interface{}, isGenAI bool) error {
+	// Apply rate limiting
+	if c.rateLimiter != nil {
+		if isGenAI {
+			if err := c.rateLimiter.WaitGenAI(ctx); err != nil {
+				return fmt.Errorf("rate limiter wait cancelled: %w", err)
+			}
+		} else {
+			if err := c.rateLimiter.Wait(ctx); err != nil {
+				return fmt.Errorf("rate limiter wait cancelled: %w", err)
+			}
+		}
+	}
+
 	var reqBody io.Reader
 	if body != nil {
 		jsonData, err := json.Marshal(body)
@@ -208,10 +245,24 @@ func (c *Client) doRequest(ctx context.Context, method, endpoint string, body in
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		// Debug: Log error response
 		fmt.Printf("[DO API Debug] Error Response (status %d): %s\n", resp.StatusCode, string(respBody))
+
+		// Handle rate limit (429) specially
+		if resp.StatusCode == 429 {
+			retryAfter := ParseRetryAfter(resp)
+			if retryAfter > 0 {
+				fmt.Printf("[DO API Debug] Rate limited. Retry-After: %v\n", retryAfter)
+			}
+			// Apply backoff multiplier to slow down future requests
+			if c.rateLimiter != nil {
+				c.rateLimiter.SetBackoffMultiplier(2.0)
+			}
+		}
+
 		var apiErr APIError
 		if err := json.Unmarshal(respBody, &apiErr); err != nil {
 			return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
 		}
+		apiErr.StatusCode = resp.StatusCode
 		return &apiErr
 	}
 

@@ -112,8 +112,10 @@ func (s *BatchIngestService) StartBatchIngest(ctx context.Context, req BatchInge
 		return nil, fmt.Errorf("failed to fetch subject: %w", err)
 	}
 
+	// Require Knowledge Base for PYQ ingestion when AI is enabled
+	// PYQ papers need to be indexed in KB for AI-powered search and chat features
 	if subject.KnowledgeBaseUUID == "" && s.enableAI {
-		log.Printf("Warning: Subject %d has no knowledge base. Documents will be uploaded but not indexed.", req.SubjectID)
+		return nil, fmt.Errorf("knowledge base not configured for this subject. Please wait for AI setup to complete before ingesting PYQ papers")
 	}
 
 	// Check for duplicate papers (same year+month already ingested)

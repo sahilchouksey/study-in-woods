@@ -111,8 +111,10 @@ func (s *BatchDocumentService) StartBatchUpload(ctx context.Context, req BatchUp
 		return nil, fmt.Errorf("failed to fetch subject: %w", err)
 	}
 
+	// Require Knowledge Base for document uploads when AI is enabled
+	// Documents need to be indexed in KB for AI-powered search and chat features
 	if subject.KnowledgeBaseUUID == "" && s.enableAI {
-		log.Printf("Warning: Subject %d has no knowledge base. Documents will be uploaded but not indexed.", req.SubjectID)
+		return nil, fmt.Errorf("knowledge base not configured for this subject. Please wait for AI setup to complete before uploading documents")
 	}
 
 	if len(req.Documents) == 0 {

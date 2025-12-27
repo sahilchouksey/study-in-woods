@@ -163,6 +163,7 @@ func (c *Client) GetKnowledgeBase(ctx context.Context, uuid string) (*KnowledgeB
 }
 
 // CreateKnowledgeBase creates a new knowledge base
+// Uses GenAI rate limiting since this is a resource-intensive operation
 func (c *Client) CreateKnowledgeBase(ctx context.Context, req CreateKnowledgeBaseRequest) (*KnowledgeBase, error) {
 	endpoint := "/v2/gen-ai/knowledge_bases"
 
@@ -170,7 +171,8 @@ func (c *Client) CreateKnowledgeBase(ctx context.Context, req CreateKnowledgeBas
 		KnowledgeBase KnowledgeBase `json:"knowledge_base"`
 	}
 
-	if err := c.doRequest(ctx, "POST", endpoint, req, &result); err != nil {
+	// Use GenAI rate limiting for KB creation (more conservative)
+	if err := c.doRequestGenAI(ctx, "POST", endpoint, req, &result); err != nil {
 		return nil, err
 	}
 

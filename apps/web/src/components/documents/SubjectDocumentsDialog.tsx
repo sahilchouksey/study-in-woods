@@ -165,7 +165,13 @@ export function SubjectDocumentsDialog({
 
             <TabsContent value="pyqs" className="mt-0 h-full">
               <ScrollArea className="h-[300px]">
-                <PYQTab subjectId={subject.id} subjectCode={subject.code} subjectName={subject.name} isAdmin={isAdmin} />
+                <PYQTab 
+                  subjectId={subject.id} 
+                  subjectCode={subject.code} 
+                  subjectName={subject.name} 
+                  isAdmin={isAdmin} 
+                  aiSetupStatus={subject.ai_setup_status}
+                />
               </ScrollArea>
             </TabsContent>
 
@@ -179,6 +185,7 @@ export function SubjectDocumentsDialog({
                       subjectName={subject.name}
                       onSuccess={() => setActiveTab('documents')}
                       excludeTypes={['syllabus']}
+                      aiSetupStatus={subject.ai_setup_status}
                     />
                   </ScrollArea>
                 ) : (

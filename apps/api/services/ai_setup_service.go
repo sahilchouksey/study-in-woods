@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -262,17 +263,17 @@ func (s *AISetupService) processJob(jobID uint) {
 	log.Printf("AISetupService: Starting job %d processing", jobID)
 
 	// Initial delay to let any previous DO API calls settle
-	log.Printf("AISetupService: Waiting 5s before starting to avoid rate limits...")
+	log.Printf("AISetupService: Waiting 5s before starting...")
 	time.Sleep(5 * time.Second)
 
-	// Backoff durations: 5s, 15s, 30s, 60s, 120s (total ~4 min max wait per subject)
-	backoffDurations := []time.Duration{
-		5 * time.Second,
-		15 * time.Second,
-		30 * time.Second,
-		60 * time.Second,
-		120 * time.Second,
-	}
+	// Exponential backoff configuration for rate limit retries
+	// Base: 5s, then 10s, 20s, 40s, 80s, 160s (exponential growth with 2x multiplier)
+	const (
+		initialBackoff = 5 * time.Second
+		maxBackoff     = 180 * time.Second // Cap at 3 minutes
+		backoffFactor  = 2.0
+		maxRetries     = 6
+	)
 
 	for {
 		// Get next pending item
@@ -297,12 +298,15 @@ func (s *AISetupService) processJob(jobID uint) {
 		s.updateItemStatus(item.ID, model.IndexingJobItemStatusKBCreating, "kb")
 
 		var lastErr error
-		maxRetries := len(backoffDurations)
 
 		// Retry loop with exponential backoff for rate limit errors
 		for attempt := 0; attempt < maxRetries; attempt++ {
 			if attempt > 0 {
-				backoff := backoffDurations[attempt-1]
+				// Calculate exponential backoff: initialBackoff * (backoffFactor ^ (attempt-1))
+				backoff := time.Duration(float64(initialBackoff) * math.Pow(backoffFactor, float64(attempt-1)))
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
 				log.Printf("AISetupService: Retrying AI setup for subject %d (attempt %d/%d) after %v backoff",
 					subjectID, attempt+1, maxRetries, backoff)
 				time.Sleep(backoff)
@@ -354,9 +358,10 @@ func (s *AISetupService) processJob(jobID uint) {
 			s.incrementJobFailed(jobID)
 		}
 
-		// Rate limit delay between subjects
-		log.Printf("AISetupService: Waiting 5s before next subject...")
-		time.Sleep(5 * time.Second)
+		// Delay between subjects to avoid rate limits
+		// Using a moderate delay since the rate limiter handles fine-grained throttling
+		log.Printf("AISetupService: Waiting 10s before next subject...")
+		time.Sleep(10 * time.Second)
 	}
 
 	// Finalize job

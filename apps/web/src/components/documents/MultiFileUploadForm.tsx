@@ -10,7 +10,9 @@ import {
   Trash2,
   X,
   Clock,
-  Loader2
+  Loader2,
+  AlertTriangle,
+  Bot
 } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import { toast } from 'sonner';
@@ -18,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Select,
   SelectContent,
@@ -37,7 +40,7 @@ import { useUploadDocument } from '@/lib/api/hooks/useDocuments';
 import { useExtractSyllabus } from '@/lib/api/hooks/useSyllabus';
 import { useExtractPYQ } from '@/lib/api/hooks/usePYQ';
 import { useBatchUploadManager } from '@/lib/api/hooks/useNotifications';
-import { INDEXING_JOB_STATUS_CONFIG, type IndexingJobItemStatus } from '@/lib/api/notifications';
+import { INDEXING_JOB_STATUS_CONFIG, type IndexingJobItemStatus, type AISetupStatus } from '@/lib/api/notifications';
 
 type LocalFileStatus = 'pending' | 'uploading' | 'done' | 'error';
 
@@ -60,6 +63,8 @@ interface MultiFileUploadFormProps {
   defaultType?: DocumentType;
   /** Use batch upload for multiple files (default: true) */
   useBatchUpload?: boolean;
+  /** AI setup status for the subject */
+  aiSetupStatus?: AISetupStatus;
 }
 
 // Threshold for using batch upload vs sequential upload
@@ -72,7 +77,12 @@ export function MultiFileUploadForm({
   excludeTypes = [],
   defaultType = 'notes',
   useBatchUpload = true,
+  aiSetupStatus,
 }: MultiFileUploadFormProps) {
+  // Check if AI/KB is ready for uploads
+  const isAIReady = aiSetupStatus === 'completed';
+  const isAIPending = aiSetupStatus === 'pending' || aiSetupStatus === 'in_progress';
+  const isAIFailed = aiSetupStatus === 'failed';
   const [files, setFiles] = useState<LocalFile[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const [isSequentialUploading, setIsSequentialUploading] = useState(false);
@@ -350,6 +360,31 @@ export function MultiFileUploadForm({
     <div className="flex flex-col h-full">
       {/* Scrollable Content Area */}
       <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-1">
+        {/* AI Setup Status Warning */}
+        {!isAIReady && aiSetupStatus && (
+          <Alert variant={isAIFailed ? 'destructive' : 'default'} className={isAIPending ? 'border-blue-200 bg-blue-50' : ''}>
+            {isAIPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : isAIFailed ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : (
+              <AlertTriangle className="h-4 w-4" />
+            )}
+            <AlertTitle className="flex items-center gap-2">
+              {isAIPending ? 'AI Setup in Progress' : isAIFailed ? 'AI Setup Failed' : 'Knowledge Base Not Ready'}
+            </AlertTitle>
+            <AlertDescription>
+              {isAIPending ? (
+                <>Documents require a Knowledge Base for AI-powered search. Please wait for the AI setup to complete before uploading.</>
+              ) : isAIFailed ? (
+                <>AI setup failed for this subject. Please contact support or try again later.</>
+              ) : (
+                <>This subject does not have a Knowledge Base configured. Documents cannot be uploaded until AI setup is complete.</>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Batch Job Status Banner */}
         {batchManager.isProcessing && batchManager.activeJob && (
           <Card className="border-primary/50 bg-primary/5">
@@ -392,10 +427,10 @@ export function MultiFileUploadForm({
             dragActive
               ? 'border-primary bg-primary/5'
               : 'border-muted-foreground/25 hover:border-muted-foreground/50'
-          } ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          } ${isUploading || !isAIReady ? 'opacity-50 pointer-events-none' : ''}`}
+          onDrop={isAIReady ? handleDrop : undefined}
+          onDragOver={isAIReady ? handleDragOver : undefined}
+          onDragLeave={isAIReady ? handleDragLeave : undefined}
         >
           <input
             type="file"
@@ -404,12 +439,12 @@ export function MultiFileUploadForm({
             multiple
             accept={ALLOWED_FILE_EXTENSIONS.join(',')}
             onChange={handleFileInput}
-            disabled={isUploading}
+            disabled={isUploading || !isAIReady}
           />
-          <label htmlFor="multi-file-upload" className="cursor-pointer">
+          <label htmlFor="multi-file-upload" className={isAIReady ? 'cursor-pointer' : 'cursor-not-allowed'}>
             <Plus className="h-10 w-10 mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm font-medium">
-              Drop files here or click to browse
+              {isAIReady ? 'Drop files here or click to browse' : 'Upload disabled - AI setup required'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Max {MAX_FILE_SIZE / (1024 * 1024)}MB per file - PDF, DOCX, TXT, and more

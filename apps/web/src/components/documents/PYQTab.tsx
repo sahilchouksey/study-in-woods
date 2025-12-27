@@ -39,15 +39,17 @@ import {
 } from '@/lib/api/pyq';
 import { AvailablePYQPapersSection } from './AvailablePYQPapersSection';
 import { PYQBatchUploadDialog } from './PYQBatchUploadDialog';
+import type { AISetupStatus } from '@/lib/api/notifications';
 
 interface PYQTabProps {
   subjectId: string;
   subjectCode?: string;
   subjectName?: string;
   isAdmin?: boolean;
+  aiSetupStatus?: AISetupStatus;
 }
 
-export function PYQTab({ subjectId, subjectCode, subjectName, isAdmin = false }: PYQTabProps) {
+export function PYQTab({ subjectId, subjectCode, subjectName, isAdmin = false, aiSetupStatus }: PYQTabProps) {
   const { data: pyqsData, isLoading, refetch } = usePYQs(subjectId);
   const { data: documentsData } = useDocuments(subjectId);
   const extractMutation = useExtractPYQ();
@@ -172,6 +174,7 @@ export function PYQTab({ subjectId, subjectCode, subjectName, isAdmin = false }:
             subjectId={subjectId}
             subjectName={subjectName || 'Subject'}
             onComplete={handleBatchUploadComplete}
+            aiSetupStatus={aiSetupStatus}
           />
         )}
       </ScrollArea>
@@ -299,6 +302,7 @@ export function PYQTab({ subjectId, subjectCode, subjectName, isAdmin = false }:
           subjectId={subjectId}
           subjectName={subjectName || 'Subject'}
           onComplete={handleBatchUploadComplete}
+          aiSetupStatus={aiSetupStatus}
         />
       )}
     </ScrollArea>

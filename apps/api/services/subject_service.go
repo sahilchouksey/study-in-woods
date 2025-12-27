@@ -574,7 +574,7 @@ func (s *SubjectService) SetupSubjectAI(ctx context.Context, subjectID uint) (*C
 	return result, nil
 }
 
-// DeleteSubjectWithCleanup deletes a subject and cleans up DigitalOcean resources
+// DeleteSubjectWithCleanup deletes a subject and cleans up all related data including DigitalOcean resources
 func (s *SubjectService) DeleteSubjectWithCleanup(ctx context.Context, subjectID uint) error {
 	// Get subject with UUIDs
 	var subject model.Subject
@@ -582,25 +582,144 @@ func (s *SubjectService) DeleteSubjectWithCleanup(ctx context.Context, subjectID
 		return fmt.Errorf("failed to fetch subject: %w", err)
 	}
 
+	log.Printf("DeleteSubjectWithCleanup: Starting cleanup for subject %d (%s)", subjectID, subject.Name)
+
 	// Clean up DigitalOcean resources if they exist
 	if s.doClient != nil {
 		if subject.AgentUUID != "" {
 			if err := s.doClient.DeleteAgent(ctx, subject.AgentUUID); err != nil {
 				log.Printf("Warning: Failed to delete agent %s: %v", subject.AgentUUID, err)
+			} else {
+				log.Printf("DeleteSubjectWithCleanup: Deleted agent %s", subject.AgentUUID)
 			}
 		}
 
 		if subject.KnowledgeBaseUUID != "" {
 			if err := s.doClient.DeleteKnowledgeBase(ctx, subject.KnowledgeBaseUUID); err != nil {
 				log.Printf("Warning: Failed to delete knowledge base %s: %v", subject.KnowledgeBaseUUID, err)
+			} else {
+				log.Printf("DeleteSubjectWithCleanup: Deleted knowledge base %s", subject.KnowledgeBaseUUID)
 			}
 		}
 	}
 
-	// Delete subject from database (soft delete)
-	if err := s.db.Delete(&subject).Error; err != nil {
-		return fmt.Errorf("failed to delete subject: %w", err)
+	// Use a transaction to ensure all related data is cleaned up atomically
+	err := s.db.Transaction(func(tx *gorm.DB) error {
+		// 1. Get all syllabuses for this subject
+		var syllabuses []model.Syllabus
+		if err := tx.Where("subject_id = ?", subjectID).Find(&syllabuses).Error; err != nil {
+			return fmt.Errorf("failed to fetch syllabuses: %w", err)
+		}
+
+		for _, syllabus := range syllabuses {
+			// 2. Get all units for this syllabus
+			var units []model.SyllabusUnit
+			if err := tx.Where("syllabus_id = ?", syllabus.ID).Find(&units).Error; err != nil {
+				return fmt.Errorf("failed to fetch syllabus units: %w", err)
+			}
+
+			// 3. Delete all topics for each unit
+			for _, unit := range units {
+				if err := tx.Where("unit_id = ?", unit.ID).Delete(&model.SyllabusTopic{}).Error; err != nil {
+					return fmt.Errorf("failed to delete syllabus topics for unit %d: %w", unit.ID, err)
+				}
+			}
+
+			// 4. Delete all units for this syllabus
+			if err := tx.Where("syllabus_id = ?", syllabus.ID).Delete(&model.SyllabusUnit{}).Error; err != nil {
+				return fmt.Errorf("failed to delete syllabus units: %w", err)
+			}
+
+			// 5. Delete all book references for this syllabus
+			if err := tx.Where("syllabus_id = ?", syllabus.ID).Delete(&model.BookReference{}).Error; err != nil {
+				return fmt.Errorf("failed to delete book references: %w", err)
+			}
+		}
+
+		// 6. Delete all syllabuses for this subject
+		if err := tx.Where("subject_id = ?", subjectID).Delete(&model.Syllabus{}).Error; err != nil {
+			return fmt.Errorf("failed to delete syllabuses: %w", err)
+		}
+
+		// 7. Delete all indexing job items for this subject (hard delete since they reference the subject)
+		if err := tx.Unscoped().Where("subject_id = ?", subjectID).Delete(&model.IndexingJobItem{}).Error; err != nil {
+			return fmt.Errorf("failed to delete indexing job items: %w", err)
+		}
+
+		// 8. Delete all documents for this subject
+		if err := tx.Where("subject_id = ?", subjectID).Delete(&model.Document{}).Error; err != nil {
+			return fmt.Errorf("failed to delete documents: %w", err)
+		}
+
+		// 9. Delete all PYQ papers for this subject
+		if err := tx.Where("subject_id = ?", subjectID).Delete(&model.PYQPaper{}).Error; err != nil {
+			return fmt.Errorf("failed to delete PYQ papers: %w", err)
+		}
+
+		// 10. Delete all chat sessions for this subject
+		if err := tx.Where("subject_id = ?", subjectID).Delete(&model.ChatSession{}).Error; err != nil {
+			return fmt.Errorf("failed to delete chat sessions: %w", err)
+		}
+
+		// 11. Finally, delete the subject itself
+		if err := tx.Delete(&subject).Error; err != nil {
+			return fmt.Errorf("failed to delete subject: %w", err)
+		}
+
+		log.Printf("DeleteSubjectWithCleanup: Successfully deleted subject %d and all related data", subjectID)
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("failed to delete subject with cleanup: %w", err)
 	}
 
+	return nil
+}
+
+// CleanupAIResources deletes DigitalOcean AI resources (Agent, Knowledge Base) for a subject
+// and resets the subject's AI setup status so it can be re-setup
+func (s *SubjectService) CleanupAIResources(ctx context.Context, subjectID uint) error {
+	// Get subject with UUIDs
+	var subject model.Subject
+	if err := s.db.First(&subject, subjectID).Error; err != nil {
+		return fmt.Errorf("failed to fetch subject: %w", err)
+	}
+
+	log.Printf("CleanupAIResources: Starting cleanup for subject %d (%s)", subjectID, subject.Name)
+
+	// Clean up DigitalOcean resources if they exist
+	if s.doClient != nil {
+		// Delete Agent first (it depends on the KB)
+		if subject.AgentUUID != "" {
+			if err := s.doClient.DeleteAgent(ctx, subject.AgentUUID); err != nil {
+				log.Printf("Warning: Failed to delete agent %s: %v", subject.AgentUUID, err)
+			} else {
+				log.Printf("CleanupAIResources: Deleted agent %s", subject.AgentUUID)
+			}
+		}
+
+		// Delete Knowledge Base
+		if subject.KnowledgeBaseUUID != "" {
+			if err := s.doClient.DeleteKnowledgeBase(ctx, subject.KnowledgeBaseUUID); err != nil {
+				log.Printf("Warning: Failed to delete knowledge base %s: %v", subject.KnowledgeBaseUUID, err)
+			} else {
+				log.Printf("CleanupAIResources: Deleted knowledge base %s", subject.KnowledgeBaseUUID)
+			}
+		}
+	}
+
+	// Reset AI-related fields on the subject
+	if err := s.db.Model(&subject).Updates(map[string]interface{}{
+		"knowledge_base_uuid":     "",
+		"agent_uuid":              "",
+		"agent_deployment_url":    "",
+		"agent_api_key_encrypted": "",
+		"ai_setup_status":         nil, // Reset to null so it can be re-setup
+	}).Error; err != nil {
+		return fmt.Errorf("failed to reset AI fields: %w", err)
+	}
+
+	log.Printf("CleanupAIResources: Successfully cleaned up AI resources for subject %d", subjectID)
 	return nil
 }

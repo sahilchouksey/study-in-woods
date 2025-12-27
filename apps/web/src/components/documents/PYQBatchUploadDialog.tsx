@@ -8,7 +8,9 @@ import {
   AlertCircle,
   Trash2,
   ExternalLink,
-  Plus
+  Plus,
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { LoadingSpinner, InlineSpinner } from '@/components/ui/loading-spinner';
 import {
@@ -24,11 +26,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useNotifications } from '@/providers/notification-provider';
 import { useBatchIngestPYQs, useIndexingJobStatus } from '@/lib/api/hooks/useNotifications';
 import type { AvailablePYQPaper } from '@/lib/api/pyq';
 import { ALLOWED_FILE_EXTENSIONS, MAX_FILE_SIZE, validateFile } from '@/lib/api/documents';
+import type { AISetupStatus } from '@/lib/api/notifications';
 
 interface PYQBatchUploadDialogProps {
   open: boolean;
@@ -37,6 +41,8 @@ interface PYQBatchUploadDialogProps {
   subjectId: string;
   subjectName: string;
   onComplete?: () => void;
+  /** AI setup status for the subject */
+  aiSetupStatus?: AISetupStatus;
 }
 
 interface LocalFile {
@@ -61,9 +67,15 @@ export function PYQBatchUploadDialog({
   subjectId,
   subjectName: _subjectName, // Reserved for future use (e.g., notification messages)
   onComplete,
+  aiSetupStatus,
 }: PYQBatchUploadDialogProps) {
   const { refetch: refetchNotifications } = useNotifications();
   const batchIngestMutation = useBatchIngestPYQs();
+  
+  // Check if AI/KB is ready for ingestion
+  const isAIReady = aiSetupStatus === 'completed';
+  const isAIPending = aiSetupStatus === 'pending' || aiSetupStatus === 'in_progress';
+  const isAIFailed = aiSetupStatus === 'failed';
   
   // Track active job for polling
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
@@ -335,6 +347,31 @@ export function PYQBatchUploadDialog({
         <div className="flex-1 min-h-0 overflow-y-auto">
           <ScrollArea className="max-h-[50vh]">
             <div className="space-y-6 pr-4">
+            {/* AI Setup Status Warning */}
+            {!isAIReady && aiSetupStatus && (
+              <Alert variant={isAIFailed ? 'destructive' : 'default'} className={isAIPending ? 'border-blue-200 bg-blue-50' : ''}>
+                {isAIPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isAIFailed ? (
+                  <AlertCircle className="h-4 w-4" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4" />
+                )}
+                <AlertTitle>
+                  {isAIPending ? 'AI Setup in Progress' : isAIFailed ? 'AI Setup Failed' : 'Knowledge Base Not Ready'}
+                </AlertTitle>
+                <AlertDescription>
+                  {isAIPending ? (
+                    <>PYQ papers require a Knowledge Base for AI-powered search. Please wait for the AI setup to complete before ingesting.</>
+                  ) : isAIFailed ? (
+                    <>AI setup failed for this subject. Please contact support or try again later.</>
+                  ) : (
+                    <>This subject does not have a Knowledge Base configured. PYQ papers cannot be ingested until AI setup is complete.</>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+            
             {/* Selected External Papers */}
             {selectedPapers.length > 0 && (
               <div className="space-y-3">
@@ -498,13 +535,19 @@ export function PYQBatchUploadDialog({
           </Button>
           <Button
             onClick={handleStartIngest}
-            disabled={!hasItems || isIngesting}
+            disabled={!hasItems || isIngesting || !isAIReady}
             className="gap-2"
+            title={!isAIReady ? 'Knowledge Base is required for PYQ ingestion' : undefined}
           >
             {isIngesting ? (
               <>
                 <InlineSpinner />
                 Ingesting...
+              </>
+            ) : !isAIReady ? (
+              <>
+                <AlertTriangle className="h-4 w-4" />
+                AI Setup Required
               </>
             ) : (
               <>
