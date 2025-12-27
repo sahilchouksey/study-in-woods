@@ -1002,7 +1002,8 @@ func isSyllabusRateLimitError(err error) bool {
 	errStr := err.Error()
 	return strings.Contains(errStr, "429") ||
 		strings.Contains(errStr, "too_many_requests") ||
-		strings.Contains(errStr, "rate limit")
+		strings.Contains(errStr, "rate limit") ||
+		strings.Contains(errStr, "failed to check limits")
 }
 
 // GetSyllabusBySubject retrieves the first/primary syllabus for a subject
