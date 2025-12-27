@@ -80,7 +80,8 @@ export function MultiFileUploadForm({
   aiSetupStatus,
 }: MultiFileUploadFormProps) {
   // Check if AI/KB is ready for uploads
-  const isAIReady = aiSetupStatus === 'completed';
+  // If aiSetupStatus is undefined/not provided, assume AI is ready (backwards compatibility)
+  const isAIReady = !aiSetupStatus || aiSetupStatus === 'completed';
   const isAIPending = aiSetupStatus === 'pending' || aiSetupStatus === 'in_progress';
   const isAIFailed = aiSetupStatus === 'failed';
   const [files, setFiles] = useState<LocalFile[]>([]);

@@ -73,7 +73,8 @@ export function PYQBatchUploadDialog({
   const batchIngestMutation = useBatchIngestPYQs();
   
   // Check if AI/KB is ready for ingestion
-  const isAIReady = aiSetupStatus === 'completed';
+  // If aiSetupStatus is undefined/not provided, assume AI is ready (backwards compatibility)
+  const isAIReady = !aiSetupStatus || aiSetupStatus === 'completed';
   const isAIPending = aiSetupStatus === 'pending' || aiSetupStatus === 'in_progress';
   const isAIFailed = aiSetupStatus === 'failed';
   
