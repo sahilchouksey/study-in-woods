@@ -1479,14 +1479,27 @@ func (c *ChunkedSyllabusExtractor) saveMultiSubjectSyllabusData(
 
 		// Single goroutine processes all subjects sequentially to avoid rate limits
 		go func() {
+			// Initial delay to let any previous DO API calls settle
+			log.Printf("ChunkedExtractor: Waiting 5s before starting AI setup to avoid rate limits...")
+			time.Sleep(5 * time.Second)
+
+			// Backoff durations: 5s, 15s, 30s, 60s, 120s (total ~4 min max wait per subject)
+			backoffDurations := []time.Duration{
+				5 * time.Second,
+				15 * time.Second,
+				30 * time.Second,
+				60 * time.Second,
+				120 * time.Second,
+			}
+
 			for i, subjectID := range subjectsNeedingAISetup {
 				var lastErr error
-				maxRetries := 5
+				maxRetries := len(backoffDurations)
 
 				// Retry loop with exponential backoff for rate limit errors
 				for attempt := 0; attempt < maxRetries; attempt++ {
 					if attempt > 0 {
-						backoff := time.Duration(1<<attempt) * time.Second // 2s, 4s, 8s, 16s
+						backoff := backoffDurations[attempt-1]
 						log.Printf("ChunkedExtractor: Retrying AI setup for subject %d (attempt %d/%d) after %v backoff",
 							subjectID, attempt+1, maxRetries, backoff)
 						time.Sleep(backoff)
@@ -1518,8 +1531,10 @@ func (c *ChunkedSyllabusExtractor) saveMultiSubjectSyllabusData(
 				}
 
 				// Rate limit delay between subjects (except after last one)
+				// Use 5s to stay well under DO's rate limit window
 				if i < len(subjectsNeedingAISetup)-1 {
-					time.Sleep(2 * time.Second)
+					log.Printf("ChunkedExtractor: Waiting 5s before next subject...")
+					time.Sleep(5 * time.Second)
 				}
 			}
 			log.Printf("ChunkedExtractor: Completed AI setup for all %d subjects", len(subjectsNeedingAISetup))
