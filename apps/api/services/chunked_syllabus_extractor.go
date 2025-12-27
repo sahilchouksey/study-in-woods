@@ -1473,24 +1473,69 @@ func (c *ChunkedSyllabusExtractor) saveMultiSubjectSyllabusData(
 	}
 
 	// Setup AI resources for subjects AFTER transaction commits (so subjects are visible)
+	// Process sequentially with rate limiting and retry to avoid DigitalOcean API 429 errors
 	if c.subjectService != nil && len(subjectsNeedingAISetup) > 0 {
-		log.Printf("ChunkedExtractor: Starting AI setup for %d subjects after transaction commit", len(subjectsNeedingAISetup))
-		for _, subjectID := range subjectsNeedingAISetup {
-			go func(sid uint) {
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-				defer cancel()
-				if result, err := c.subjectService.SetupSubjectAI(ctx, sid); err != nil {
-					log.Printf("Warning: ChunkedExtractor failed to setup AI for subject %d: %v", sid, err)
-				} else {
-					log.Printf("ChunkedExtractor: AI setup complete for subject %d (KB: %v, Agent: %v, APIKey: %v)",
-						sid, result.KnowledgeBaseCreated, result.AgentCreated, result.APIKeyCreated)
+		log.Printf("ChunkedExtractor: Starting AI setup for %d subjects after transaction commit (sequential with rate limiting)", len(subjectsNeedingAISetup))
+
+		// Single goroutine processes all subjects sequentially to avoid rate limits
+		go func() {
+			for i, subjectID := range subjectsNeedingAISetup {
+				var lastErr error
+				maxRetries := 5
+
+				// Retry loop with exponential backoff for rate limit errors
+				for attempt := 0; attempt < maxRetries; attempt++ {
+					if attempt > 0 {
+						backoff := time.Duration(1<<attempt) * time.Second // 2s, 4s, 8s, 16s
+						log.Printf("ChunkedExtractor: Retrying AI setup for subject %d (attempt %d/%d) after %v backoff",
+							subjectID, attempt+1, maxRetries, backoff)
+						time.Sleep(backoff)
+					}
+
+					ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+					result, err := c.subjectService.SetupSubjectAI(ctx, subjectID)
+					cancel()
+
+					if err == nil {
+						log.Printf("ChunkedExtractor: AI setup complete for subject %d (KB: %v, Agent: %v, APIKey: %v)",
+							subjectID, result.KnowledgeBaseCreated, result.AgentCreated, result.APIKeyCreated)
+						lastErr = nil
+						break
+					}
+
+					lastErr = err
+					if !isRateLimitError(err) {
+						// Non-retriable error, log and move on
+						log.Printf("Warning: ChunkedExtractor failed to setup AI for subject %d: %v", subjectID, err)
+						break
+					}
+					// Rate limit error - will retry
+					log.Printf("ChunkedExtractor: Rate limit hit for subject %d, will retry...", subjectID)
 				}
-			}(subjectID)
-		}
+
+				if lastErr != nil && isRateLimitError(lastErr) {
+					log.Printf("Warning: ChunkedExtractor exhausted retries for subject %d due to rate limiting: %v", subjectID, lastErr)
+				}
+
+				// Rate limit delay between subjects (except after last one)
+				if i < len(subjectsNeedingAISetup)-1 {
+					time.Sleep(2 * time.Second)
+				}
+			}
+			log.Printf("ChunkedExtractor: Completed AI setup for all %d subjects", len(subjectsNeedingAISetup))
+		}()
 	}
 
 	return syllabuses, nil
 }
 
-// extractTopicsFromRawText intelligently extracts individual topics from raw_text
-// Splits on common separators: comma, dash (–), semicolon, newline
+// isRateLimitError checks if an error is a DigitalOcean rate limit error (HTTP 429)
+func isRateLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "429") ||
+		strings.Contains(errStr, "too_many_requests") ||
+		strings.Contains(errStr, "rate limit")
+}
