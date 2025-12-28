@@ -19,6 +19,9 @@ import {
 import type { InfiniteData } from '@tanstack/react-query';
 import { showErrorToast, showSuccessToast } from '@/lib/utils/errors';
 
+// Default page size for chat messages - must match what ChatInterface uses
+export const DEFAULT_CHAT_PAGE_SIZE = 50;
+
 // ==================== Chat Context Hooks ====================
 
 /**
@@ -218,6 +221,7 @@ export interface UseStreamingChatReturn {
   isReasoning: boolean;             // True while receiving reasoning chunks
   isToolRunning: boolean;           // True while a tool is executing
   hasCompletedResponse: boolean;    // True after streaming completes (until next message)
+  completedMessageId: number | null; // ID of the completed assistant message (for deduplication)
   cancelStream: () => void;
 }
 
@@ -239,6 +243,9 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
   // Track if we have completed content that should still be displayed
   // This stays true after streaming completes until the user sends the next message
   const [hasCompletedResponse, setHasCompletedResponse] = useState(false);
+  // Track the ID of the completed assistant message for accurate deduplication
+  // This prevents filtering out the wrong message during race conditions
+  const [completedMessageId, setCompletedMessageId] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // Throttling refs for smooth streaming animation
@@ -288,6 +295,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
     setIsReasoning(false);
     setIsToolRunning(false);
     setHasCompletedResponse(false);
+    setCompletedMessageId(null);
     setStreamingContent('');
     setStreamingReasoning('');
     setStreamingCitations([]);
@@ -303,6 +311,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
     setIsReasoning(true); // Start in reasoning phase
     setIsToolRunning(false);
     setHasCompletedResponse(false); // Clear previous completed response
+    setCompletedMessageId(null); // Clear previous completed message ID
     setStreamingContent('');
     setStreamingReasoning('');
     setStreamingCitations([]);
@@ -329,7 +338,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
 
     // Update infinite query cache for optimistic UI
     queryClient.setQueryData<InfiniteData<PaginatedMessagesResponse>>(
-      ['chat', 'messages', 'infinite', sessionId, 50],
+      ['chat', 'messages', 'infinite', sessionId, DEFAULT_CHAT_PAGE_SIZE],
       (old) => {
         if (!old) {
           // If no data yet, create initial structure with optimistic message
@@ -427,7 +436,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
           }
         },
         // Stream complete
-        onComplete: (_data: StreamDoneEvent) => {
+        onComplete: (data: StreamDoneEvent) => {
           // Flush any remaining buffered content before completing
           if (contentBufferRef.current) {
             setStreamingContent((prev) => prev + contentBufferRef.current);
@@ -451,6 +460,9 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
           setIsReasoning(false);
           setIsToolRunning(false);
           setHasCompletedResponse(true); // Mark that we have a completed response to display
+          // Store the completed message ID for accurate deduplication
+          // This prevents race conditions where the wrong message gets filtered
+          setCompletedMessageId(data.assistant_message_id);
           // NOTE: We intentionally do NOT reset streamingContent, streamingReasoning, 
           // streamingCitations, or streamingToolEvents here.
           // They will be reset when the user sends the next message.
@@ -482,6 +494,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
           setIsReasoning(false);
           setIsToolRunning(false);
           setHasCompletedResponse(false); // Don't show completed response on error
+          setCompletedMessageId(null); // Clear completed message ID on error
           setStreamingContent('');
           setStreamingReasoning('');
           setStreamingCitations([]);
@@ -497,7 +510,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
 
           // Remove optimistic message from infinite query cache
           queryClient.setQueryData<InfiniteData<PaginatedMessagesResponse>>(
-            ['chat', 'messages', 'infinite', sessionId, 50],
+            ['chat', 'messages', 'infinite', sessionId, DEFAULT_CHAT_PAGE_SIZE],
             (old) => {
               if (!old) return old;
               const newPages = old.pages.map(page => ({
@@ -521,6 +534,7 @@ export function useStreamingChat({ sessionId, onComplete, aiSettings }: UseStrea
     isReasoning,
     isToolRunning,
     hasCompletedResponse,
+    completedMessageId,
     streamingContent,
     streamingReasoning,
     streamingCitations,

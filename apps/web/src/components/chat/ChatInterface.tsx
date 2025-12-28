@@ -373,6 +373,7 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
     isReasoning,
     isToolRunning,
     hasCompletedResponse, // Keep showing streaming bubble after completion until next message
+    completedMessageId, // ID of the completed assistant message for deduplication
     streamingContent, 
     streamingReasoning,
     streamingCitations,
@@ -391,25 +392,28 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
   // Filter messages to avoid duplicate display when streaming completes
   // When hasCompletedResponse is true, the StreamingMessageBubble shows the AI response,
   // but the query invalidation also fetches the persisted assistant message.
-  // We filter out the last assistant message to prevent showing it twice.
+  // We filter out the completed assistant message by ID to prevent showing it twice.
   const messages = useMemo(() => {
     if (!allMessages.length) return [];
     
     // Check if we have any streaming data that would cause StreamingMessageBubble to render
     const hasStreamingData = streamingContent || streamingReasoning || streamingToolEvents.length > 0;
     
-    // If we have a completed streaming response with any data, filter out the last assistant message
-    // to avoid showing it twice (once in StreamingMessageBubble, once in MessageBubble)
-    if (hasCompletedResponse && hasStreamingData) {
-      // Find the index of the last assistant message
-      const lastAssistantIndex = allMessages.findLastIndex(m => m.role === 'assistant');
-      if (lastAssistantIndex !== -1) {
-        return allMessages.filter((_, index) => index !== lastAssistantIndex);
-      }
+    // If we have a completed streaming response with any data AND a known message ID,
+    // filter out that specific message to avoid showing it twice
+    // (once in StreamingMessageBubble, once in MessageBubble)
+    if (hasCompletedResponse && hasStreamingData && completedMessageId) {
+      // Filter by specific message ID instead of position - this prevents race condition bugs
+      // where the wrong message gets filtered when data arrives in unexpected order
+      return allMessages.filter(m => {
+        // Convert ID to number for comparison (message.id can be string or number)
+        const msgId = typeof m.id === 'string' ? parseInt(m.id, 10) : m.id;
+        return msgId !== completedMessageId;
+      });
     }
     
     return allMessages;
-  }, [allMessages, hasCompletedResponse, streamingContent, streamingReasoning, streamingToolEvents]);
+  }, [allMessages, hasCompletedResponse, completedMessageId, streamingContent, streamingReasoning, streamingToolEvents]);
 
   // Auto-scroll to bottom when new messages arrive or streaming content updates
   // Only auto-scroll if user hasn't scrolled up to load more
