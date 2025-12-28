@@ -626,7 +626,7 @@ export function ChatInterface({ sessionId, subject: propSubject, onBack }: ChatI
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto relative" ref={scrollRef} onScroll={handleScroll}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden relative" ref={scrollRef} onScroll={handleScroll}>
         <div className="p-4 space-y-4 max-w-4xl mx-auto min-h-full">
           {messagesLoading ? (
             <LoadingSpinner size="lg" centered withPadding />
