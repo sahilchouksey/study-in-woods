@@ -4,7 +4,7 @@ A comprehensive educational platform with AI-powered chat, document management, 
 
 Built with Turborepo for optimized builds and development workflow.
 
-## 🏗️ Monorepo Structure
+## Monorepo Structure
 
 ```
 study-in-woods/
@@ -21,21 +21,21 @@ study-in-woods/
 
 ---
 
-## 📦 Applications
+## Applications
 
 ### Backend API (`apps/api`)
-**Tech Stack**: Go, Fiber v2, GORM, PostgreSQL, Redis, DigitalOcean AI Gateway
+**Tech Stack**:  Go, Fiber v2, GORM, PostgreSQL, Redis, DigitalOcean AI Gateway
 
 Complete RESTful API with 96 endpoints covering:
-- ✅ Authentication & Authorization (JWT-based)
-- ✅ University, Course, Semester, Subject Management
-- ✅ Document Management with AI Integration
-- ✅ AI-Powered Chat with DigitalOcean
-- ✅ Analytics & Monitoring
-- ✅ External API Access (Encrypted Keys)
-- ✅ Admin Panel (29 endpoints)
-- ✅ Background Cron Jobs (6 tasks)
-- ✅ Database Seeding
+- Authentication & Authorization (JWT-based)
+- University, Course, Semester, Subject Management
+- Document Management with AI Integration
+- AI-Powered Chat with DigitalOcean
+- Analytics & Monitoring
+- External API Access (Encrypted Keys)
+- Admin Panel (29 endpoints)
+- Background Cron Jobs (6 tasks)
+- Database Seeding
 
 **Lines of Code**: 12,046 lines across 75 Go files
 
@@ -50,22 +50,22 @@ Modern web application providing user interface for:
 - Analytics dashboard
 - Admin panel
 
-📖 **Documentation**: See [`apps/web/README.md`](apps/web/README.md)
+**Documentation**: See [`apps/web/README.md`](apps/web/README.md)
 
 ### OCR Service (`apps/ocr-service`)
 **Tech Stack**: Python, FastAPI, IBM Docling
 
-Lightweight OCR microservice for PDF text extraction:
+Lightweight OCR microservice for PDF text extraction: 
 - PDF file upload processing
 - PDF URL processing
 - Synchronous text extraction with page count
 - Used by backend API for document indexing
 
-📖 **Documentation**: See [`apps/ocr-service/README.md`](apps/ocr-service/README.md)
+**Documentation**: See [`apps/ocr-service/README. md`](apps/ocr-service/README.md)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Docker** & **Docker Compose** (recommended)
@@ -79,7 +79,7 @@ Lightweight OCR microservice for PDF text extraction:
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/sahilchouksey/study-in-woods.git
+git clone https://github.com/sahilchouksey/study-in-woods. git
 cd study-in-woods
 ```
 
@@ -96,7 +96,7 @@ npm run docker:ps
 npm run docker:logs
 ```
 
-This will start:
+This will start: 
 - PostgreSQL on `localhost:5432`
 - Redis on `localhost:6379`
 
@@ -107,7 +107,7 @@ This will start:
 npm install
 
 # Install Go dependencies for backend
-cd apps/api && go mod download && cd ../..
+cd apps/api && go mod download && cd ../.. 
 ```
 
 #### 4. Setup Backend Environment
@@ -116,7 +116,7 @@ cd apps/api && go mod download && cd ../..
 cd apps/api
 
 # Copy environment file
-cp .env.example .env
+cp .env.example . env
 # Edit .env if needed (Docker configs are already set correctly)
 
 # Run database migrations
@@ -136,7 +136,7 @@ cd ../..
 # Start both apps in parallel
 npm run dev
 
-# Or start individual apps:
+# Or start individual apps: 
 npm run api:dev    # Backend only
 npm run web:dev    # Frontend only
 ```
@@ -148,7 +148,7 @@ Frontend will run on `http://localhost:3000`
 - Email: `admin@studyinwoods.com`
 - Password: `Admin123!`
 
-⚠️ **Change password after first login!**
+**Warning:** Change password after first login!
 
 ---
 
@@ -195,13 +195,13 @@ npm run docker:ps
 # Restart containers
 npm run docker:restart
 
-# Stop and remove all data (⚠️ deletes database!)
+# Stop and remove all data (Warning: deletes database!)
 npm run docker:clean
 ```
 
 ---
 
-## 📋 Environment Variables
+## Environment Variables
 
 ### Backend (`apps/api/.env`)
 
@@ -236,7 +236,7 @@ PORT=8080
 CRON_ENABLED=true
 ```
 
-### Frontend (`apps/web/.env.local`)
+### Frontend (`apps/web/.env. local`)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8080
@@ -245,7 +245,7 @@ NEXT_PUBLIC_APP_NAME=Study in Woods
 
 ---
 
-## 🛠️ Development Commands
+## Development Commands
 
 ### Turborepo Commands (Root)
 
@@ -318,7 +318,7 @@ npm run lint          # Run ESLint
 
 ---
 
-## 🏗️ Project Architecture
+## Project Architecture
 
 ### Backend Architecture
 
@@ -353,36 +353,36 @@ apps/web/
 
 ---
 
-## 📊 Features
+## Features
 
 ### Core Features
-✅ User Authentication & Authorization  
-✅ University & Course Management  
-✅ Subject Management with AI  
-✅ Document Upload & Management  
-✅ AI-Powered Chat Interface  
-✅ Real-time Analytics  
-✅ Admin Dashboard  
-✅ API Key Management  
-✅ Background Job Processing  
+- User Authentication & Authorization  
+- University & Course Management  
+- Subject Management with AI  
+- Document Upload & Management  
+- AI-Powered Chat Interface  
+- Real-time Analytics  
+- Admin Dashboard  
+- API Key Management  
+- Background Job Processing  
 
 ### AI Features (DigitalOcean)
-✅ Automatic Document Indexing  
-✅ Knowledge Base Creation  
-✅ AI Chat Agents  
-✅ Contextual Responses  
-✅ Token Usage Tracking  
+- Automatic Document Indexing  
+- Knowledge Base Creation  
+- AI Chat Agents  
+- Contextual Responses  
+- Token Usage Tracking  
 
 ### Admin Features
-✅ User Management  
-✅ System Analytics  
-✅ Audit Logging  
-✅ Settings Management  
-✅ API Key Monitoring  
+- User Management  
+- System Analytics  
+- Audit Logging  
+- Settings Management  
+- API Key Monitoring  
 
 ---
 
-## 🗄️ Database Models
+## Database Models
 
 1. **User** - User accounts with roles
 2. **University** - Educational institutions
@@ -401,7 +401,7 @@ apps/web/
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Backend Tests
 ```bash
@@ -420,7 +420,7 @@ npm run test:watch    # Watch mode
 
 ---
 
-## 🚢 Deployment
+## Deployment
 
 ### Docker Deployment (Recommended)
 
@@ -453,7 +453,7 @@ npm run build
 
 ---
 
-## 📈 API Documentation
+## API Documentation
 
 ### Base URL
 `http://localhost:8080/api/v1`
@@ -475,31 +475,29 @@ npm run build
 
 ---
 
-## 🔒 Security
+## Security
 
-- ✅ JWT-based authentication
-- ✅ bcrypt password hashing
-- ✅ AES-256 API key encryption
-- ✅ Rate limiting (Redis-based)
-- ✅ CORS configuration
-- ✅ SQL injection protection (GORM)
-- ✅ XSS protection
-- ✅ Audit logging for admin actions
+- JWT-based authentication
+- bcrypt password hashing
+- AES-256 API key encryption
+- Rate limiting (Redis-based)
+- CORS configuration
+- SQL injection protection (GORM)
+- XSS protection
+- Audit logging for admin actions
 
 ---
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-
