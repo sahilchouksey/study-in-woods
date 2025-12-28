@@ -1391,10 +1391,12 @@ func (s *ChatService) GetSessionMessages(ctx context.Context, sessionID uint, us
 
 	// Get messages - select all fields but be aware of large JSONB
 	// For production, consider pagination-aware loading or lazy loading citations
+	// Order DESC so page 1 = newest messages, page 2 = older, etc.
+	// Frontend re-sorts to ASC for display (oldest at top, newest at bottom)
 	queryStart := time.Now()
 	var messages []model.ChatMessage
 	query := s.db.Where("session_id = ?", sessionID).
-		Order("created_at ASC")
+		Order("created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit).Offset(offset)
