@@ -18,7 +18,8 @@ type ForgotPasswordRequest struct {
 // ResetPasswordRequest represents a password reset with token
 type ResetPasswordRequest struct {
 	Token       string `json:"token" validate:"required"`
-	NewPassword string `json:"new_password" validate:"required,min=8"`
+	NewPassword string `json:"new_password,omitempty"`
+	Password    string `json:"password,omitempty"` // Alternative field name from frontend
 }
 
 // ChangePasswordRequest represents a password change request
@@ -85,12 +86,18 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Invalid request body")
 	}
 
-	if req.Token == "" || req.NewPassword == "" {
+	// Support both "password" and "new_password" field names from frontend
+	password := req.NewPassword
+	if password == "" {
+		password = req.Password
+	}
+
+	if req.Token == "" || password == "" {
 		return response.BadRequest(c, "Token and new password are required")
 	}
 
 	// Validate password strength
-	if !authutil.IsPasswordValid(req.NewPassword) {
+	if !authutil.IsPasswordValid(password) {
 		return response.BadRequest(c, "Password must be at least 8 characters long")
 	}
 
@@ -117,7 +124,7 @@ func (h *AuthHandler) ResetPassword(c *fiber.Ctx) error {
 	}
 
 	// Hash new password
-	hashedPassword, err := authutil.HashPassword(req.NewPassword)
+	hashedPassword, err := authutil.HashPassword(password)
 	if err != nil {
 		return response.InternalServerError(c, "Failed to process password")
 	}
