@@ -75,7 +75,8 @@ func (s *GORMStore) Init() error {
 		// User-related models
 		&model.User{},
 		&model.UserCourse{},
-		&model.APIKeyUsageLog{}, // Tracks client-side API key usage (keys stored in browser)
+		&model.APIKeyUsageLog{},     // Tracks client-side API key usage (keys stored in browser)
+		&model.PasswordResetToken{}, // Password reset tokens for forgot password flow
 
 		// Institution & Course hierarchy models
 		&model.University{},
