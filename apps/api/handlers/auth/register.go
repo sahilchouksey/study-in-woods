@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/sahilchouksey/go-init-setup/model"
+	"github.com/sahilchouksey/go-init-setup/services"
 	authutil "github.com/sahilchouksey/go-init-setup/utils/auth"
 	"github.com/sahilchouksey/go-init-setup/utils/crypto"
 	"github.com/sahilchouksey/go-init-setup/utils/middleware"
@@ -18,6 +19,7 @@ type AuthHandler struct {
 	jwtManager           *authutil.JWTManager
 	blacklistService     *authutil.BlacklistService
 	bruteForceProtection *middleware.BruteForceProtection
+	emailService         *services.EmailService
 }
 
 // NewAuthHandler creates a new auth handler
@@ -27,6 +29,7 @@ func NewAuthHandler(db *gorm.DB, jwtManager *authutil.JWTManager, bruteForceProt
 		jwtManager:           jwtManager,
 		blacklistService:     authutil.NewBlacklistService(db),
 		bruteForceProtection: bruteForceProtection,
+		emailService:         services.NewEmailService(),
 	}
 }
 

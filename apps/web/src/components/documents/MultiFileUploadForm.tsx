@@ -378,7 +378,7 @@ export function MultiFileUploadForm({
               {isAIPending ? (
                 <>Documents require a Knowledge Base for AI-powered search. Please wait for the AI setup to complete before uploading.</>
               ) : isAIFailed ? (
-                <>AI setup failed for this subject. Please contact support or try again later.</>
+                <>AI setup failed for this subject. Please <a href="mailto:support@studyinwoods.app" className="underline hover:text-foreground">contact support</a> or try again later.</>
               ) : (
                 <>This subject does not have a Knowledge Base configured. Documents cannot be uploaded until AI setup is complete.</>
               )}

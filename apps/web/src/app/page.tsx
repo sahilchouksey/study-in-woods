@@ -530,6 +530,13 @@ export default function HomePage() {
               © 2025 Study in Woods. All rights reserved.
             </div>
             <div className="text-xs text-neutral-500">
+              <a
+                href="mailto:support@studyinwoods.app"
+                className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+              >
+                support@studyinwoods.app
+              </a>
+              {' · '}
               Made by{' '}
               <a
                 href="https://sahilchouksey.in"

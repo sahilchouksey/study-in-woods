@@ -157,7 +157,7 @@ export function ChatSetup({ onSessionCreated }: ChatSetupProps) {
           <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
           <h3 className="text-lg font-semibold">Failed to load chat options</h3>
           <p className="text-muted-foreground">
-            Please try refreshing the page or contact support if the issue persists.
+            Please try refreshing the page or <a href="mailto:support@studyinwoods.app" className="underline hover:text-foreground">contact support</a> if the issue persists.
           </p>
         </div>
       </div>

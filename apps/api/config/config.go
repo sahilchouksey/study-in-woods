@@ -55,6 +55,14 @@ type EnviornmentVariable struct {
 	// Job State Configuration
 	EXTRACTION_JOB_TTL_SUCCESS_HOURS int
 	EXTRACTION_JOB_TTL_FAILURE_HOURS int
+
+	// SMTP Configuration for Email
+	SMTP_HOST     string
+	SMTP_PORT     int
+	SMTP_USERNAME string
+	SMTP_PASSWORD string
+	SMTP_FROM     string
+	APP_URL       string // Frontend URL for password reset links
 }
 
 func Get() (*EnviornmentVariable, error) {
@@ -108,6 +116,14 @@ func Get() (*EnviornmentVariable, error) {
 		// Job State Configuration (with defaults)
 		EXTRACTION_JOB_TTL_SUCCESS_HOURS: getEnvInt("EXTRACTION_JOB_TTL_SUCCESS_HOURS", 1),
 		EXTRACTION_JOB_TTL_FAILURE_HOURS: getEnvInt("EXTRACTION_JOB_TTL_FAILURE_HOURS", 24),
+
+		// SMTP Configuration for Email (Gmail defaults)
+		SMTP_HOST:     getEnvString("SMTP_HOST", "smtp.gmail.com"),
+		SMTP_PORT:     getEnvInt("SMTP_PORT", 587),
+		SMTP_USERNAME: os.Getenv("SMTP_USERNAME"),
+		SMTP_PASSWORD: os.Getenv("SMTP_PASSWORD"),
+		SMTP_FROM:     getEnvString("SMTP_FROM", "noreply@studyinwoods.com"),
+		APP_URL:       getEnvString("APP_URL", "http://localhost:3000"),
 	}
 
 	return envVariables, nil
@@ -137,4 +153,13 @@ func getEnvFloat(key string, defaultVal float64) float64 {
 		return defaultVal
 	}
 	return floatVal
+}
+
+// getEnvString returns a string environment variable or a default value
+func getEnvString(key string, defaultVal string) string {
+	val := os.Getenv(key)
+	if val == "" {
+		return defaultVal
+	}
+	return val
 }

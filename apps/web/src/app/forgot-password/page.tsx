@@ -74,6 +74,16 @@ export default function ForgotPasswordPage() {
                 </button>
               </p>
 
+              <p className="text-xs text-neutral-500 dark:text-neutral-500">
+                Still having trouble?{' '}
+                <a 
+                  href="mailto:support@studyinwoods.app" 
+                  className="font-medium hover:underline"
+                >
+                  Contact support
+                </a>
+              </p>
+
               <Link href="/login">
                 <Button variant="outline" className="w-full">
                   Back to Login

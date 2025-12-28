@@ -62,15 +62,19 @@ func (h *AuthHandler) ForgotPassword(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to create reset token")
 	}
 
-	// TODO: Send email with reset link
-	// For now, just log it or return in development
-	// resetLink := fmt.Sprintf("http://yourapp.com/reset-password?token=%s", resetToken)
-	// emailService.SendPasswordResetEmail(user.Email, resetLink)
+	// Send password reset email
+	if h.emailService != nil && h.emailService.IsConfigured() {
+		go func() {
+			if err := h.emailService.SendPasswordResetEmail(user.Email, resetToken, user.Name); err != nil {
+				// Log error but don't fail the request
+				// The user still gets the success message for security
+				_ = err
+			}
+		}()
+	}
 
 	return response.Success(c, fiber.Map{
 		"message": "If the email exists, a password reset link will be sent",
-		// In development, you might want to include the token
-		// "token": resetToken, // Remove in production
 	})
 }
 

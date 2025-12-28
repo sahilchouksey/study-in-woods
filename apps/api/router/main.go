@@ -22,7 +22,6 @@ import (
 	semester_handlers "github.com/sahilchouksey/go-init-setup/handlers/semester"
 	subject_handlers "github.com/sahilchouksey/go-init-setup/handlers/subject"
 	syllabus_handlers "github.com/sahilchouksey/go-init-setup/handlers/syllabus"
-	todo_handlers "github.com/sahilchouksey/go-init-setup/handlers/todo"
 	university_handlers "github.com/sahilchouksey/go-init-setup/handlers/university"
 	"github.com/sahilchouksey/go-init-setup/services"
 	"github.com/sahilchouksey/go-init-setup/utils"
@@ -162,7 +161,7 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Health check endpoints (public)
 	app.Get("/ping", utils.MakeHTTPHandleFunc(handlers.HandleCheckHealth, store))
-	app.Get("/health/detailed", utils.MakeHTTPHandleFunc(handlers.HandleDetailedHealth, store))
+	app.Get("/health/detailed", utils.MakeHTTPHandleFunc(handlers.HandleDetailedHealth, store)) // NOTE: unused in frontend
 
 	// API v1 group
 	api := app.Group("/api/v1")
@@ -264,7 +263,7 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	subjectSyllabus.Get("/search", syllabusHandler.SearchTopics)   // Public: Search topics in syllabus
 
 	// Multiple syllabuses per subject route
-	api.Get("/subjects/:subject_id/syllabuses", syllabusHandler.GetAllSyllabusesBySubject) // Public: Get all syllabuses for a subject
+	api.Get("/subjects/:subject_id/syllabuses", syllabusHandler.GetAllSyllabusesBySubject) // NOTE: unused in frontend - Public: Get all syllabuses for a subject
 
 	// Document syllabus extraction
 	api.Post("/documents/:document_id/extract-syllabus", authMiddleware.Required(), syllabusHandler.ExtractSyllabus) // Protected: Extract syllabus from document
@@ -275,9 +274,9 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	syllabus.Get("/:id/status", syllabusHandler.GetExtractionStatus)                        // Public: Get extraction status
 	syllabus.Post("/:id/retry", authMiddleware.Required(), syllabusHandler.RetryExtraction) // Protected: Retry failed extraction
 	syllabus.Delete("/:id", authMiddleware.RequireAdmin(), syllabusHandler.DeleteSyllabus)  // Admin: Delete syllabus
-	syllabus.Get("/:id/units", syllabusHandler.ListUnits)                                   // Public: List units
-	syllabus.Get("/:id/units/:unit_number", syllabusHandler.GetUnit)                        // Public: Get unit by number
-	syllabus.Get("/:id/books", syllabusHandler.ListBooks)                                   // Public: List book references
+	syllabus.Get("/:id/units", syllabusHandler.ListUnits)                                   // NOTE: unused in frontend - Public: List units
+	syllabus.Get("/:id/units/:unit_number", syllabusHandler.GetUnit)                        // NOTE: unused in frontend - Public: Get unit by number
+	syllabus.Get("/:id/books", syllabusHandler.ListBooks)                                   // NOTE: unused in frontend - Public: List book references
 
 	// ==================== PYQ Extraction ====================
 
@@ -373,67 +372,71 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 	// ======================================================================
 
 	// ==================== Phase 8: Analytics, Monitoring & Reporting ====================
+	// NOTE: All analytics endpoints below are unused in frontend
 
 	// Analytics routes (user-specific endpoints, require authentication)
 	analytics := api.Group("/analytics", authMiddleware.Required())
-	analytics.Get("/me", analyticsHandler.GetMyStats)                                                            // Protected: Get current user's stats
-	analytics.Get("/users/:id", analyticsHandler.GetUserStats)                                                   // Protected: Get user stats (self or admin)
-	analytics.Get("/subjects/:id", analyticsHandler.GetSubjectStats)                                             // Protected: Get subject stats
-	analytics.Get("/subjects/top", analyticsHandler.GetTopSubjects)                                              // Protected: Get top subjects
-	analytics.Get("/activities", analyticsHandler.GetUserActivities)                                             // Protected: Get user activities (paginated)
-	analytics.Post("/activity", analyticsHandler.LogActivity)                                                    // Protected: Manual activity logging
-	analytics.Get("/activity/timeseries", authMiddleware.RequireAdmin(), analyticsHandler.GetActivityTimeSeries) // Admin: Activity time series
-	analytics.Get("/chat/timeseries", authMiddleware.RequireAdmin(), analyticsHandler.GetChatUsageTimeSeries)    // Admin: Chat usage time series
+	analytics.Get("/me", analyticsHandler.GetMyStats)                                                            // NOTE: unused in frontend - Protected: Get current user's stats
+	analytics.Get("/users/:id", analyticsHandler.GetUserStats)                                                   // NOTE: unused in frontend - Protected: Get user stats (self or admin)
+	analytics.Get("/subjects/:id", analyticsHandler.GetSubjectStats)                                             // NOTE: unused in frontend - Protected: Get subject stats
+	analytics.Get("/subjects/top", analyticsHandler.GetTopSubjects)                                              // NOTE: unused in frontend - Protected: Get top subjects
+	analytics.Get("/activities", analyticsHandler.GetUserActivities)                                             // NOTE: unused in frontend - Protected: Get user activities (paginated)
+	analytics.Post("/activity", analyticsHandler.LogActivity)                                                    // NOTE: unused in frontend - Protected: Manual activity logging
+	analytics.Get("/activity/timeseries", authMiddleware.RequireAdmin(), analyticsHandler.GetActivityTimeSeries) // NOTE: unused in frontend - Admin: Activity time series
+	analytics.Get("/chat/timeseries", authMiddleware.RequireAdmin(), analyticsHandler.GetChatUsageTimeSeries)    // NOTE: unused in frontend - Admin: Chat usage time series
 
 	// Admin-only analytics routes
+	// NOTE: All admin panel endpoints below are unused in frontend (no admin UI exists)
 	admin := api.Group("/admin", authMiddleware.RequireAdmin())
-	admin.Get("/dashboard", analyticsHandler.GetDashboard)  // Admin: Dashboard statistics
-	admin.Get("/audit-logs", analyticsHandler.GetAuditLogs) // Admin: Audit logs
-	admin.Get("/health", analyticsHandler.GetSystemHealth)  // Admin: System health check
+	admin.Get("/dashboard", analyticsHandler.GetDashboard)  // NOTE: unused in frontend - Admin: Dashboard statistics
+	admin.Get("/audit-logs", analyticsHandler.GetAuditLogs) // NOTE: unused in frontend - Admin: Audit logs
+	admin.Get("/health", analyticsHandler.GetSystemHealth)  // NOTE: unused in frontend - Admin: System health check
 
 	// ==================== Phase 11: Admin Panel Endpoints ====================
+	// NOTE: All admin panel endpoints below are unused in frontend (no admin UI exists)
 
 	// Admin User Management
-	admin.Get("/users/stats", func(c *fiber.Ctx) error { return admin_handlers.GetUserStats(c, store) })
-	admin.Get("/users", func(c *fiber.Ctx) error { return admin_handlers.ListUsers(c, store) })
-	admin.Get("/users/:id", func(c *fiber.Ctx) error { return admin_handlers.GetUser(c, store) })
-	admin.Put("/users/:id", middleware.AdminAuditLog(store, "user_update", "users"), func(c *fiber.Ctx) error { return admin_handlers.UpdateUser(c, store) })
-	admin.Delete("/users/:id", middleware.AdminAuditLog(store, "user_delete", "users"), func(c *fiber.Ctx) error { return admin_handlers.DeleteUser(c, store) })
-	admin.Post("/users/:id/reset-password", middleware.AdminAuditLog(store, "password_reset", "users"), func(c *fiber.Ctx) error { return admin_handlers.ResetUserPassword(c, store) })
+	admin.Get("/users/stats", func(c *fiber.Ctx) error { return admin_handlers.GetUserStats(c, store) })                                                                                // NOTE: unused in frontend
+	admin.Get("/users", func(c *fiber.Ctx) error { return admin_handlers.ListUsers(c, store) })                                                                                         // NOTE: unused in frontend
+	admin.Get("/users/:id", func(c *fiber.Ctx) error { return admin_handlers.GetUser(c, store) })                                                                                       // NOTE: unused in frontend
+	admin.Put("/users/:id", middleware.AdminAuditLog(store, "user_update", "users"), func(c *fiber.Ctx) error { return admin_handlers.UpdateUser(c, store) })                           // NOTE: unused in frontend
+	admin.Delete("/users/:id", middleware.AdminAuditLog(store, "user_delete", "users"), func(c *fiber.Ctx) error { return admin_handlers.DeleteUser(c, store) })                        // NOTE: unused in frontend
+	admin.Post("/users/:id/reset-password", middleware.AdminAuditLog(store, "password_reset", "users"), func(c *fiber.Ctx) error { return admin_handlers.ResetUserPassword(c, store) }) // NOTE: unused in frontend
 
 	// Admin Analytics
-	admin.Get("/analytics/overview", func(c *fiber.Ctx) error { return admin_handlers.GetOverviewAnalytics(c, store) })
-	admin.Get("/analytics/users", func(c *fiber.Ctx) error { return admin_handlers.GetUserAnalytics(c, store) })
-	admin.Get("/analytics/api-keys", func(c *fiber.Ctx) error { return admin_handlers.GetAPIKeyAnalytics(c, store) })
-	admin.Get("/analytics/documents", func(c *fiber.Ctx) error { return admin_handlers.GetDocumentAnalytics(c, store) })
-	admin.Get("/analytics/chats", func(c *fiber.Ctx) error { return admin_handlers.GetChatAnalytics(c, store) })
+	admin.Get("/analytics/overview", func(c *fiber.Ctx) error { return admin_handlers.GetOverviewAnalytics(c, store) })  // NOTE: unused in frontend
+	admin.Get("/analytics/users", func(c *fiber.Ctx) error { return admin_handlers.GetUserAnalytics(c, store) })         // NOTE: unused in frontend
+	admin.Get("/analytics/api-keys", func(c *fiber.Ctx) error { return admin_handlers.GetAPIKeyAnalytics(c, store) })    // NOTE: unused in frontend
+	admin.Get("/analytics/documents", func(c *fiber.Ctx) error { return admin_handlers.GetDocumentAnalytics(c, store) }) // NOTE: unused in frontend
+	admin.Get("/analytics/chats", func(c *fiber.Ctx) error { return admin_handlers.GetChatAnalytics(c, store) })         // NOTE: unused in frontend
 
 	// Admin Audit Logs
-	admin.Get("/audit", func(c *fiber.Ctx) error { return admin_handlers.ListAuditLogs(c, store) })
-	admin.Get("/audit/:id", func(c *fiber.Ctx) error { return admin_handlers.GetAuditLog(c, store) })
+	admin.Get("/audit", func(c *fiber.Ctx) error { return admin_handlers.ListAuditLogs(c, store) })   // NOTE: unused in frontend
+	admin.Get("/audit/:id", func(c *fiber.Ctx) error { return admin_handlers.GetAuditLog(c, store) }) // NOTE: unused in frontend
 
 	// Admin Settings Management
-	admin.Get("/settings", func(c *fiber.Ctx) error { return admin_handlers.ListSettings(c, store) })
-	admin.Get("/settings/:key", func(c *fiber.Ctx) error { return admin_handlers.GetSetting(c, store) })
-	admin.Put("/settings/:key", middleware.AdminAuditLog(store, "setting_update", "settings"), func(c *fiber.Ctx) error { return admin_handlers.UpdateSetting(c, store) })
-	admin.Delete("/settings/:key", middleware.AdminAuditLog(store, "setting_delete", "settings"), func(c *fiber.Ctx) error { return admin_handlers.DeleteSetting(c, store) })
+	admin.Get("/settings", func(c *fiber.Ctx) error { return admin_handlers.ListSettings(c, store) })                                                                         // NOTE: unused in frontend
+	admin.Get("/settings/:key", func(c *fiber.Ctx) error { return admin_handlers.GetSetting(c, store) })                                                                      // NOTE: unused in frontend
+	admin.Put("/settings/:key", middleware.AdminAuditLog(store, "setting_update", "settings"), func(c *fiber.Ctx) error { return admin_handlers.UpdateSetting(c, store) })    // NOTE: unused in frontend
+	admin.Delete("/settings/:key", middleware.AdminAuditLog(store, "setting_delete", "settings"), func(c *fiber.Ctx) error { return admin_handlers.DeleteSetting(c, store) }) // NOTE: unused in frontend
 
 	// ===========================================================================
 
 	// ===============================================================================
 
 	// ==================== Phase 9: External API Access ====================
+	// NOTE: All API keys endpoints below are unused in frontend (no API keys UI exists)
 
 	// API Keys routes (all protected - require authentication)
 	apiKeys := api.Group("/api-keys", authMiddleware.Required())
-	apiKeys.Post("/", apiKeyHandler.CreateAPIKey)           // Protected: Create new API key
-	apiKeys.Get("/", apiKeyHandler.ListAPIKeys)             // Protected: List user's API keys
-	apiKeys.Get("/:id", apiKeyHandler.GetAPIKey)            // Protected: Get API key details
-	apiKeys.Put("/:id", apiKeyHandler.UpdateAPIKey)         // Protected: Update API key
-	apiKeys.Post("/:id/revoke", apiKeyHandler.RevokeAPIKey) // Protected: Revoke API key
-	apiKeys.Delete("/:id", apiKeyHandler.DeleteAPIKey)      // Protected: Delete API key
-	apiKeys.Get("/:id/usage", apiKeyHandler.GetUsageStats)  // Protected: Get API key usage stats
-	apiKeys.Post("/:id/extend", apiKeyHandler.ExtendExpiry) // Protected: Extend API key expiry
+	apiKeys.Post("/", apiKeyHandler.CreateAPIKey)           // NOTE: unused in frontend - Protected: Create new API key
+	apiKeys.Get("/", apiKeyHandler.ListAPIKeys)             // NOTE: unused in frontend - Protected: List user's API keys
+	apiKeys.Get("/:id", apiKeyHandler.GetAPIKey)            // NOTE: unused in frontend - Protected: Get API key details
+	apiKeys.Put("/:id", apiKeyHandler.UpdateAPIKey)         // NOTE: unused in frontend - Protected: Update API key
+	apiKeys.Post("/:id/revoke", apiKeyHandler.RevokeAPIKey) // NOTE: unused in frontend - Protected: Revoke API key
+	apiKeys.Delete("/:id", apiKeyHandler.DeleteAPIKey)      // NOTE: unused in frontend - Protected: Delete API key
+	apiKeys.Get("/:id/usage", apiKeyHandler.GetUsageStats)  // NOTE: unused in frontend - Protected: Get API key usage stats
+	apiKeys.Post("/:id/extend", apiKeyHandler.ExtendExpiry) // NOTE: unused in frontend - Protected: Extend API key expiry
 
 	// ===========================================================================
 
@@ -451,16 +454,10 @@ func SetupRoutes(app *fiber.App, store database.Storage) {
 
 	// Extraction job management
 	v2Jobs := apiv2.Group("/extraction-jobs", authMiddleware.Required())
-	v2Jobs.Get("/active", syllabusHandler.GetMyActiveJob)         // Get user's active job
+	v2Jobs.Get("/active", syllabusHandler.GetMyActiveJob)         // NOTE: unused in frontend - Get user's active job
 	v2Jobs.Get("/:job_id", syllabusHandler.GetJobStatus)          // Get job status
 	v2Jobs.Get("/:job_id/stream", syllabusHandler.ReconnectToJob) // Reconnect to job stream
-	v2Jobs.Post("/:job_id/cancel", syllabusHandler.CancelJob)     // Cancel job
+	v2Jobs.Post("/:job_id/cancel", syllabusHandler.CancelJob)     // NOTE: unused in frontend - Cancel job
 
 	// ===========================================================================
-
-	// Todo endpoints (keeping existing routes for backward compatibility)
-	app.Get("/todos", utils.MakeHTTPHandleFunc(todo_handlers.GetAllTodos, store))
-	app.Get("/add/todo", utils.MakeHTTPHandleFunc(todo_handlers.AddTodoHandler, store))
-	app.Get("/update/todo", utils.MakeHTTPHandleFunc(todo_handlers.UpdateTodoHandler, store))
-	app.Get("/delete/todo", utils.MakeHTTPHandleFunc(todo_handlers.DeleteTodoHandler, store))
 }
