@@ -37,7 +37,7 @@ export function SettingsTab() {
 
     setIsSaving(true);
     try {
-      await apiClient.put('/api/v1/auth/profile', { name });
+      await apiClient.put('/api/v1/profile', { name });
       refetchUser();
       toast.success('Profile updated successfully');
       setHasChanges(false);
