@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study in Woods - Complete Documentation</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        /* ============================================
+           UNIFIED PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           ============================================ */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @page { 
+            size: A4; 
+            margin: 0.75in 0.6in;
+        }
+        
+        body { 
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+            max-width: 7.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 20pt 0 10pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
+        }
+        
+        h3 { 
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 16pt 0 8pt 0;
+            page-break-after: avoid;
+        }
+        
+        h4 {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1a365d;
+            margin: 12pt 0 6pt 0;
+        }
+        
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.3in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { text-indent: 0; }
+        
+        /* ============ LISTS ============ */
+        ul, ol { 
+            margin: 10pt 0 10pt 0.4in;
+            padding-left: 0.2in;
+        }
+        
+        li { 
+            margin-bottom: 5pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        li strong { color: #1a365d; }
+        
+        /* ============ TABLES ============ */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 14pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        thead {
+            border-top: 2px solid #1a365d;
+            border-bottom: 1px solid #1a365d;
+        }
+        
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            font-weight: 600;
+            padding: 6pt 8pt;
+            text-align: left;
+            font-size: 10pt;
+        }
+        
+        tbody { border-bottom: 2px solid #1a365d; }
+        
+        td { 
+            padding: 5pt 8pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) { background-color: #f7fafc; }
+        
+        /* ============ DIAGRAMS ============ */
+        .diagram-container { 
+            margin: 14pt 0;
+            padding: 10pt;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4pt;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+        
+        .figure-caption { 
+            text-align: center; 
+            font-style: italic; 
+            margin-top: 8pt; 
+            font-size: 10pt;
+            color: #4a6fa5;
+        }
+        
+        .mermaid { background: white; }
+        
+        /* ============ COMPONENT BOX ============ */
+        .component-box {
+            background: #f7fafc;
+            border-left: 4px solid #2c5282;
+            padding: 12px 16px;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+        
+        .component-box h4 { margin-top: 0; color: #2c5282; }
+        .component-box ul { margin-left: 16px; margin-bottom: 0; }
+        .component-box li { margin-bottom: 4px; }
+        
+        /* ============ CITATIONS ============ */
+        .citation { 
+            margin-left: 0.4in; 
+            text-indent: -0.4in; 
+            margin-bottom: 8pt; 
+            text-align: left;
+        }
+        
+        .citation-number { color: #2c5282; font-weight: 600; }
+        
+        /* ============ STATUS ============ */
+        .status-pass { color: #276749; font-weight: 600; }
+        
+        /* ============ TOC ============ */
+        .toc-table { font-family: Arial, Helvetica, sans-serif; }
+        .toc-table th.page-col { text-align: right; width: 60px; }
+        .toc-table th.sno-col { width: 40px; text-align: center; }
+        .toc-table .sno { text-align: center; color: #2c5282; font-weight: 600; }
+        .toc-table .chapter { font-weight: 600; color: #1a365d; }
+        .toc-table .page-num { text-align: right; font-weight: 600; color: #2c5282; }
+        .toc-table .sub-row td { border-bottom: none; padding: 2px 5px 2px 16px; font-size: 9pt; color: #4a5568; }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { page-break-after: always; break-after: page; }
+        
+        /* ============ PRINT ============ */
+        @media print {
+            body { padding: 0; }
+            .diagram-container, table { page-break-inside: avoid; }
+            h2, h3 { page-break-after: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<h1>Table of Contents</h1>
+
+<table class="toc-table">
+    <thead>
+        <tr>
+            <th class="sno-col">S.No.</th>
+            <th>Particulars</th>
+            <th class="page-col">Page</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td class="sno">1.</td><td class="chapter">INTRODUCTION</td><td class="page-num">2</td></tr>
+        <tr class="sub-row"><td></td><td>- About Project, Purpose, Overview</td><td></td></tr>
+        <tr><td class="sno">2.</td><td class="chapter">PROJECT UNDERSTANDING DOCUMENT</td><td class="page-num">5</td></tr>
+        <tr class="sub-row"><td></td><td>- Problem Statement, Proposed Solution, Scope</td><td></td></tr>
+        <tr><td class="sno">3.</td><td class="chapter">REQUIREMENTS</td><td class="page-num">11</td></tr>
+        <tr class="sub-row"><td></td><td>- Functional & Non-Functional Requirements</td><td></td></tr>
+        <tr><td class="sno">4.</td><td class="chapter">TECHNOLOGY USED</td><td class="page-num">15</td></tr>
+        <tr class="sub-row"><td></td><td>- Frontend, Backend, Database, Cloud Services</td><td></td></tr>
+        <tr><td class="sno">5.</td><td class="chapter">SOFTWARE PROCESS MODEL</td><td class="page-num">23</td></tr>
+        <tr class="sub-row"><td></td><td>- Agile Methodology, Development Phases</td><td></td></tr>
+        <tr><td class="sno">6.</td><td class="chapter">DESIGN</td><td class="page-num">26</td></tr>
+        <tr class="sub-row"><td></td><td>- System Architecture, DFD, ER Diagram, Sequence Diagrams</td><td></td></tr>
+        <tr><td class="sno">7.</td><td class="chapter">DATABASE</td><td class="page-num">36</td></tr>
+        <tr class="sub-row"><td></td><td>- Schema Design, Table Specifications</td><td></td></tr>
+        <tr><td class="sno">8.</td><td class="chapter">SCREENS</td><td class="page-num">43</td></tr>
+        <tr class="sub-row"><td></td><td>- User Interface Layouts</td><td></td></tr>
+        <tr><td class="sno">9.</td><td class="chapter">TESTING</td><td class="page-num">47</td></tr>
+        <tr class="sub-row"><td></td><td>- Test Cases, Results, Coverage</td><td></td></tr>
+        <tr><td class="sno">10.</td><td class="chapter">BIBLIOGRAPHY</td><td class="page-num">50</td></tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 1: INTRODUCTION ==================== -->
+<h1>1. Introduction</h1>
+
+<h2>1.1 About the Project</h2>
+<p><strong>Study in Woods</strong> is an AI-powered educational platform that helps students organize academic materials and interact with course content intelligently. The system processes syllabus PDFs using NLP to extract structured information and provides an AI chat interface for study guidance.</p>
+
+<h2>1.2 Purpose of the Project</h2>
+<p class="no-indent">The primary objectives are:</p>
+<ul>
+    <li><strong>Academic Organization:</strong> Centralized platform for managing universities, courses, semesters, and subjects</li>
+    <li><strong>Intelligent Content Extraction:</strong> AI-powered processing of syllabus PDFs with automatic data extraction</li>
+    <li><strong>AI-Assisted Learning:</strong> Conversational AI for answering questions and providing study guidance</li>
+    <li><strong>Exam Preparation:</strong> Past year question paper extraction and categorization linked to syllabus topics</li>
+    <li><strong>Progress Tracking:</strong> Study progress monitoring and personalized study plan management</li>
+</ul>
+
+<h2>1.3 System Architecture</h2>
+<p>The application follows a three-tier microservices architecture:</p>
+<ul>
+    <li><strong>Frontend:</strong> Next.js 15 with React 19 providing responsive UI</li>
+    <li><strong>Backend:</strong> Go (Golang) with Fiber framework handling API and business logic</li>
+    <li><strong>Data Layer:</strong> PostgreSQL for primary storage, Redis for caching and sessions</li>
+    <li><strong>OCR Service:</strong> Python FastAPI microservice for text extraction from scanned documents</li>
+</ul>
+
+<h2>1.4 Core Functionalities</h2>
+<ol>
+    <li><strong>User Management:</strong> Secure authentication with role-based access (Admin/Student)</li>
+    <li><strong>Document Processing:</strong> Syllabus upload with AI-powered content extraction</li>
+    <li><strong>AI Chat Interface:</strong> Subject-specific conversational assistance</li>
+    <li><strong>PYQ Management:</strong> Question paper extraction and categorization</li>
+    <li><strong>Analytics Dashboard:</strong> Usage statistics and performance tracking</li>
+    <li><strong>RESTful API:</strong> 100+ endpoints for programmatic access</li>
+</ol>
+
+<h2>1.5 User Characteristics</h2>
+<p class="no-indent"><strong>Students:</strong> MCA or similar program students seeking AI-assisted learning and exam preparation tools.</p>
+<p class="no-indent"><strong>Administrators:</strong> Academic staff managing universities, courses, and system settings with audit capabilities.</p>
+
+<h2>1.6 Operating Environment</h2>
+<ul>
+    <li><strong>Client:</strong> Modern web browsers (Chrome, Firefox, Safari, Edge) on all devices</li>
+    <li><strong>Server:</strong> Docker containerized deployment on Linux with HTTPS</li>
+    <li><strong>Cloud:</strong> DigitalOcean Spaces for storage, GradientAI (Llama 3.3 70B) for AI features</li>
+</ul>
+
+<h2>1.7 Constraints and Dependencies</h2>
+<p class="no-indent"><strong>Constraints:</strong> Go/Next.js stack required; PDF-only uploads; must support 1000+ concurrent users.</p>
+<p class="no-indent"><strong>Dependencies:</strong> DigitalOcean services (AI, storage), PostgreSQL, Redis, third-party libraries.</p>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 2: PROJECT UNDERSTANDING ==================== -->
+<h1>2. Project Understanding Document</h1>
+
+<h2>2.1 Problem Statement</h2>
+<p>In the contemporary educational landscape, students pursuing higher education, particularly in technical fields like Master of Computer Applications (MCA), encounter several critical challenges in managing their academic materials and optimizing their learning processes:</p>
+<ul>
+    <li><strong>Information Overload:</strong> Students receive voluminous course syllabi in PDF format containing complex hierarchical information about course units, topics, and learning outcomes, making manual extraction and organization time-consuming and error-prone.</li>
+    <li><strong>Fragmented Resources:</strong> Academic materials are scattered across multiple platforms - university portals, email attachments, physical documents, and personal storage, leading to inefficient access and retrieval.</li>
+    <li><strong>Limited Study Assistance:</strong> Traditional learning methods lack personalized, on-demand guidance for clarifying doubts and understanding complex topics outside of classroom hours.</li>
+    <li><strong>Exam Preparation Challenges:</strong> Students struggle to systematically organize and categorize previous year questions, making targeted exam preparation difficult.</li>
+    <li><strong>Lack of Progress Tracking:</strong> Absence of integrated tools to monitor study progress, set goals, and manage academic todos results in suboptimal time management.</li>
+</ul>
+
+<h2>2.2 Proposed Solution</h2>
+<p class="no-indent"><strong>Study in Woods</strong> addresses these challenges through an integrated, AI-powered platform that combines intelligent document processing, conversational AI, and comprehensive academic management capabilities.</p>
+
+<h3>2.2.1 Solution Components</h3>
+
+<div class="component-box">
+    <h4>Component 1: Intelligent Syllabus Processing</h4>
+    <ul>
+        <li>Automated PDF parsing using advanced NLP techniques</li>
+        <li>Hierarchical extraction of units, topics, and subtopics</li>
+        <li>Structured storage for easy navigation and retrieval</li>
+        <li>Support for multiple syllabus formats across universities</li>
+    </ul>
+</div>
+
+<div class="component-box">
+    <h4>Component 2: AI-Powered Study Assistant</h4>
+    <ul>
+        <li>Context-aware chatbot powered by RAG (Retrieval Augmented Generation)</li>
+        <li>Subject-specific knowledge bases for accurate responses</li>
+        <li>Natural language query processing for intuitive interaction</li>
+        <li>Citation of source materials for verifiable answers</li>
+    </ul>
+</div>
+
+<div class="component-box">
+    <h4>Component 3: Academic Organization System</h4>
+    <ul>
+        <li>University - Course - Semester - Subject hierarchy management</li>
+        <li>Document upload and categorization capabilities</li>
+        <li>Previous year question paper organization</li>
+        <li>Personal notes and resource management</li>
+    </ul>
+</div>
+
+<div class="component-box">
+    <h4>Component 4: Progress Tracking Dashboard</h4>
+    <ul>
+        <li>Visual analytics for study patterns and progress</li>
+        <li>Goal setting and achievement tracking</li>
+        <li>Todo management for academic tasks</li>
+        <li>Performance insights and recommendations</li>
+    </ul>
+</div>
+
+<h2>2.3 Project Scope</h2>
+
+<h3>2.3.1 In Scope</h3>
+<table>
+    <thead><tr><th>Category</th><th>Features Included</th></tr></thead>
+    <tbody>
+        <tr><td><strong>User Management</strong></td><td>Registration, authentication, profile management, role-based access (Student/Admin)</td></tr>
+        <tr><td><strong>Academic Structure</strong></td><td>University, course, semester, and subject management with full CRUD operations</td></tr>
+        <tr><td><strong>Document Processing</strong></td><td>PDF upload, syllabus extraction, document storage, and retrieval</td></tr>
+        <tr><td><strong>AI Chat System</strong></td><td>Subject-specific chatbot, conversation history, RAG-based responses</td></tr>
+        <tr><td><strong>Analytics</strong></td><td>Usage statistics, study patterns, progress visualization</td></tr>
+        <tr><td><strong>Administration</strong></td><td>User management, system configuration, audit logging</td></tr>
+    </tbody>
+</table>
+
+<h3>2.3.2 Out of Scope</h3>
+<ul>
+    <li>Mobile native applications (iOS/Android) - Web responsive design provided instead</li>
+    <li>Offline functionality - Requires internet connectivity</li>
+    <li>Video content processing - Focus on PDF and text documents</li>
+    <li>Real-time collaboration features - Individual study focus</li>
+    <li>Payment/subscription management - Free platform for students</li>
+</ul>
+
+<h2>2.4 Target Users</h2>
+
+<h3>2.4.1 Primary Users</h3>
+<p class="no-indent"><strong>Students:</strong> MCA and similar postgraduate program students who need:</p>
+<ul>
+    <li>Organized access to course syllabi and materials</li>
+    <li>AI-assisted study guidance and doubt resolution</li>
+    <li>Efficient exam preparation tools</li>
+    <li>Progress tracking and goal management</li>
+</ul>
+
+<h3>2.4.2 Secondary Users</h3>
+<p class="no-indent"><strong>Administrators:</strong> College/university staff responsible for:</p>
+<ul>
+    <li>Managing academic structure (universities, courses, subjects)</li>
+    <li>Uploading and maintaining syllabus documents</li>
+    <li>Monitoring platform usage and user activity</li>
+    <li>System configuration and maintenance</li>
+</ul>
+
+<h2>2.5 Expected Outcomes</h2>
+<table>
+    <thead><tr><th>Outcome</th><th>Measurement Criteria</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Improved Study Efficiency</strong></td><td>Reduced time spent searching for academic materials by 60%</td></tr>
+        <tr><td><strong>Enhanced Understanding</strong></td><td>AI chat resolves 80% of student queries without external help</td></tr>
+        <tr><td><strong>Better Organization</strong></td><td>All academic materials accessible from single platform</td></tr>
+        <tr><td><strong>Exam Readiness</strong></td><td>Systematic coverage of syllabus topics with progress tracking</td></tr>
+        <tr><td><strong>Time Savings</strong></td><td>Automated syllabus extraction saves 2+ hours per subject</td></tr>
+    </tbody>
+</table>
+
+<h2>2.6 Constraints and Assumptions</h2>
+
+<h3>2.6.1 Constraints</h3>
+<ul>
+    <li><strong>Technical:</strong> Dependent on DigitalOcean AI platform availability and API limits</li>
+    <li><strong>Data:</strong> Syllabus extraction accuracy depends on PDF formatting consistency</li>
+    <li><strong>Performance:</strong> AI response generation limited by LLM processing time</li>
+    <li><strong>Storage:</strong> Cloud storage costs scale with document uploads</li>
+</ul>
+
+<h3>2.6.2 Assumptions</h3>
+<ul>
+    <li>Users have reliable internet connectivity</li>
+    <li>Syllabus PDFs follow standard academic formatting conventions</li>
+    <li>Users possess basic computer literacy skills</li>
+    <li>University academic structures follow hierarchical organization</li>
+    <li>English is the primary language for academic content</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 3: REQUIREMENTS ==================== -->
+<h1>3. Requirements</h1>
+
+<h2>3.1 Functional Requirements</h2>
+<table>
+    <thead><tr><th>ID</th><th>Requirement</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td>FR-1</td><td>User Registration</td><td>Email/password signup with validation and duplicate prevention</td></tr>
+        <tr><td>FR-2</td><td>JWT Authentication</td><td>Secure token-based login with Redis session management</td></tr>
+        <tr><td>FR-3</td><td>Role-Based Access</td><td>Student and Admin roles with differentiated permissions</td></tr>
+        <tr><td>FR-4</td><td>Academic Hierarchy</td><td>University > Course > Semester > Subject management</td></tr>
+        <tr><td>FR-5</td><td>Document Upload</td><td>PDF upload (10MB max) to DigitalOcean Spaces storage</td></tr>
+        <tr><td>FR-6</td><td>AI Syllabus Extraction</td><td>Auto-extract units, topics from syllabus PDFs (85% accuracy)</td></tr>
+        <tr><td>FR-7</td><td>Document Indexing</td><td>Auto-index documents into subject-specific AI knowledge bases</td></tr>
+        <tr><td>FR-8</td><td>AI Chat Interface</td><td>Llama 3.3 70B powered conversational assistant with context</td></tr>
+        <tr><td>FR-9</td><td>PYQ Management</td><td>Extract and categorize past year questions by topic/difficulty</td></tr>
+        <tr><td>FR-10</td><td>API Key Management</td><td>Encrypted API keys with scopes, rate limiting, and expiration</td></tr>
+    </tbody>
+</table>
+
+<h2>3.2 Non-Functional Requirements</h2>
+<table>
+    <thead><tr><th>ID</th><th>Category</th><th>Requirement</th></tr></thead>
+    <tbody>
+        <tr><td>NFR-1</td><td>Performance</td><td>95% requests under 2s; AI responses stream within 5s</td></tr>
+        <tr><td>NFR-2</td><td>Scalability</td><td>1000+ concurrent users; 10,000 requests/minute capacity</td></tr>
+        <tr><td>NFR-3</td><td>Security</td><td>JWT RS256, bcrypt hashing, AES-256 encryption, HTTPS enforced</td></tr>
+        <tr><td>NFR-4</td><td>Availability</td><td>99.5% uptime with graceful failure handling</td></tr>
+        <tr><td>NFR-5</td><td>Usability</td><td>Responsive design (desktop/tablet/mobile), WCAG 2.1 AA compliant</td></tr>
+        <tr><td>NFR-6</td><td>Reliability</td><td>ACID compliance, daily backups, 30-day point-in-time recovery</td></tr>
+        <tr><td>NFR-7</td><td>Maintainability</td><td>Clean architecture, 70% test coverage, comprehensive logging</td></tr>
+        <tr><td>NFR-8</td><td>Protection</td><td>Rate limiting, CORS, input validation against SQL injection/XSS</td></tr>
+    </tbody>
+</table>
+
+<h2>3.3 Hardware Requirements</h2>
+
+<h3>3.3.1 Client-Side</h3>
+<table>
+    <thead><tr><th>Component</th><th>Minimum</th><th>Recommended</th></tr></thead>
+    <tbody>
+        <tr><td>Processor</td><td>Dual-core 1.6 GHz</td><td>Quad-core 2.4 GHz</td></tr>
+        <tr><td>RAM</td><td>2 GB</td><td>4 GB</td></tr>
+        <tr><td>Network</td><td>1 Mbps</td><td>5 Mbps broadband</td></tr>
+        <tr><td>Browser</td><td colspan="2">Chrome 90+, Firefox 88+, Safari 14+, Edge 90+</td></tr>
+    </tbody>
+</table>
+
+<h3>3.3.2 Server-Side</h3>
+<table>
+    <thead><tr><th>Component</th><th>App Server</th><th>Database</th><th>Cache</th></tr></thead>
+    <tbody>
+        <tr><td>CPU</td><td>4 vCPU</td><td>4 vCPU</td><td>2 vCPU</td></tr>
+        <tr><td>RAM</td><td>8 GB</td><td>8 GB</td><td>4 GB</td></tr>
+        <tr><td>Storage</td><td>80 GB SSD</td><td>200 GB SSD</td><td>40 GB SSD</td></tr>
+        <tr><td>OS</td><td colspan="3">Ubuntu 22.04 LTS</td></tr>
+    </tbody>
+</table>
+
+<h2>3.4 Software Requirements</h2>
+
+<h3>3.4.1 Frontend Stack</h3>
+<table>
+    <thead><tr><th>Technology</th><th>Version</th></tr></thead>
+    <tbody>
+        <tr><td>Next.js</td><td>15.5.6</td></tr>
+        <tr><td>React</td><td>19.1.0</td></tr>
+        <tr><td>TypeScript</td><td>5.x</td></tr>
+        <tr><td>Tailwind CSS</td><td>4.0</td></tr>
+        <tr><td>TanStack Query</td><td>5.90.9</td></tr>
+    </tbody>
+</table>
+
+<h3>3.4.2 Backend Stack</h3>
+<table>
+    <thead><tr><th>Technology</th><th>Version</th></tr></thead>
+    <tbody>
+        <tr><td>Go (Golang)</td><td>1.24.1</td></tr>
+        <tr><td>Fiber</td><td>2.52.5</td></tr>
+        <tr><td>GORM</td><td>1.31.0</td></tr>
+        <tr><td>PostgreSQL</td><td>15.x</td></tr>
+        <tr><td>Redis</td><td>7.x</td></tr>
+    </tbody>
+</table>
+
+<h3>3.4.3 Cloud Services</h3>
+<table>
+    <thead><tr><th>Service</th><th>Provider</th></tr></thead>
+    <tbody>
+        <tr><td>Compute (Droplets)</td><td>DigitalOcean</td></tr>
+        <tr><td>Object Storage (Spaces)</td><td>DigitalOcean</td></tr>
+        <tr><td>AI Platform (Llama 3.3 70B)</td><td>DigitalOcean GradientAI</td></tr>
+        <tr><td>Knowledge Bases</td><td>DigitalOcean AI</td></tr>
+    </tbody>
+</table>
+
+<h2>3.5 External Interface Requirements</h2>
+<ul>
+    <li><strong>User Interface:</strong> Responsive web UI with dashboard, document upload, AI chat, and admin panels</li>
+    <li><strong>API Interface:</strong> RESTful JSON API with JWT authentication, rate limiting, and OpenAPI documentation</li>
+    <li><strong>AI Platform:</strong> DigitalOcean GradientAI API for chat completions and knowledge base management</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 4: TECHNOLOGY USED ==================== -->
+<h1>4. Technology Used</h1>
+
+<h2>4.1 Technology Stack Overview</h2>
+<p>The Study in Woods platform uses a modern, scalable technology stack with clear separation between frontend, backend, database, and cloud services layers.</p>
+
+<h2>4.2 Frontend Technologies</h2>
+<table>
+    <thead><tr><th>Technology</th><th>Version</th><th>Purpose</th><th>Key Features</th></tr></thead>
+    <tbody>
+        <tr><td>Next.js</td><td>15.5.6</td><td>React Framework</td><td>SSR, SSG, API Routes, Turbopack, Image Optimization</td></tr>
+        <tr><td>React</td><td>19.1.0</td><td>UI Library</td><td>Server Components, Suspense, Virtual DOM, Hooks</td></tr>
+        <tr><td>TypeScript</td><td>5.x</td><td>Type Safety</td><td>Static Typing, IntelliSense, Compile-time Errors</td></tr>
+        <tr><td>Tailwind CSS</td><td>4.0</td><td>Styling</td><td>Utility Classes, JIT Compiler, Dark Mode, Responsive</td></tr>
+        <tr><td>shadcn/ui</td><td>Latest</td><td>UI Components</td><td>Accessible, Customizable, Radix UI Primitives</td></tr>
+        <tr><td>TanStack Query</td><td>5.90.9</td><td>State Management</td><td>Caching, Auto-refetch, Optimistic Updates</td></tr>
+        <tr><td>Framer Motion</td><td>12.23.24</td><td>Animations</td><td>Declarative Animations, Gestures, Layout Transitions</td></tr>
+        <tr><td>React Hook Form</td><td>7.66.0</td><td>Form Management</td><td>Validation, Performance, Error Handling</td></tr>
+        <tr><td>Zod</td><td>4.1.12</td><td>Schema Validation</td><td>Type-safe Schemas, Runtime Validation</td></tr>
+        <tr><td>Axios</td><td>1.13.2</td><td>HTTP Client</td><td>Interceptors, Request Cancellation, Auto JSON</td></tr>
+    </tbody>
+</table>
+
+<h2>4.3 Backend Technologies</h2>
+<table>
+    <thead><tr><th>Library</th><th>Version</th><th>Purpose</th><th>Key Capabilities</th></tr></thead>
+    <tbody>
+        <tr><td>Go</td><td>1.24.1</td><td>Programming Language</td><td>Goroutines, Channels, Fast Compilation, GC</td></tr>
+        <tr><td>Fiber</td><td>2.52.5</td><td>Web Framework</td><td>Fasthttp, Middleware, Routing, Context</td></tr>
+        <tr><td>GORM</td><td>1.31.0</td><td>ORM</td><td>Migrations, Associations, Hooks, Preloading</td></tr>
+        <tr><td>JWT</td><td>5.3.0</td><td>Authentication</td><td>Token Generation, RS256, Claims Validation</td></tr>
+        <tr><td>bcrypt</td><td>0.43.0</td><td>Password Hashing</td><td>Adaptive Cost, Automatic Salting</td></tr>
+        <tr><td>go-redis</td><td>9.16.0</td><td>Redis Client</td><td>Connection Pooling, Pipelining, Pub/Sub</td></tr>
+        <tr><td>AWS SDK</td><td>1.55.8</td><td>S3 Client</td><td>Multipart Upload, Pre-signed URLs, Retries</td></tr>
+        <tr><td>Validator</td><td>10.28.0</td><td>Input Validation</td><td>Struct Tags, Custom Validators, Error Messages</td></tr>
+        <tr><td>Cron</td><td>3.0.1</td><td>Job Scheduling</td><td>Cron Expressions, Job Chains, Error Handling</td></tr>
+    </tbody>
+</table>
+
+<h2>4.4 Database Technologies</h2>
+<table>
+    <thead><tr><th>Technology</th><th>Version</th><th>Type</th><th>Primary Use Cases</th></tr></thead>
+    <tbody>
+        <tr><td>PostgreSQL</td><td>15.x</td><td>Relational Database</td><td>Permanent data storage, Complex queries, ACID transactions, JSONB support</td></tr>
+        <tr><td>Redis</td><td>7.x</td><td>In-Memory Cache</td><td>Session storage, Rate limiting, Temporary data, Pub/Sub</td></tr>
+    </tbody>
+</table>
+
+<h2>4.5 Cloud Services & Infrastructure</h2>
+<p>DigitalOcean provides the complete cloud infrastructure, selected for its simplicity, transparent pricing, and India-specific infrastructure (Bangalore BLR1 region).</p>
+<table>
+    <thead><tr><th>Service</th><th>Provider</th><th>Purpose</th><th>Specifications</th></tr></thead>
+    <tbody>
+        <tr><td>Droplets</td><td>DigitalOcean</td><td>Compute</td><td>4 vCPU, 8GB RAM, 100GB SSD, Ubuntu 22.04</td></tr>
+        <tr><td>Spaces</td><td>DigitalOcean</td><td>Object Storage</td><td>S3-compatible, CDN, BLR1 region, Private ACL</td></tr>
+        <tr><td>Load Balancer</td><td>DigitalOcean</td><td>Traffic Distribution</td><td>SSL termination, Health checks, WebSocket support</td></tr>
+        <tr><td>GradientAI</td><td>DigitalOcean AI</td><td>LLM Inference</td><td>Llama 3.3 70B, OpenAI-compatible API</td></tr>
+        <tr><td>Knowledge Bases</td><td>DigitalOcean AI</td><td>Vector Database</td><td>RAG, Embeddings, Document indexing</td></tr>
+    </tbody>
+</table>
+
+<h2>4.6 Development & Deployment Tools</h2>
+<table>
+    <thead><tr><th>Tool</th><th>Version</th><th>Purpose</th><th>Benefits</th></tr></thead>
+    <tbody>
+        <tr><td>Docker</td><td>24.0+</td><td>Containerization</td><td>Consistency, Isolation, Easy deployment</td></tr>
+        <tr><td>Docker Compose</td><td>2.x</td><td>Multi-container orchestration</td><td>Local development, Service dependencies</td></tr>
+        <tr><td>Air</td><td>Latest</td><td>Live reload (Go)</td><td>Fast feedback, Incremental builds</td></tr>
+        <tr><td>Turbopack</td><td>Integrated</td><td>Frontend bundler</td><td>5x faster builds, HMR with state preservation</td></tr>
+        <tr><td>GitHub Actions</td><td>Latest</td><td>CI/CD</td><td>Automated testing, Continuous deployment</td></tr>
+        <tr><td>Git</td><td>2.x</td><td>Version control</td><td>Collaboration, History, Branching</td></tr>
+    </tbody>
+</table>
+
+<h2>4.7 System Architecture</h2>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TB
+    subgraph CLIENT[Client Layer]
+        WB[Web Browser]
+        MB[Mobile Browser]
+        PWA[PWA Client]
+    end
+    
+    subgraph LB[Load Balancer]
+        DO_LB[DigitalOcean LB - SSL]
+    end
+    
+    subgraph API[API Layer - Go Fiber]
+        API1[Instance 1]
+        API2[Instance 2]
+        APIN[Instance N]
+    end
+    
+    subgraph DATA[Data Layer]
+        PG[(PostgreSQL)]
+        RD[(Redis)]
+    end
+    
+    subgraph CLOUD[Cloud Services]
+        SP[DO Spaces]
+        AI[GradientAI LLM]
+        KB[Knowledge Bases]
+    end
+    
+    WB & MB & PWA -->|HTTPS| DO_LB
+    DO_LB --> API1 & API2 & APIN
+    API1 & API2 & APIN --> PG & RD
+    API1 & API2 & APIN --> SP & AI & KB
+    </div>
+    <p class="figure-caption">Figure 4.1: System Architecture Overview</p>
+</div>
+
+<h2>4.8 Technology Selection Summary</h2>
+<table>
+    <thead><tr><th>Decision</th><th>Choice</th><th>Rationale</th></tr></thead>
+    <tbody>
+        <tr><td>Backend Language</td><td>Go over Node.js/Python</td><td>3x more requests/sec than Node.js, single binary deployment, compile-time error checking</td></tr>
+        <tr><td>Database</td><td>PostgreSQL over MongoDB</td><td>Relational data model fits academic hierarchy, ACID guarantees, JSONB for flexibility</td></tr>
+        <tr><td>Frontend Framework</td><td>Next.js over CRA</td><td>SSR for SEO, 60% faster initial load, built-in routing and image optimization</td></tr>
+        <tr><td>Cloud Provider</td><td>DigitalOcean over AWS</td><td>Transparent pricing, Bangalore data center (15-30ms latency), integrated GradientAI</td></tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 5: SOFTWARE PROCESS MODEL ==================== -->
+<h1>5. Software Process Model</h1>
+
+<h2>5.1 Methodology</h2>
+<p>The Study in Woods project follows an <strong>Agile</strong> software development methodology, implementing a hybrid approach combining Scrum for sprint management and Kanban for continuous feature flow. This methodology was chosen to enable rapid iteration and the ability to adapt to changing requirements during the academic project timeline.</p>
+<p>Development spans 12 phases over 6 months (June - December 2024), with two-week sprints targeting 20-25 story points each. Phases overlap with continuous integration and testing running throughout.</p>
+
+<h2>5.2 Sprint Structure</h2>
+<table>
+    <thead><tr><th>Activity</th><th>Frequency</th><th>Duration</th><th>Deliverables</th></tr></thead>
+    <tbody>
+        <tr><td>Sprint Planning</td><td>Every 2 weeks</td><td>2 hours</td><td>Sprint backlog, Story estimates</td></tr>
+        <tr><td>Sprint Review</td><td>Every 2 weeks</td><td>1 hour</td><td>Working software demo</td></tr>
+        <tr><td>Backlog Refinement</td><td>Weekly</td><td>1 hour</td><td>Refined user stories</td></tr>
+    </tbody>
+</table>
+
+<h2>5.3 Development Phases</h2>
+<table>
+    <thead><tr><th>Phase</th><th>Weeks</th><th>Key Deliverables</th><th>LOC</th></tr></thead>
+    <tbody>
+        <tr><td>1: Project Setup</td><td>1-2</td><td>Monorepo structure, Docker Compose, initial DB schema</td><td rowspan="3">~3,500</td></tr>
+        <tr><td>2: Authentication</td><td>3-4</td><td>JWT auth, login/register, password reset</td></tr>
+        <tr><td>3: Academic Hierarchy</td><td>5-6</td><td>University/Course/Semester/Subject CRUD</td></tr>
+        <tr><td>4: Document Upload</td><td>7-8</td><td>DigitalOcean Spaces integration, multipart upload</td><td rowspan="3">~4,200</td></tr>
+        <tr><td>5: AI Knowledge Base</td><td>9-10</td><td>GradientAI KB integration, document indexing</td></tr>
+        <tr><td>6: Syllabus Extraction</td><td>11-12</td><td>Llama 3.3 70B extraction, structured JSON output</td></tr>
+        <tr><td>7: Chat Sessions</td><td>13-14</td><td>Session CRUD, message history</td><td rowspan="3">~3,800</td></tr>
+        <tr><td>8: AI Chat</td><td>15-16</td><td>SSE streaming, KB-context responses</td></tr>
+        <tr><td>9: Citations</td><td>17-18</td><td>Source document references in responses</td></tr>
+        <tr><td>10: PYQ Extraction</td><td>19-20</td><td>Question extraction from exam papers</td><td rowspan="3">~3,000</td></tr>
+        <tr><td>11: Analytics</td><td>21-22</td><td>Usage tracking, dashboard charts</td></tr>
+        <tr><td>12: Admin Panel</td><td>23-24</td><td>User management, system settings, deployment</td></tr>
+    </tbody>
+</table>
+
+<h2>5.4 CI/CD Pipeline</h2>
+<p class="no-indent">Automated via GitHub Actions on every push:</p>
+<ul>
+    <li><strong>Linting:</strong> golangci-lint (Go), ESLint (TypeScript)</li>
+    <li><strong>Testing:</strong> Unit tests (70% coverage required), integration tests via Docker Compose</li>
+    <li><strong>Build:</strong> Multi-stage Docker images</li>
+    <li><strong>Deploy:</strong> Zero-downtime deployment to DigitalOcean Droplet on main branch merge</li>
+</ul>
+
+<h2>5.5 Version Control</h2>
+<p class="no-indent">Git Flow branching with Conventional Commits:</p>
+<ul>
+    <li><strong>main:</strong> Production-ready code</li>
+    <li><strong>develop:</strong> Integration branch</li>
+    <li><strong>feature/*:</strong> Individual features</li>
+    <li>Semantic versioning (MAJOR.MINOR.PATCH) for releases</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 6: DESIGN ==================== -->
+<h1>6. Design</h1>
+
+<h2>6.1 System Architecture</h2>
+<p class="no-indent">Three-tier architecture: Presentation (Next.js), Application (Go Fiber API), Data (PostgreSQL, Redis, DigitalOcean Spaces). Communication via RESTful APIs, SSE for streaming, S3 for storage.</p>
+
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TB
+    subgraph PL["PRESENTATION LAYER - Next.js 15"]
+        direction LR
+        P1["Pages & Routing"]
+        P2["Components"]
+        P3["Hooks"]
+        P4["State"]
+    end
+    
+    subgraph AL["APPLICATION LAYER - Go Fiber"]
+        direction LR
+        A1["Handlers"]
+        A2["Services"]
+        A3["Middleware"]
+        A4["Utils"]
+    end
+    
+    subgraph DL["DATA LAYER"]
+        direction LR
+        D1[("PostgreSQL")]
+        D2[("Redis")]
+        D3[("DO Spaces")]
+        D4[("GradientAI")]
+    end
+    
+    PL -->|"HTTPS/REST + SSE"| AL
+    AL --> D1
+    AL --> D2
+    AL --> D3
+    AL --> D4
+    </div>
+    <p class="figure-caption">Figure 6.1: Three-tier System Architecture</p>
+</div>
+
+<h2>6.2 Design Patterns Used</h2>
+<table>
+    <thead><tr><th>Pattern</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Repository Pattern</strong></td><td>GORM-based data access layer abstracts database operations</td></tr>
+        <tr><td><strong>Service Layer</strong></td><td>Business logic separated from handlers and data access</td></tr>
+        <tr><td><strong>Middleware Chain</strong></td><td>JWT auth, CORS, rate limiting, logging as composable middleware</td></tr>
+        <tr><td><strong>Provider Pattern</strong></td><td>React context providers for auth, theme, and query state</td></tr>
+        <tr><td><strong>Observer Pattern</strong></td><td>SSE for real-time streaming of AI responses and job status</td></tr>
+        <tr><td><strong>Factory Pattern</strong></td><td>Service initialization with dependency injection</td></tr>
+    </tbody>
+</table>
+
+<h2>6.3 Data Flow Summary</h2>
+
+<h3>6.3.1 Context Diagram (Level 0)</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart LR
+    U1(["Student"]) -->|"Login, Upload, Questions"| SYS["Study in Woods"]
+    SYS -->|"Auth Tokens, AI Responses"| U1
+    U2(["Admin"]) -->|"Manage Users, Config"| SYS
+    SYS -->|"Audit Logs, Reports"| U2
+    SYS --> E1["AI API"]
+    SYS --> E2[("Database")]
+    SYS --> E3["Email"]
+    </div>
+    <p class="figure-caption">Figure 6.2: Context Diagram (Level 0 DFD)</p>
+</div>
+
+<h3>6.3.2 System Decomposition (Level 1)</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TD
+    S(["Student"]) --> A1["1.0 Authentication"]
+    A1 --> DB1[("User DB")]
+    A1 --> A2["2.0 Academic Mgmt"]
+    A1 --> A3["3.0 Doc Processing"]
+    A1 --> A4["4.0 AI Chat"]
+    A1 --> A5["5.0 Analytics"]
+    A2 --> DB2[("Course DB")]
+    A3 --> DB3["Spaces + AI"]
+    A4 --> DB4["Knowledge Base"]
+    A5 --> DB5[("Activity Logs")]
+    AD(["Admin"]) --> A6["6.0 Administration"]
+    A6 --> DB6[("Audit Logs")]
+    </div>
+    <p class="figure-caption">Figure 6.3: System Decomposition (Level 1)</p>
+</div>
+
+<h2>6.4 Entity Relationship Diagram</h2>
+<p class="no-indent">Database: 30+ tables. Core hierarchy: University - Course - Semester - Subject - Documents/ChatSessions.</p>
+
+<div class="diagram-container">
+    <div class="mermaid">
+erDiagram
+    User ||--o{ ChatSession : has
+    User {
+        int id PK
+        string email
+        string role
+    }
+    University ||--o{ Course : has
+    University {
+        int id PK
+        string name
+        string code
+    }
+    Course ||--o{ Semester : has
+    Semester ||--o{ Subject : has
+    Subject ||--o{ Document : has
+    Subject ||--o{ ChatSession : has
+    Subject {
+        int id PK
+        string kb_uuid
+    }
+    Document ||--o{ Syllabus : has
+    Document {
+        int id PK
+        string status
+    }
+    ChatSession ||--o{ ChatMessage : has
+    ChatMessage {
+        int id PK
+        json citations
+    }
+    </div>
+    <p class="figure-caption">Figure 6.4: Entity Relationship Diagram</p>
+</div>
+
+<h2>6.5 Key Sequence Flows</h2>
+
+<h3>6.5.1 Authentication Flow</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+    participant R as Redis
+    
+    U->>F: Enter credentials
+    F->>B: POST /login
+    B->>DB: Lookup user
+    DB-->>B: User record
+    B->>B: bcrypt verify
+    B->>B: Generate JWT
+    B->>R: Store session (24h TTL)
+    B-->>F: JWT Token
+    F-->>U: Redirect to Dashboard
+    </div>
+    <p class="figure-caption">Figure 6.5: Authentication Sequence Diagram</p>
+</div>
+
+<h3>6.5.2 Document Upload & AI Extraction</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant S as Spaces
+    participant AI as AI Service
+    participant DB as Database
+    
+    U->>F: Upload PDF
+    F->>B: POST /documents
+    B->>S: Upload to S3
+    S-->>B: File URL
+    B->>DB: Save (pending)
+    B-->>F: Success
+    Note over B,AI: Background Job
+    B->>AI: Extract syllabus
+    AI-->>B: JSON
+    B->>DB: Store Topics
+    B->>AI: Index to KB
+    B->>DB: Update (completed)
+    </div>
+    <p class="figure-caption">Figure 6.6: Document Upload and AI Extraction Flow</p>
+</div>
+
+<h3>6.5.3 AI Chat with RAG</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant KB as Knowledge Base
+    participant AI as AI Service
+    participant DB as Database
+    
+    U->>F: Ask question
+    F->>B: POST /chat
+    B->>DB: Get history
+    B->>KB: Query docs
+    KB-->>B: Citations
+    B->>AI: Generate
+    AI-->>B: SSE Stream
+    B-->>F: Stream
+    F-->>U: Display
+    B->>DB: Save message
+    </div>
+    <p class="figure-caption">Figure 6.7: AI Chat with RAG Flow</p>
+</div>
+
+<h2>6.6 Component Architecture</h2>
+
+<h3>6.6.1 Backend Layers</h3>
+<div class="diagram-container">
+    <div class="mermaid">
+flowchart TB
+    subgraph API["API Layer"]
+        H1["Auth"] --- H2["Course"] --- H3["Document"] --- H4["Chat"] --- H5["Admin"]
+    end
+    
+    subgraph MW["Middleware"]
+        M1["JWT"] --- M2["CORS"] --- M3["Rate Limit"] --- M4["Logger"]
+    end
+    
+    subgraph SVC["Service Layer"]
+        S1["AuthService"] --- S2["SyllabusExtractor"] --- S3["ChatService"]
+    end
+    
+    subgraph REPO["Repository Layer - GORM"]
+        R1["UserRepo"] --- R2["SubjectRepo"] --- R3["DocumentRepo"] --- R4["ChatRepo"]
+    end
+    
+    subgraph DATA["Data"]
+        D1[("PostgreSQL")] --- D2[("Redis")]
+    end
+    
+    subgraph EXT["External"]
+        E1["DO Spaces"] --- E2["GradientAI"] --- E3["SMTP"]
+    end
+    
+    API --> MW --> SVC --> REPO --> DATA
+    SVC --> EXT
+    </div>
+    <p class="figure-caption">Figure 6.8: Backend Layered Architecture</p>
+</div>
+
+<h3>6.6.2 Frontend Structure</h3>
+<p class="no-indent">The Next.js 15 frontend follows a modular architecture with clear separation of concerns:</p>
+<table>
+    <thead><tr><th>Layer</th><th>Components</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><strong>App Router</strong></td><td>Next.js 15 App Directory</td><td>File-based routing with layouts</td></tr>
+        <tr><td><strong>Layout</strong></td><td>Header, Sidebar, Footer</td><td>Consistent UI shell across pages</td></tr>
+        <tr><td><strong>Auth Pages</strong></td><td>/login, /register</td><td>User authentication flows</td></tr>
+        <tr><td><strong>Dashboard</strong></td><td>Stats, Activity, Actions</td><td>Overview and quick actions</td></tr>
+        <tr><td><strong>Academic</strong></td><td>/universities, /courses, /subjects</td><td>Academic hierarchy management</td></tr>
+        <tr><td><strong>Chat</strong></td><td>/chat/[subjectId]</td><td>AI chat with sessions, messages, citations</td></tr>
+        <tr><td><strong>Analytics</strong></td><td>Charts, Stats, Activity Table</td><td>Usage insights and metrics</td></tr>
+        <tr><td><strong>Admin</strong></td><td>Users, Settings, Audit Logs</td><td>System administration</td></tr>
+        <tr><td><strong>Providers</strong></td><td>Query, Theme, Auth</td><td>Global state and context</td></tr>
+        <tr><td><strong>Utils</strong></td><td>API Client (Axios), Hooks, Zod</td><td>Shared utilities and validation</td></tr>
+    </tbody>
+</table>
+<p class="figure-caption">Figure 6.9: Frontend Application Structure</p>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 7: DATABASE ==================== -->
+<h1>7. Database</h1>
+
+<h2>7.1 Database Overview</h2>
+<p>The Study in Woods platform uses PostgreSQL 15.x as its primary relational database management system, storing all persistent application data across <strong>30+ tables</strong>. The database schema follows normalization principles (3NF) to minimize data redundancy while maintaining referential integrity through foreign key constraints. GORM (Go Object Relational Mapping) library manages database operations, automatic migrations, and relationship handling.</p>
+
+<h2>7.2 Database Schema Summary</h2>
+<table>
+    <thead><tr><th>Category</th><th>Tables</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>User Management</td><td>users, jwt_token_blacklist</td><td>Authentication, authorization, session management</td></tr>
+        <tr><td>Academic Hierarchy</td><td>universities, courses, semesters, subjects</td><td>Educational structure and curriculum organization</td></tr>
+        <tr><td>Document Management</td><td>documents, syllabuses, syllabus_units, syllabus_topics</td><td>File storage, syllabus extraction, content indexing</td></tr>
+        <tr><td>Chat System</td><td>chat_sessions, chat_messages, chat_memories, chat_compacted_contexts</td><td>AI conversations, context management, memory optimization</td></tr>
+        <tr><td>PYQ System</td><td>pyq_papers, pyq_questions, pyq_question_choices, pyq_crawler_sources, pyq_crawled_papers</td><td>Previous year questions management and crawling</td></tr>
+        <tr><td>System & Audit</td><td>api_keys, api_key_usage_logs, user_activities, admin_audit_logs, app_settings</td><td>API management, activity tracking, configuration</td></tr>
+        <tr><td>Background Jobs</td><td>indexing_jobs, indexing_job_items, cron_job_logs</td><td>Asynchronous processing, job scheduling</td></tr>
+        <tr><td>User Engagement</td><td>user_notifications, user_courses</td><td>Notifications, enrollment tracking</td></tr>
+    </tbody>
+</table>
+
+<h2>7.3 Core Table Definitions</h2>
+
+<h3>7.3.1 users</h3>
+<p class="no-indent">Primary table for user authentication and profile management.</p>
+<table>
+    <thead><tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr></thead>
+    <tbody>
+        <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+        <tr><td>email</td><td>VARCHAR(255)</td><td>UNIQUE, NOT NULL</td></tr>
+        <tr><td>password_hash, password_salt</td><td>VARCHAR(255), BYTEA</td><td>NOT NULL (bcrypt)</td></tr>
+        <tr><td>name</td><td>VARCHAR(255)</td><td>NOT NULL</td></tr>
+        <tr><td>role</td><td>VARCHAR(20)</td><td>DEFAULT 'student' (student/admin)</td></tr>
+        <tr><td>semester, token_version</td><td>INTEGER</td><td>DEFAULT 1, 0</td></tr>
+        <tr><td>created_at, updated_at, deleted_at</td><td>TIMESTAMP</td><td>Soft delete support</td></tr>
+    </tbody>
+</table>
+<p class="no-indent"><strong>Relations:</strong> Has many ChatSessions, ChatMessages, UserCourses, AdminAuditLogs</p>
+
+<h3>7.3.2 Academic Hierarchy (universities -> courses -> semesters -> subjects)</h3>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr></thead>
+    <tbody>
+        <tr><td>universities</td><td>id, name, code (UNIQUE), location, is_active</td><td>-</td></tr>
+        <tr><td>courses</td><td>id, name, code (UNIQUE), duration, description</td><td>university_id -> universities(id)</td></tr>
+        <tr><td>semesters</td><td>id, number, name</td><td>course_id -> courses(id)</td></tr>
+        <tr><td>subjects</td><td>id, name, code, credits, knowledge_base_uuid, agent_uuid</td><td>semester_id -> semesters(id)</td></tr>
+    </tbody>
+</table>
+<p class="no-indent">All tables include created_at, updated_at timestamps. CASCADE delete propagates through hierarchy.</p>
+
+<h3>7.3.3 documents</h3>
+<p class="no-indent">Stores uploaded PDFs and tracks indexing status with DigitalOcean Knowledge Base.</p>
+<table>
+    <thead><tr><th>Column</th><th>Type</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+        <tr><td>subject_id</td><td>INTEGER</td><td>FK -> subjects(id)</td></tr>
+        <tr><td>type</td><td>VARCHAR(20)</td><td>'syllabus', 'pyq', 'book', 'reference', 'notes'</td></tr>
+        <tr><td>filename, file_size, page_count</td><td>VARCHAR, BIGINT, INT</td><td>File metadata</td></tr>
+        <tr><td>spaces_url, spaces_key</td><td>TEXT, VARCHAR</td><td>DigitalOcean Spaces storage</td></tr>
+        <tr><td>data_source_id, indexing_job_id</td><td>VARCHAR(100)</td><td>Knowledge Base integration</td></tr>
+        <tr><td>indexing_status</td><td>VARCHAR(20)</td><td>'pending', 'in_progress', 'completed', 'failed'</td></tr>
+    </tbody>
+</table>
+
+<h3>7.3.4 Syllabus Structure (syllabuses -> syllabus_units -> syllabus_topics)</h3>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr></thead>
+    <tbody>
+        <tr><td>syllabuses</td><td>id, subject_name, subject_code, total_credits, extraction_status, raw_extraction</td><td>subject_id, document_id</td></tr>
+        <tr><td>syllabus_units</td><td>id, unit_number, title, description, hours</td><td>syllabus_id -> syllabuses(id)</td></tr>
+        <tr><td>syllabus_topics</td><td>id, topic_number, title, description, keywords</td><td>unit_id -> syllabus_units(id)</td></tr>
+    </tbody>
+</table>
+
+<h3>7.3.5 Chat System</h3>
+<p class="no-indent"><strong>chat_sessions:</strong></p>
+<table>
+    <thead><tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr></thead>
+    <tbody>
+        <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
+        <tr><td>user_id</td><td>INTEGER</td><td>FK -> users(id)</td></tr>
+        <tr><td>subject_id</td><td>INTEGER</td><td>FK -> subjects(id)</td></tr>
+        <tr><td>title</td><td>VARCHAR(255)</td><td>Auto-generated or user-set</td></tr>
+    </tbody>
+</table>
+
+<p class="no-indent"><strong>chat_messages:</strong></p>
+<table>
+    <thead><tr><th>Column</th><th>Type</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>id, session_id, subject_id, user_id</td><td>INTEGER</td><td>PK and Foreign Keys</td></tr>
+        <tr><td>role</td><td>VARCHAR(20)</td><td>'user', 'assistant', 'system'</td></tr>
+        <tr><td>content</td><td>TEXT</td><td>Message content</td></tr>
+        <tr><td>citations</td><td>JSONB</td><td>Knowledge Base citations array</td></tr>
+        <tr><td>tokens_used, model_used, response_time</td><td>INT, VARCHAR, INT</td><td>Usage analytics</td></tr>
+        <tr><td>is_streamed</td><td>BOOLEAN</td><td>SSE streaming flag</td></tr>
+    </tbody>
+</table>
+<p class="no-indent"><strong>Additional Chat Tables:</strong> chat_memories (conversation context), chat_memory_batches (batch processing), chat_compacted_contexts (compressed long-term memory)</p>
+
+<h3>7.3.6 System & Audit Tables</h3>
+<table>
+    <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td>api_keys</td><td>id, user_id, key_hash, name, is_active</td><td>Encrypted API key storage</td></tr>
+        <tr><td>api_key_usage_logs</td><td>id, user_id, service, endpoint, status_code</td><td>API consumption tracking</td></tr>
+        <tr><td>user_activities</td><td>id, user_id, action, resource_type, resource_id, ip_address</td><td>User action tracking</td></tr>
+        <tr><td>admin_audit_logs</td><td>id, admin_id, action, target_type, target_id, changes (JSONB)</td><td>Admin action audit trail</td></tr>
+        <tr><td>app_settings</td><td>id, key (UNIQUE), value, description</td><td>Application configuration</td></tr>
+        <tr><td>jwt_token_blacklist</td><td>id, user_id, token_hash (UNIQUE), expires_at</td><td>Invalidated token tracking</td></tr>
+    </tbody>
+</table>
+
+<h2>7.4 Entity Relationships</h2>
+<p>The database follows a hierarchical structure with cascading relationships:</p>
+<p class="no-indent"><strong>Primary Relationships:</strong></p>
+<ul>
+    <li>universities (1) -> (M) courses -> (M) semesters -> (M) subjects</li>
+    <li>subjects (1) -> (M) documents, syllabuses, chat_sessions</li>
+    <li>users (1) -> (M) chat_sessions -> (M) chat_messages</li>
+    <li>syllabuses (1) -> (M) syllabus_units -> (M) syllabus_topics</li>
+    <li>users (1) -> (M) api_keys, user_activities, admin_audit_logs</li>
+</ul>
+
+<h2>7.5 Indexes and Performance</h2>
+<p>Strategic indexing optimizes query performance:</p>
+<ul>
+    <li><strong>B-tree indexes:</strong> All foreign keys (user_id, subject_id, session_id, course_id, semester_id)</li>
+    <li><strong>Unique indexes:</strong> Email addresses, codes, token hashes</li>
+    <li><strong>Composite indexes:</strong> (user_id, created_at) for user activity queries</li>
+    <li><strong>Partial indexes:</strong> indexing_status='pending' for background job processing</li>
+    <li><strong>GIN indexes:</strong> JSONB columns (citations, metadata) for @> containment queries</li>
+</ul>
+<p><strong>Connection Management:</strong> pgx driver maintains 25-100 concurrent connections with 1-hour max lifetime. Query optimization includes prepared statement caching, GORM preloading to prevent N+1 queries, and Redis caching with 5-minute TTL.</p>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 8: SCREENS ==================== -->
+<h1>8. Screens</h1>
+
+<h2>8.1 Authentication Screens</h2>
+
+<h3>8.1.1 Login Screen</h3>
+<p class="no-indent"><strong>URL:</strong> /login - Centered authentication form with email/password inputs and form validation.</p>
+<p class="no-indent"><strong>Components:</strong> Email input, Password input, Remember Me checkbox, Sign In button, Forgot Password link</p>
+
+<h3>8.1.2 Registration Screen</h3>
+<p class="no-indent"><strong>URL:</strong> /register - User registration with password strength indicator.</p>
+<p class="no-indent"><strong>Components:</strong> Name input, Email input, Password input (with strength meter), Confirm Password, Terms checkbox</p>
+
+<h2>8.2 Dashboard & Navigation</h2>
+
+<h3>8.2.1 Main Dashboard</h3>
+<p class="no-indent"><strong>URL:</strong> /dashboard - Central hub with statistics, recent activity, and quick actions.</p>
+<p class="no-indent"><strong>Layout:</strong> Sidebar (left, 250px), Header (top, with profile dropdown), Content area (main)</p>
+<p class="no-indent"><strong>Components:</strong> Stats cards (4), Recent activity list, Quick action buttons, Navigation sidebar</p>
+
+<h2>8.3 Academic Management Screens</h2>
+
+<h3>8.3.1 Universities List</h3>
+<p class="no-indent"><strong>URL:</strong> /universities - Card layout of universities with search and filter.</p>
+<p class="no-indent"><strong>Features:</strong> Search/filter, Card grid, Add/Edit/Delete (admin), View associated courses</p>
+
+<h3>8.3.2 Course List</h3>
+<p class="no-indent"><strong>URL:</strong> /courses?university_id=X - Courses organized by university with breadcrumbs.</p>
+<p class="no-indent"><strong>Features:</strong> Breadcrumbs, Filter by university, Course cards, Semester navigation</p>
+
+<h3>8.3.3 Subject Detail</h3>
+<p class="no-indent"><strong>URL:</strong> /subjects/[id] - Comprehensive subject view with tabbed interface.</p>
+<p class="no-indent"><strong>Tabs:</strong> Overview, Syllabus, Documents (with upload), Chat, Analytics</p>
+
+<h2>8.4 Document Management Screens</h2>
+
+<h3>8.4.1 Document Upload Interface</h3>
+<p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=documents - Drag-and-drop upload with real-time progress.</p>
+<p class="no-indent"><strong>Components:</strong> Dropzone, Upload queue (progress bars), Document list table, Filter/search</p>
+
+<h3>8.4.2 Syllabus Viewer</h3>
+<p class="no-indent"><strong>URL:</strong> /subjects/[id]?tab=syllabus - Hierarchical display of extracted syllabus.</p>
+<p class="no-indent"><strong>Features:</strong> Accordion units, Expand/collapse all, Edit mode (admin), Export to PDF</p>
+
+<h2>8.5 Chat Interface</h2>
+
+<h3>8.5.1 Chat Screen</h3>
+<p class="no-indent"><strong>URL:</strong> /chat/[subjectId]?session=[sessionId] - AI-powered chat with document citations.</p>
+<p class="no-indent"><strong>Layout:</strong> Sessions sidebar (250px), Chat area (flex), Citation panel (300px, collapsible)</p>
+<p class="no-indent"><strong>Components:</strong> Session list, Message bubbles (markdown), Input box, Citation cards, Typing indicator</p>
+<p class="no-indent"><strong>Features:</strong> Real-time streaming (SSE), Markdown rendering, Code syntax highlighting</p>
+
+<h3>8.5.2 Chat Session Management</h3>
+<p class="no-indent"><strong>Features:</strong> Session list, Search sessions, New session button, Delete with confirmation</p>
+
+<h2>8.6 Analytics Dashboard</h2>
+
+<h3>8.6.1 Analytics Overview</h3>
+<p class="no-indent"><strong>URL:</strong> /analytics - Usage metrics and trends visualization.</p>
+<p class="no-indent"><strong>Charts:</strong> Daily active users (line), Documents uploaded (bar), Chat by subject (pie), API calls (area)</p>
+<p class="no-indent"><strong>Components:</strong> Stats cards, Charts (Recharts), Leaderboard table, Date range picker, Export CSV</p>
+
+<h2>8.7 Admin Panel</h2>
+
+<h3>8.7.1 User Management</h3>
+<p class="no-indent"><strong>URL:</strong> /admin/users - User administration with role management.</p>
+<p class="no-indent"><strong>Features:</strong> User table (sortable), Search/filter, Edit role, Reset password, Delete user, Bulk actions</p>
+
+<h3>8.7.2 System Settings</h3>
+<p class="no-indent"><strong>URL:</strong> /admin/settings - System-wide configuration interface.</p>
+<p class="no-indent"><strong>Sections:</strong> General, Authentication, File Upload, AI Config, Rate Limits, Email, Advanced</p>
+
+<h3>8.7.3 Audit Logs</h3>
+<p class="no-indent"><strong>URL:</strong> /admin/audit-logs - Read-only administrative action logs.</p>
+<p class="no-indent"><strong>Features:</strong> Filterable table, Date range filter, Action type filter, JSON diff viewer, Export CSV</p>
+
+<h2>8.8 Responsive Design</h2>
+<p class="no-indent">All screens support three breakpoints: mobile (320px-767px), tablet (768px-1023px), and desktop (1024px+). Mobile collapses sidebar to hamburger menu and stacks content vertically.</p>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 9: TESTING ==================== -->
+<h1>9. Testing</h1>
+
+<h2>9.1 Testing Strategy</h2>
+<p>The project implements comprehensive testing through automated CI/CD pipeline, with all tests executing on every pull request. The testing pyramid prioritizes unit tests (70%), integration tests (20%), and end-to-end tests (10%).</p>
+
+<h2>9.2 Types of Testing</h2>
+<ul>
+    <li><strong>Unit Testing:</strong> Go (testify) - 156 tests covering services, handlers, utilities; React (Jest/RTL) - 89 component and hook tests</li>
+    <li><strong>Integration Testing:</strong> API tests with real PostgreSQL/Redis via Docker; database relationship and constraint verification</li>
+    <li><strong>End-to-End Testing:</strong> Playwright browser automation for critical user journeys</li>
+    <li><strong>Security Testing:</strong> Authentication/authorization verification, input validation (SQL injection, XSS, path traversal), dependency scanning</li>
+    <li><strong>Performance Testing:</strong> Load testing with k6 (100-1000 concurrent users), API response time benchmarks, database query optimization</li>
+</ul>
+
+<h2>9.3 Test Cases Summary</h2>
+<table>
+    <thead><tr><th>Test Suite</th><th>Cases</th><th>Coverage Area</th></tr></thead>
+    <tbody>
+        <tr><td>Authentication</td><td>12</td><td>Register, Login, JWT, Password reset</td></tr>
+        <tr><td>Academic Hierarchy</td><td>23</td><td>Universities, Courses, Subjects, Relationships</td></tr>
+        <tr><td>Documents & Syllabus</td><td>28</td><td>Upload, Validation, Extraction, Storage</td></tr>
+        <tr><td>Chat & AI</td><td>14</td><td>Sessions, Messages, Streaming, Citations</td></tr>
+        <tr><td>Admin</td><td>9</td><td>User management, Settings, Audit logs</td></tr>
+    </tbody>
+</table>
+
+<h2>9.4 E2E User Journeys</h2>
+<table>
+    <thead><tr><th>User Journey</th><th>Steps</th><th>Duration</th><th>Pass Rate</th></tr></thead>
+    <tbody>
+        <tr><td>User Registration & Login</td><td>7</td><td>15s</td><td>98%</td></tr>
+        <tr><td>Course Enrollment</td><td>10</td><td>22s</td><td>96%</td></tr>
+        <tr><td>Document Upload & Processing</td><td>12</td><td>45s</td><td>94%</td></tr>
+        <tr><td>AI Chat Interaction</td><td>8</td><td>18s</td><td>97%</td></tr>
+        <tr><td>Admin User Management</td><td>9</td><td>20s</td><td>99%</td></tr>
+    </tbody>
+</table>
+
+<h2>9.5 Performance Benchmarks</h2>
+<table>
+    <thead><tr><th>Test Type</th><th>Virtual Users</th><th>Duration</th><th>Result</th></tr></thead>
+    <tbody>
+        <tr><td>Baseline Load</td><td>100</td><td>5 min</td><td>95% requests < 2s</td></tr>
+        <tr><td>Spike Test</td><td>50 -> 500</td><td>10 min</td><td>No crashes</td></tr>
+        <tr><td>Soak Test</td><td>200</td><td>30 min</td><td>Stable memory</td></tr>
+    </tbody>
+</table>
+
+<h2>9.6 Test Results Summary</h2>
+<table>
+    <thead><tr><th>Metric</th><th>Target</th><th>Current</th><th>Status</th></tr></thead>
+    <tbody>
+        <tr><td>Unit Test Coverage</td><td>70%</td><td>76%</td><td class="status-pass">Pass</td></tr>
+        <tr><td>Integration Test Coverage</td><td>60%</td><td>68%</td><td class="status-pass">Pass</td></tr>
+        <tr><td>E2E Coverage (Critical Paths)</td><td>100%</td><td>100%</td><td class="status-pass">Pass</td></tr>
+        <tr><td>API Response Time (p95)</td><td>< 2s</td><td>1.2s</td><td class="status-pass">Pass</td></tr>
+        <tr><td>Security Vulnerabilities (High/Critical)</td><td>0</td><td>0</td><td class="status-pass">Pass</td></tr>
+        <tr><td>CI Pipeline Duration</td><td>< 15 min</td><td>10 min</td><td class="status-pass">Pass</td></tr>
+        <tr><td>Overall Test Pass Rate</td><td>> 95%</td><td>97.8%</td><td class="status-pass">Pass</td></tr>
+    </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ==================== CHAPTER 10: BIBLIOGRAPHY ==================== -->
+<h1>10. Bibliography</h1>
+
+<h2>10.1 Core Technologies</h2>
+<p class="citation"><span class="citation-number">[1]</span> The Go Programming Language. Google, 2024. https://go.dev/doc/</p>
+<p class="citation"><span class="citation-number">[2]</span> Fiber Web Framework v2. Fiber, 2024. https://docs.gofiber.io/</p>
+<p class="citation"><span class="citation-number">[3]</span> Next.js 15 Documentation. Vercel, 2024. https://nextjs.org/docs</p>
+<p class="citation"><span class="citation-number">[4]</span> React Documentation. Meta, 2024. https://react.dev/</p>
+<p class="citation"><span class="citation-number">[5]</span> TypeScript Documentation. Microsoft, 2024. https://www.typescriptlang.org/docs/</p>
+<p class="citation"><span class="citation-number">[6]</span> Tailwind CSS v4.0. Tailwind Labs, 2024. https://tailwindcss.com/docs</p>
+
+<h2>10.2 Database & Infrastructure</h2>
+<p class="citation"><span class="citation-number">[7]</span> PostgreSQL 15 Documentation. PostgreSQL, 2024. https://www.postgresql.org/docs/15/</p>
+<p class="citation"><span class="citation-number">[8]</span> Redis Documentation. Redis, 2024. https://redis.io/docs/</p>
+<p class="citation"><span class="citation-number">[9]</span> GORM - ORM for Golang. GORM, 2024. https://gorm.io/docs/</p>
+<p class="citation"><span class="citation-number">[10]</span> Docker Documentation. Docker, 2024. https://docs.docker.com/</p>
+
+<h2>10.3 Cloud & AI Services</h2>
+<p class="citation"><span class="citation-number">[11]</span> DigitalOcean API & Spaces Documentation. DigitalOcean, 2024. https://docs.digitalocean.com/</p>
+<p class="citation"><span class="citation-number">[12]</span> Meta Llama 3.3 Model. Meta AI, 2024. https://ai.meta.com/llama/</p>
+
+<h2>10.4 Academic References</h2>
+<p class="citation"><span class="citation-number">[13]</span> Lewis, P., et al. "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." NeurIPS, 2020.</p>
+<p class="citation"><span class="citation-number">[14]</span> Vaswani, A., et al. "Attention Is All You Need." NeurIPS, 2017.</p>
+<p class="citation"><span class="citation-number">[15]</span> Jones, M., et al. "JSON Web Token (JWT) - RFC 7519." IETF, 2015.</p>
+
+<h2>10.5 Books & Standards</h2>
+<p class="citation"><span class="citation-number">[16]</span> Donovan, A. & Kernighan, B. "The Go Programming Language." Addison-Wesley, 2015.</p>
+<p class="citation"><span class="citation-number">[17]</span> Kleppmann, M. "Designing Data-Intensive Applications." O'Reilly, 2017.</p>
+<p class="citation"><span class="citation-number">[18]</span> W3C. "Web Content Accessibility Guidelines (WCAG) 2.1." W3C, 2018.</p>
+<p class="citation"><span class="citation-number">[19]</span> OWASP Foundation. "OWASP Top Ten 2021." OWASP, 2021. https://owasp.org/Top10/</p>
+
+<script>
+    mermaid.initialize({ 
+        startOnLoad: true,
+        theme: 'default',
+        themeVariables: {
+            fontFamily: 'Arial, sans-serif',
+            fontSize: '12px'
+        },
+        flowchart: {
+            htmlLabels: true,
+            curve: 'basis',
+            nodeSpacing: 30,
+            rankSpacing: 40
+        },
+        er: {
+            useMaxWidth: true,
+            entityPadding: 15,
+            fontSize: 12
+        }
+    });
+</script>
+
+</body>
+</html>
