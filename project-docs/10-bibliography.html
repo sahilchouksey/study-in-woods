@@ -2,70 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bibliography - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================
+           PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           ============================================ */
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @page { size: A4; margin: 1in; }
-        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #000; }
-        h1 { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 20px 0 30px 0; text-transform: uppercase; }
-        h2 { font-size: 14pt; font-weight: bold; margin-top: 25px; margin-bottom: 15px; text-decoration: underline; }
-        p { text-align: justify; margin-bottom: 12px; text-indent: 0.5in; }
-        p.no-indent { text-indent: 0; }
-        .citation { margin-left: 0.5in; text-indent: -0.5in; margin-bottom: 10px; text-align: left; }
-        .page-break { page-break-after: always; }
+        
+        @page { 
+            size: A4; 
+            margin: 1in 1in 1in 1.25in;
+        }
+        
+        body { 
+            font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
+        }
+        
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { 
+            text-indent: 0; 
+        }
+        
+        /* ============ CITATIONS ============ */
+        .citation { 
+            margin-left: 0.5in; 
+            text-indent: -0.5in; 
+            margin-bottom: 10pt; 
+            text-align: left;
+            line-height: 1.5;
+        }
+        
+        .citation-number {
+            color: #2c5282;
+            font-weight: 600;
+        }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { 
+            page-break-after: always;
+            break-after: page;
+        }
+        
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body { padding: 0; }
+            h2 { page-break-after: avoid; }
+        }
     </style>
 </head>
 <body>
-    <h1>10. BIBLIOGRAPHY</h1>
+    <h1>10. Bibliography</h1>
     
     <h2>10.1 Core Technologies</h2>
     
-    <p class="citation">[1] The Go Programming Language. Google, 2024. https://go.dev/doc/</p>
+    <p class="citation"><span class="citation-number">[1]</span> The Go Programming Language. Google, 2024. https://go.dev/doc/</p>
     
-    <p class="citation">[2] Fiber Web Framework v2. Fiber, 2024. https://docs.gofiber.io/</p>
+    <p class="citation"><span class="citation-number">[2]</span> Fiber Web Framework v2. Fiber, 2024. https://docs.gofiber.io/</p>
     
-    <p class="citation">[3] Next.js 15 Documentation. Vercel, 2024. https://nextjs.org/docs</p>
+    <p class="citation"><span class="citation-number">[3]</span> Next.js 15 Documentation. Vercel, 2024. https://nextjs.org/docs</p>
     
-    <p class="citation">[4] React Documentation. Meta, 2024. https://react.dev/</p>
+    <p class="citation"><span class="citation-number">[4]</span> React Documentation. Meta, 2024. https://react.dev/</p>
     
-    <p class="citation">[5] TypeScript Documentation. Microsoft, 2024. https://www.typescriptlang.org/docs/</p>
+    <p class="citation"><span class="citation-number">[5]</span> TypeScript Documentation. Microsoft, 2024. https://www.typescriptlang.org/docs/</p>
     
-    <p class="citation">[6] Tailwind CSS v4.0. Tailwind Labs, 2024. https://tailwindcss.com/docs</p>
+    <p class="citation"><span class="citation-number">[6]</span> Tailwind CSS v4.0. Tailwind Labs, 2024. https://tailwindcss.com/docs</p>
     
     <h2>10.2 Database & Infrastructure</h2>
     
-    <p class="citation">[7] PostgreSQL 15 Documentation. PostgreSQL, 2024. https://www.postgresql.org/docs/15/</p>
+    <p class="citation"><span class="citation-number">[7]</span> PostgreSQL 15 Documentation. PostgreSQL, 2024. https://www.postgresql.org/docs/15/</p>
     
-    <p class="citation">[8] Redis Documentation. Redis, 2024. https://redis.io/docs/</p>
+    <p class="citation"><span class="citation-number">[8]</span> Redis Documentation. Redis, 2024. https://redis.io/docs/</p>
     
-    <p class="citation">[9] GORM - ORM for Golang. GORM, 2024. https://gorm.io/docs/</p>
+    <p class="citation"><span class="citation-number">[9]</span> GORM - ORM for Golang. GORM, 2024. https://gorm.io/docs/</p>
     
-    <p class="citation">[10] Docker Documentation. Docker, 2024. https://docs.docker.com/</p>
+    <p class="citation"><span class="citation-number">[10]</span> Docker Documentation. Docker, 2024. https://docs.docker.com/</p>
     
     <h2>10.3 Cloud & AI Services</h2>
     
-    <p class="citation">[11] DigitalOcean API & Spaces Documentation. DigitalOcean, 2024. https://docs.digitalocean.com/</p>
+    <p class="citation"><span class="citation-number">[11]</span> DigitalOcean API & Spaces Documentation. DigitalOcean, 2024. https://docs.digitalocean.com/</p>
     
-    <p class="citation">[12] Meta Llama 3.3 Model. Meta AI, 2024. https://ai.meta.com/llama/</p>
+    <p class="citation"><span class="citation-number">[12]</span> Meta Llama 3.3 Model. Meta AI, 2024. https://ai.meta.com/llama/</p>
     
     <h2>10.4 Academic References</h2>
     
-    <p class="citation">[13] Lewis, P., et al. "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." NeurIPS, 2020.</p>
+    <p class="citation"><span class="citation-number">[13]</span> Lewis, P., et al. "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks." NeurIPS, 2020.</p>
     
-    <p class="citation">[14] Vaswani, A., et al. "Attention Is All You Need." NeurIPS, 2017.</p>
+    <p class="citation"><span class="citation-number">[14]</span> Vaswani, A., et al. "Attention Is All You Need." NeurIPS, 2017.</p>
     
-    <p class="citation">[15] Jones, M., et al. "JSON Web Token (JWT) - RFC 7519." IETF, 2015.</p>
+    <p class="citation"><span class="citation-number">[15]</span> Jones, M., et al. "JSON Web Token (JWT) - RFC 7519." IETF, 2015.</p>
     
     <h2>10.5 Books & Standards</h2>
     
-    <p class="citation">[16] Donovan, A. & Kernighan, B. "The Go Programming Language." Addison-Wesley, 2015.</p>
+    <p class="citation"><span class="citation-number">[16]</span> Donovan, A. & Kernighan, B. "The Go Programming Language." Addison-Wesley, 2015.</p>
     
-    <p class="citation">[17] Kleppmann, M. "Designing Data-Intensive Applications." O'Reilly, 2017.</p>
+    <p class="citation"><span class="citation-number">[17]</span> Kleppmann, M. "Designing Data-Intensive Applications." O'Reilly, 2017.</p>
     
-    <p class="citation">[18] W3C. "Web Content Accessibility Guidelines (WCAG) 2.1." W3C, 2018.</p>
+    <p class="citation"><span class="citation-number">[18]</span> W3C. "Web Content Accessibility Guidelines (WCAG) 2.1." W3C, 2018.</p>
     
-    <p class="citation">[19] OWASP Foundation. "OWASP Top Ten 2021." OWASP, 2021. https://owasp.org/Top10/</p>
-
-    <div class="page-number">10</div>
+    <p class="citation"><span class="citation-number">[19]</span> OWASP Foundation. "OWASP Top Ten 2021." OWASP, 2021. https://owasp.org/Top10/</p>
 </body>
 </html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table of Contents</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0.75in;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: white;
+            padding: 0.5in;
+        }
+        
+        h1 {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 16pt;
+            font-weight: 700;
+            color: #1a365d;
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #2c5282;
+            text-transform: uppercase;
+        }
+        
+        .toc-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        
+        .toc-table th {
+            padding: 10px 5px;
+            text-align: left;
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: 600;
+            font-size: 11pt;
+            color: #1a365d;
+            border-bottom: 1.5px solid #1a365d;
+        }
+        
+        .toc-table th.page-col {
+            text-align: right;
+            width: 70px;
+        }
+        
+        .toc-table th.sno-col {
+            width: 45px;
+            text-align: center;
+        }
+        
+        .toc-table td {
+            padding: 6px 5px;
+            border-bottom: 1px dotted #ccc;
+            vertical-align: bottom;
+            font-size: 11pt;
+        }
+        
+        .toc-table tbody tr:last-child td {
+            border-bottom: 1.5px solid #1a365d;
+        }
+        
+        .toc-table .sno {
+            text-align: center;
+            color: #2c5282;
+            font-weight: 600;
+        }
+        
+        .toc-table .chapter {
+            font-weight: 600;
+            color: #1a365d;
+        }
+        
+        .toc-table .page-num {
+            text-align: right;
+            font-weight: 600;
+            color: #2c5282;
+        }
+        
+        .toc-table .sub-row td {
+            border-bottom: none;
+            padding: 3px 5px 3px 20px;
+            font-size: 10pt;
+            color: #4a5568;
+        }
+        
+        .toc-table .sub-row td.page-num {
+            color: #718096;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Table of Contents</h1>
+    
+    <table class="toc-table">
+        <thead>
+            <tr>
+                <th class="sno-col">S.No.</th>
+                <th>Particulars</th>
+                <th class="page-col">Page</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="sno">1.</td>
+                <td class="chapter">INTRODUCTION</td>
+                <td class="page-num">7</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- About Project, Purpose, Overview</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">2.</td>
+                <td class="chapter">PROJECT UNDERSTANDING DOCUMENT</td>
+                <td class="page-num">10</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Problem Statement, Proposed Solution, Scope</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">3.</td>
+                <td class="chapter">REQUIREMENTS</td>
+                <td class="page-num">16</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Functional & Non-Functional Requirements</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">4.</td>
+                <td class="chapter">TECHNOLOGY USED</td>
+                <td class="page-num">20</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Frontend, Backend, Database, Cloud Services</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">5.</td>
+                <td class="chapter">SOFTWARE PROCESS MODEL</td>
+                <td class="page-num">28</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Agile Methodology, Development Phases</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">6.</td>
+                <td class="chapter">DESIGN</td>
+                <td class="page-num">31</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- System Architecture, DFD, ER Diagram, Sequence Diagrams</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">7.</td>
+                <td class="chapter">DATABASE</td>
+                <td class="page-num">41</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Schema Design, Table Specifications</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">8.</td>
+                <td class="chapter">SCREENS</td>
+                <td class="page-num">48</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- User Interface Layouts</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">9.</td>
+                <td class="chapter">TESTING</td>
+                <td class="page-num">52</td>
+            </tr>
+            <tr class="sub-row">
+                <td></td>
+                <td>- Test Cases, Results, Coverage</td>
+                <td class="page-num"></td>
+            </tr>
+            
+            <tr>
+                <td class="sno">10.</td>
+                <td class="chapter">BIBLIOGRAPHY</td>
+                <td class="page-num">55</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

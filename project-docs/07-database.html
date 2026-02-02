@@ -4,26 +4,161 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Database - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================
+           PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           ============================================ */
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @page { size: A4; margin: 1in; }
-        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #000; }
-        h1 { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 20px 0 30px 0; text-transform: uppercase; }
-        h2 { font-size: 14pt; font-weight: bold; margin-top: 25px; margin-bottom: 15px; text-decoration: underline; }
-        h3 { font-size: 12pt; font-weight: bold; margin-top: 20px; margin-bottom: 10px; font-style: italic; }
-        p { text-align: justify; margin-bottom: 12px; text-indent: 0.5in; }
-        p.no-indent { text-indent: 0; }
-        .page-break { page-break-after: always; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; }
-        th, td { border: 1px solid #000; padding: 6px; text-align: left; vertical-align: top; }
-        th { background-color: #f0f0f0; font-weight: bold; }
-        .table-name { font-weight: bold; font-size: 11pt; margin-top: 15px; margin-bottom: 5px; }
-        .table-group { margin: 15px 0; padding: 10px; border-left: 3px solid #333; }
-        .compact-table td { padding: 4px 6px; }
+        
+        @page { 
+            size: A4; 
+            margin: 1in 1in 1in 1.25in;
+        }
+        
+        body { 
+            font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
+        }
+        
+        h3 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 18pt 0 8pt 0;
+            font-style: italic;
+            page-break-after: avoid;
+        }
+        
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { 
+            text-indent: 0; 
+        }
+        
+        /* ============ LISTS ============ */
+        ul, ol { 
+            margin: 12pt 0 12pt 0.5in;
+            padding-left: 0.25in;
+        }
+        
+        li { 
+            margin-bottom: 6pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        li strong {
+            color: #1a365d;
+        }
+        
+        /* ============ TABLES ============ */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 16pt 0;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+        
+        thead {
+            border-top: 2px solid #1a365d;
+            border-bottom: 1px solid #1a365d;
+        }
+        
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            padding: 6pt 8pt;
+            text-align: left;
+            font-size: 9pt;
+        }
+        
+        tbody {
+            border-bottom: 2px solid #1a365d;
+        }
+        
+        td { 
+            padding: 5pt 8pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        .table-name {
+            font-weight: bold;
+            font-size: 11pt;
+            margin-top: 15pt;
+            margin-bottom: 5pt;
+            color: #1a365d;
+        }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { 
+            page-break-after: always;
+            break-after: page;
+        }
+        
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body { padding: 0; }
+            h2, h3 { page-break-after: avoid; }
+            table { page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
-    <h1>7. DATABASE</h1>
+    <h1>7. Database</h1>
     
     <h2>7.1 Database Overview</h2>
     
@@ -55,7 +190,7 @@
     
     <h3>7.3.1 users</h3>
     <p class="no-indent">Primary table for user authentication and profile management.</p>
-    <table class="compact-table">
+    <table>
         <thead>
             <tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr>
         </thead>
@@ -71,17 +206,17 @@
     </table>
     <p class="no-indent"><strong>Relations:</strong> Has many ChatSessions, ChatMessages, UserCourses, AdminAuditLogs</p>
     
-    <h3>7.3.2 Academic Hierarchy (universities → courses → semesters → subjects)</h3>
+    <h3>7.3.2 Academic Hierarchy (universities -> courses -> semesters -> subjects)</h3>
     
-    <table class="compact-table">
+    <table>
         <thead>
             <tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr>
         </thead>
         <tbody>
-            <tr><td>universities</td><td>id, name, code (UNIQUE), location, is_active</td><td>—</td></tr>
-            <tr><td>courses</td><td>id, name, code (UNIQUE), duration, description</td><td>university_id → universities(id)</td></tr>
-            <tr><td>semesters</td><td>id, number, name</td><td>course_id → courses(id)</td></tr>
-            <tr><td>subjects</td><td>id, name, code, credits, knowledge_base_uuid, agent_uuid</td><td>semester_id → semesters(id)</td></tr>
+            <tr><td>universities</td><td>id, name, code (UNIQUE), location, is_active</td><td>-</td></tr>
+            <tr><td>courses</td><td>id, name, code (UNIQUE), duration, description</td><td>university_id -> universities(id)</td></tr>
+            <tr><td>semesters</td><td>id, number, name</td><td>course_id -> courses(id)</td></tr>
+            <tr><td>subjects</td><td>id, name, code, credits, knowledge_base_uuid, agent_uuid</td><td>semester_id -> semesters(id)</td></tr>
         </tbody>
     </table>
     <p class="no-indent">All tables include created_at, updated_at timestamps. CASCADE delete propagates through hierarchy.</p>
@@ -90,13 +225,13 @@
     
     <h3>7.3.3 documents</h3>
     <p class="no-indent">Stores uploaded PDFs and tracks indexing status with DigitalOcean Knowledge Base.</p>
-    <table class="compact-table">
+    <table>
         <thead>
             <tr><th>Column</th><th>Type</th><th>Purpose</th></tr>
         </thead>
         <tbody>
             <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FK → subjects(id)</td></tr>
+            <tr><td>subject_id</td><td>INTEGER</td><td>FK -> subjects(id)</td></tr>
             <tr><td>type</td><td>VARCHAR(20)</td><td>'syllabus', 'pyq', 'book', 'reference', 'notes'</td></tr>
             <tr><td>filename, file_size, page_count</td><td>VARCHAR, BIGINT, INT</td><td>File metadata</td></tr>
             <tr><td>spaces_url, spaces_key</td><td>TEXT, VARCHAR</td><td>DigitalOcean Spaces storage</td></tr>
@@ -105,33 +240,33 @@
         </tbody>
     </table>
     
-    <h3>7.3.4 Syllabus Structure (syllabuses → syllabus_units → syllabus_topics)</h3>
-    <table class="compact-table">
+    <h3>7.3.4 Syllabus Structure (syllabuses -> syllabus_units -> syllabus_topics)</h3>
+    <table>
         <thead>
             <tr><th>Table</th><th>Key Columns</th><th>Foreign Key</th></tr>
         </thead>
         <tbody>
             <tr><td>syllabuses</td><td>id, subject_name, subject_code, total_credits, extraction_status, raw_extraction</td><td>subject_id, document_id</td></tr>
-            <tr><td>syllabus_units</td><td>id, unit_number, title, description, hours</td><td>syllabus_id → syllabuses(id)</td></tr>
-            <tr><td>syllabus_topics</td><td>id, topic_number, title, description, keywords</td><td>unit_id → syllabus_units(id)</td></tr>
+            <tr><td>syllabus_units</td><td>id, unit_number, title, description, hours</td><td>syllabus_id -> syllabuses(id)</td></tr>
+            <tr><td>syllabus_topics</td><td>id, topic_number, title, description, keywords</td><td>unit_id -> syllabus_units(id)</td></tr>
         </tbody>
     </table>
     
     <h3>7.3.5 Chat System</h3>
     
     <p class="table-name">chat_sessions</p>
-    <table class="compact-table">
+    <table>
         <thead><tr><th>Column</th><th>Type</th><th>Key/Constraint</th></tr></thead>
         <tbody>
             <tr><td>id</td><td>SERIAL</td><td>PRIMARY KEY</td></tr>
-            <tr><td>user_id</td><td>INTEGER</td><td>FK → users(id)</td></tr>
-            <tr><td>subject_id</td><td>INTEGER</td><td>FK → subjects(id)</td></tr>
+            <tr><td>user_id</td><td>INTEGER</td><td>FK -> users(id)</td></tr>
+            <tr><td>subject_id</td><td>INTEGER</td><td>FK -> subjects(id)</td></tr>
             <tr><td>title</td><td>VARCHAR(255)</td><td>Auto-generated or user-set</td></tr>
         </tbody>
     </table>
     
     <p class="table-name">chat_messages</p>
-    <table class="compact-table">
+    <table>
         <thead><tr><th>Column</th><th>Type</th><th>Purpose</th></tr></thead>
         <tbody>
             <tr><td>id, session_id, subject_id, user_id</td><td>INTEGER</td><td>PK and Foreign Keys</td></tr>
@@ -146,7 +281,7 @@
     <p class="no-indent"><strong>Additional Chat Tables:</strong> chat_memories (conversation context), chat_memory_batches (batch processing), chat_compacted_contexts (compressed long-term memory)</p>
     
     <h3>7.3.6 System & Audit Tables</h3>
-    <table class="compact-table">
+    <table>
         <thead><tr><th>Table</th><th>Key Columns</th><th>Purpose</th></tr></thead>
         <tbody>
             <tr><td>api_keys</td><td>id, user_id, key_hash, name, is_active</td><td>Encrypted API key storage</td></tr>
@@ -163,12 +298,12 @@
     <p>The database follows a hierarchical structure with cascading relationships:</p>
     
     <p class="no-indent"><strong>Primary Relationships:</strong></p>
-    <ul style="margin-left: 0.5in; margin-bottom: 15px;">
-        <li>universities (1) → (M) courses → (M) semesters → (M) subjects</li>
-        <li>subjects (1) → (M) documents, syllabuses, chat_sessions</li>
-        <li>users (1) → (M) chat_sessions → (M) chat_messages</li>
-        <li>syllabuses (1) → (M) syllabus_units → (M) syllabus_topics</li>
-        <li>users (1) → (M) api_keys, user_activities, admin_audit_logs</li>
+    <ul>
+        <li>universities (1) -> (M) courses -> (M) semesters -> (M) subjects</li>
+        <li>subjects (1) -> (M) documents, syllabuses, chat_sessions</li>
+        <li>users (1) -> (M) chat_sessions -> (M) chat_messages</li>
+        <li>syllabuses (1) -> (M) syllabus_units -> (M) syllabus_topics</li>
+        <li>users (1) -> (M) api_keys, user_activities, admin_audit_logs</li>
     </ul>
     
     <p class="no-indent"><strong>ER Diagram Reference:</strong> The complete Entity-Relationship diagram is available in the Design section (Chapter 6), showing all 30+ tables with their relationships, cardinality, and key constraints.</p>
@@ -176,7 +311,7 @@
     <h2>7.5 Indexes and Performance</h2>
     
     <p>Strategic indexing optimizes query performance:</p>
-    <ul style="margin-left: 0.5in; margin-bottom: 15px;">
+    <ul>
         <li><strong>B-tree indexes:</strong> All foreign keys (user_id, subject_id, session_id, course_id, semester_id)</li>
         <li><strong>Unique indexes:</strong> Email addresses, codes, token hashes</li>
         <li><strong>Composite indexes:</strong> (user_id, created_at) for user activity queries</li>

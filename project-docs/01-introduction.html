@@ -4,159 +4,210 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Introduction - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ============================================
+           PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           ============================================ */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @page { 
+            size: A4; 
+            margin: 1in 1in 1in 1.25in;
         }
         
-        @page {
-            size: A4;
-            margin: 1in 1in 1in 1in;
-        }
-        
-        body {
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
+        body { 
+            font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt; 
             line-height: 1.6;
-            color: #000;
-            background: #fff;
-        }
-        
-        .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 1in;
+            color: #333333;
+            max-width: 7in;
             margin: 0 auto;
-            background: white;
+            padding: 0.5in;
         }
         
-        h1 {
-            text-align: center;
-            font-size: 16pt;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 30px;
-            margin-top: 20px;
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
             text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
-        h2 {
-            font-size: 14pt;
-            font-weight: bold;
-            margin-top: 25px;
-            margin-bottom: 15px;
-            text-decoration: underline;
+        h2 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
         }
         
-        h3 {
-            font-size: 12pt;
-            font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 10px;
+        h3 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 18pt 0 8pt 0;
             font-style: italic;
+            page-break-after: avoid;
         }
         
-        p {
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { 
+            text-indent: 0; 
+        }
+        
+        /* ============ LISTS ============ */
+        ul, ol { 
+            margin: 12pt 0 12pt 0.5in;
+            padding-left: 0.25in;
+        }
+        
+        li { 
+            margin-bottom: 6pt;
             text-align: justify;
-            margin-bottom: 12px;
-            text-indent: 0.5in;
+            line-height: 1.5;
         }
         
-        p.no-indent {
-            text-indent: 0;
+        li strong {
+            color: #1a365d;
         }
         
-        ul, ol {
-            margin-left: 0.75in;
-            margin-bottom: 12px;
+        /* ============ TABLES ============ */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 16pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
         }
         
-        li {
-            margin-bottom: 8px;
-            text-align: justify;
+        thead {
+            border-top: 2px solid #1a365d;
+            border-bottom: 1px solid #1a365d;
         }
         
-        .page-number {
-            text-align: center;
-            font-size: 11pt;
-            margin-top: 30px;
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            padding: 8pt 10pt;
+            text-align: left;
+            font-size: 10pt;
         }
         
-        strong {
-            font-weight: bold;
+        tbody {
+            border-bottom: 2px solid #1a365d;
         }
         
-        .section-break {
-            margin: 30px 0;
-            border-bottom: 1px solid #ccc;
+        td { 
+            padding: 6pt 10pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { 
+            page-break-after: always;
+            break-after: page;
+        }
+        
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body { padding: 0; }
+            h2, h3 { page-break-after: avoid; }
+            table { page-break-inside: avoid; }
         }
     </style>
 </head>
 <body>
-    <div class="page">
-        <h1>1. Introduction</h1>
-        
-        <h2>1.1 About the Project</h2>
-        
-        <p><strong>Study in Woods</strong> is an AI-powered educational platform that helps students organize academic materials and interact with course content intelligently. The system processes syllabus PDFs using NLP to extract structured information and provides an AI chat interface for study guidance.</p>
-        
-        <h2>1.2 Purpose of the Project</h2>
-        
-        <p class="no-indent">The primary objectives are:</p>
-        
-        <ul>
-            <li><strong>Academic Organization:</strong> Centralized platform for managing universities, courses, semesters, and subjects</li>
-            <li><strong>Intelligent Content Extraction:</strong> AI-powered processing of syllabus PDFs with automatic data extraction</li>
-            <li><strong>AI-Assisted Learning:</strong> Conversational AI for answering questions and providing study guidance</li>
-            <li><strong>Exam Preparation:</strong> Past year question paper extraction and categorization linked to syllabus topics</li>
-            <li><strong>Progress Tracking:</strong> Study progress monitoring and personalized study plan management</li>
-        </ul>
-        
-        <h2>1.3 System Architecture</h2>
-        
-        <p>The application follows a three-tier microservices architecture:</p>
-        
-        <ul>
-            <li><strong>Frontend:</strong> Next.js 15 with React 19 providing responsive UI</li>
-            <li><strong>Backend:</strong> Go (Golang) with Fiber framework handling API and business logic</li>
-            <li><strong>Data Layer:</strong> PostgreSQL for primary storage, Redis for caching and sessions</li>
-            <li><strong>OCR Service:</strong> Python FastAPI microservice for text extraction from scanned documents</li>
-        </ul>
-        
-        <h2>1.4 Core Functionalities</h2>
-        
-        <ol>
-            <li><strong>User Management:</strong> Secure authentication with role-based access (Admin/Student)</li>
-            <li><strong>Document Processing:</strong> Syllabus upload with AI-powered content extraction</li>
-            <li><strong>AI Chat Interface:</strong> Subject-specific conversational assistance</li>
-            <li><strong>PYQ Management:</strong> Question paper extraction and categorization</li>
-            <li><strong>Analytics Dashboard:</strong> Usage statistics and performance tracking</li>
-            <li><strong>RESTful API:</strong> 100+ endpoints for programmatic access</li>
-        </ol>
-        
-        <h2>1.5 User Characteristics</h2>
-        
-        <p class="no-indent"><strong>Students:</strong> MCA or similar program students seeking AI-assisted learning and exam preparation tools.</p>
-        
-        <p class="no-indent"><strong>Administrators:</strong> Academic staff managing universities, courses, and system settings with audit capabilities.</p>
-        
-        <h2>1.6 Operating Environment</h2>
-        
-        <ul>
-            <li><strong>Client:</strong> Modern web browsers (Chrome, Firefox, Safari, Edge) on all devices</li>
-            <li><strong>Server:</strong> Docker containerized deployment on Linux with HTTPS</li>
-            <li><strong>Cloud:</strong> DigitalOcean Spaces for storage, GradientAI (Llama 3.3 70B) for AI features</li>
-        </ul>
-        
-        <h2>1.7 Constraints and Dependencies</h2>
-        
-        <p class="no-indent"><strong>Constraints:</strong> Go/Next.js stack required; PDF-only uploads; must support 1000+ concurrent users.</p>
-        
-        <p class="no-indent"><strong>Dependencies:</strong> DigitalOcean services (AI, storage), PostgreSQL, Redis, third-party libraries.</p>
-        
-        <div class="page-number">1</div>
-    </div>
+    <h1>1. Introduction</h1>
+    
+    <h2>1.1 About the Project</h2>
+    
+    <p><strong>Study in Woods</strong> is an AI-powered educational platform that helps students organize academic materials and interact with course content intelligently. The system processes syllabus PDFs using NLP to extract structured information and provides an AI chat interface for study guidance.</p>
+    
+    <h2>1.2 Purpose of the Project</h2>
+    
+    <p class="no-indent">The primary objectives are:</p>
+    
+    <ul>
+        <li><strong>Academic Organization:</strong> Centralized platform for managing universities, courses, semesters, and subjects</li>
+        <li><strong>Intelligent Content Extraction:</strong> AI-powered processing of syllabus PDFs with automatic data extraction</li>
+        <li><strong>AI-Assisted Learning:</strong> Conversational AI for answering questions and providing study guidance</li>
+        <li><strong>Exam Preparation:</strong> Past year question paper extraction and categorization linked to syllabus topics</li>
+        <li><strong>Progress Tracking:</strong> Study progress monitoring and personalized study plan management</li>
+    </ul>
+    
+    <h2>1.3 System Architecture</h2>
+    
+    <p>The application follows a three-tier microservices architecture:</p>
+    
+    <ul>
+        <li><strong>Frontend:</strong> Next.js 15 with React 19 providing responsive UI</li>
+        <li><strong>Backend:</strong> Go (Golang) with Fiber framework handling API and business logic</li>
+        <li><strong>Data Layer:</strong> PostgreSQL for primary storage, Redis for caching and sessions</li>
+        <li><strong>OCR Service:</strong> Python FastAPI microservice for text extraction from scanned documents</li>
+    </ul>
+    
+    <h2>1.4 Core Functionalities</h2>
+    
+    <ol>
+        <li><strong>User Management:</strong> Secure authentication with role-based access (Admin/Student)</li>
+        <li><strong>Document Processing:</strong> Syllabus upload with AI-powered content extraction</li>
+        <li><strong>AI Chat Interface:</strong> Subject-specific conversational assistance</li>
+        <li><strong>PYQ Management:</strong> Question paper extraction and categorization</li>
+        <li><strong>Analytics Dashboard:</strong> Usage statistics and performance tracking</li>
+        <li><strong>RESTful API:</strong> 100+ endpoints for programmatic access</li>
+    </ol>
+    
+    <h2>1.5 User Characteristics</h2>
+    
+    <p class="no-indent"><strong>Students:</strong> MCA or similar program students seeking AI-assisted learning and exam preparation tools.</p>
+    
+    <p class="no-indent"><strong>Administrators:</strong> Academic staff managing universities, courses, and system settings with audit capabilities.</p>
+    
+    <h2>1.6 Operating Environment</h2>
+    
+    <ul>
+        <li><strong>Client:</strong> Modern web browsers (Chrome, Firefox, Safari, Edge) on all devices</li>
+        <li><strong>Server:</strong> Docker containerized deployment on Linux with HTTPS</li>
+        <li><strong>Cloud:</strong> DigitalOcean Spaces for storage, GradientAI (Llama 3.3 70B) for AI features</li>
+    </ul>
+    
+    <h2>1.7 Constraints and Dependencies</h2>
+    
+    <p class="no-indent"><strong>Constraints:</strong> Go/Next.js stack required; PDF-only uploads; must support 1000+ concurrent users.</p>
+    
+    <p class="no-indent"><strong>Dependencies:</strong> DigitalOcean services (AI, storage), PostgreSQL, Redis, third-party libraries.</p>
 </body>
 </html>

@@ -4,23 +4,143 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Design - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @page { size: A4; margin: 1in; }
-        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #000; }
-        h1 { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 20px 0 30px 0; text-transform: uppercase; }
-        h2 { font-size: 14pt; font-weight: bold; margin-top: 25px; margin-bottom: 15px; text-decoration: underline; }
-        h3 { font-size: 12pt; font-weight: bold; margin-top: 20px; margin-bottom: 10px; font-style: italic; }
-        p { text-align: justify; margin-bottom: 12px; text-indent: 0.5in; }
+        
+        @page { 
+            size: A4; 
+            margin: 0.75in 0.5in;
+        }
+        
+        body { 
+            font-family: 'Merriweather', 'Georgia', serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        h1 { 
+            font-family: 'Open Sans', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: 'Open Sans', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+        }
+        
+        h3 { 
+            font-family: 'Open Sans', Arial, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 18pt 0 8pt 0;
+            font-style: italic;
+        }
+        
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+        }
+        
         p.no-indent { text-indent: 0; }
-        ul, ol { margin-left: 0.75in; margin-bottom: 12px; }
-        li { margin-bottom: 8px; text-align: justify; }
+        
+        ul, ol { 
+            margin: 12pt 0 12pt 0.5in;
+            padding-left: 0.25in;
+        }
+        
+        li { 
+            margin-bottom: 6pt;
+            text-align: justify;
+        }
+        
+        li strong { color: #1a365d; }
+        
         .page-break { page-break-after: always; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f0f0f0; font-weight: bold; }
-        .diagram-box { border: 2px solid #000; padding: 15px; margin: 20px 0; font-family: 'Courier New', monospace; font-size: 9pt; background-color: #f9f9f9; white-space: pre-wrap; }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 16pt 0;
+            font-size: 10pt;
+        }
+        
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            padding: 8pt 10pt;
+            text-align: left;
+        }
+        
+        td { 
+            padding: 6pt 10pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) { background-color: #f7fafc; }
+        
+        .diagram-container { 
+            margin: 15px 0; 
+            text-align: center;
+        }
+        
+        .diagram-container.half-page { min-height: 300px; }
+        
+        .mermaid { 
+            font-family: 'Open Sans', Arial, sans-serif;
+        }
+        
+        .figure-caption { 
+            text-align: center; 
+            font-style: italic; 
+            margin-top: 10px; 
+            font-size: 10pt;
+            color: #4a6fa5;
+        }
     </style>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            themeVariables: {
+                fontFamily: 'Open Sans, Arial, sans-serif',
+                fontSize: '14px'
+            },
+            flowchart: { 
+                useMaxWidth: true, 
+                htmlLabels: true, 
+                curve: 'basis',
+                nodeSpacing: 50,
+                rankSpacing: 50
+            },
+            er: {
+                useMaxWidth: true,
+                entityPadding: 15,
+                fontSize: 14
+            }
+        });
+    </script>
 </head>
 <body>
     <h1>6. DESIGN</h1>
@@ -29,147 +149,221 @@
     
     <p class="no-indent">Three-tier architecture: Presentation (Next.js), Application (Go Fiber API), Data (PostgreSQL, Redis, DigitalOcean Spaces). Communication via RESTful APIs, SSE for streaming, S3 for storage.</p>
     
-    <div class="diagram-box">
-┌────────────────────────────────────────────────────────────────────────┐
-│                        PRESENTATION LAYER                              │
-│                   (Next.js 15 + React 19 + TypeScript)                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
-│  │    Pages     │  │  Components  │  │    Hooks     │  │   State    │ │
-│  │  (Routing)   │  │   (shadcn)   │  │ (React Hook) │  │  (TanStack)│ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
-└────────────────────────────────┬───────────────────────────────────────┘
-                                 │ HTTPS/REST API + SSE
-                                 ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        APPLICATION LAYER                               │
-│                         (Go 1.24 + Fiber 2.52)                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌────────────┐ │
-│  │   Handlers   │  │   Services   │  │  Middleware  │  │   Utils    │ │
-│  │  (API Routes)│  │ (Business)   │  │  (Auth,CORS) │  │ (Crypto)   │ │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘ │
-└────────────────┬──────────────┬─────────────┬──────────────┬──────────┘
-                 ▼              ▼             ▼              ▼
-┌───────────────────┐ ┌─────────────┐ ┌──────────────┐ ┌──────────────┐
-│   PostgreSQL 15   │ │  Redis 7    │ │ DO Spaces    │ │ DO GradientAI│
-│  (30+ Tables)     │ │ (Cache/TTL) │ │ (S3 Storage) │ │ (Llama 3.3)  │
-└───────────────────┘ └─────────────┘ └──────────────┘ └──────────────┘
+    <div class="diagram-container">
+        <div class="mermaid">
+flowchart TB
+    subgraph PL["PRESENTATION LAYER - Next.js 15"]
+        direction LR
+        P1["Pages & Routing"]
+        P2["Components"]
+        P3["Hooks"]
+        P4["State"]
+    end
+    
+    subgraph AL["APPLICATION LAYER - Go Fiber"]
+        direction LR
+        A1["Handlers"]
+        A2["Services"]
+        A3["Middleware"]
+        A4["Utils"]
+    end
+    
+    subgraph DL["DATA LAYER"]
+        direction LR
+        D1[("PostgreSQL")]
+        D2[("Redis")]
+        D3[("DO Spaces")]
+        D4[("GradientAI")]
+    end
+    
+    PL -->|"HTTPS/REST + SSE"| AL
+    AL --> D1
+    AL --> D2
+    AL --> D3
+    AL --> D4
+        </div>
+        <p class="figure-caption">Figure 6.1: Three-tier System Architecture</p>
     </div>
     
     <h2>6.2 Design Patterns Used</h2>
     
-    <ul>
-        <li><strong>Repository Pattern:</strong> GORM-based data access layer abstracts database operations</li>
-        <li><strong>Service Layer Pattern:</strong> Business logic separated from handlers and data access</li>
-        <li><strong>Middleware Chain:</strong> JWT auth, CORS, rate limiting, logging as composable middleware</li>
-        <li><strong>Provider Pattern:</strong> React context providers for auth, theme, and query state</li>
-        <li><strong>Observer Pattern:</strong> SSE for real-time streaming of AI responses and job status</li>
-        <li><strong>Factory Pattern:</strong> Service initialization with dependency injection</li>
-    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Pattern</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Repository Pattern</strong></td><td>GORM-based data access layer abstracts database operations</td></tr>
+            <tr><td><strong>Service Layer</strong></td><td>Business logic separated from handlers and data access</td></tr>
+            <tr><td><strong>Middleware Chain</strong></td><td>JWT auth, CORS, rate limiting, logging as composable middleware</td></tr>
+            <tr><td><strong>Provider Pattern</strong></td><td>React context providers for auth, theme, and query state</td></tr>
+            <tr><td><strong>Observer Pattern</strong></td><td>SSE for real-time streaming of AI responses and job status</td></tr>
+            <tr><td><strong>Factory Pattern</strong></td><td>Service initialization with dependency injection</td></tr>
+        </tbody>
+    </table>
     
     <h2>6.3 Data Flow Summary</h2>
     
     <h3>6.3.1 Context Diagram (Level 0)</h3>
     
-    <div class="diagram-box">
-┌──────────┐     Login, Upload, Questions     ┌──────────────┐
-│ Student  │─────────────────────────────────>│  Study in    │
-│   User   │<─────────────────────────────────│   Woods      │
-└──────────┘   Auth Tokens, AI Responses      └──────┬───────┘
-                                                     │
-┌──────────┐     Manage Users, Config                │
-│  Admin   │─────────────────────────────────────────┘
-└──────────┘     Audit Logs, Reports
-                           │
-         ┌─────────────────┼─────────────────┐
-         ▼                 ▼                 ▼
-  ┌─────────────┐   ┌──────────┐   ┌─────────────────┐
-  │ DO AI API   │   │ Database │   │  Email Service  │
-  └─────────────┘   └──────────┘   └─────────────────┘
+    <div class="diagram-container">
+        <div class="mermaid">
+flowchart LR
+    U1(["Student"]) -->|"Login, Upload, Questions"| SYS["Study in Woods"]
+    SYS -->|"Auth Tokens, AI Responses"| U1
+    U2(["Admin"]) -->|"Manage Users, Config"| SYS
+    SYS -->|"Audit Logs, Reports"| U2
+    SYS --> E1["AI API"]
+    SYS --> E2[("Database")]
+    SYS --> E3["Email"]
+        </div>
+        <p class="figure-caption">Figure 6.2: Context Diagram (Level 0 DFD)</p>
     </div>
     
     <h3>6.3.2 System Decomposition (Level 1)</h3>
     
-    <div class="diagram-box">
-Student ──> [1.0 Authentication] ──> User Database
-              │
-              ├──> [2.0 Academic Management] ──> University/Course/Subject DB
-              ├──> [3.0 Document Processing] ──> DO Spaces + AI Extraction
-              ├──> [4.0 AI Chat System] ──> Knowledge Base + AI Service
-              └──> [5.0 Analytics] ──> Activity Logs
-
-Admin ──> [6.0 Administration] ──> All Databases + Audit Logs
+    <div class="diagram-container">
+        <div class="mermaid">
+flowchart TD
+    S(["Student"]) --> A1["1.0 Authentication"]
+    A1 --> DB1[("User DB")]
+    A1 --> A2["2.0 Academic Mgmt"]
+    A1 --> A3["3.0 Doc Processing"]
+    A1 --> A4["4.0 AI Chat"]
+    A1 --> A5["5.0 Analytics"]
+    A2 --> DB2[("Course DB")]
+    A3 --> DB3["Spaces + AI"]
+    A4 --> DB4["Knowledge Base"]
+    A5 --> DB5[("Activity Logs")]
+    AD(["Admin"]) --> A6["6.0 Administration"]
+    A6 --> DB6[("Audit Logs")]
+        </div>
+        <p class="figure-caption">Figure 6.3: System Decomposition (Level 1)</p>
     </div>
-    
-    <div class="page-break"></div>
     
     <h2>6.4 Entity Relationship Diagram</h2>
     
     <p class="no-indent">Database: 30+ tables. Core hierarchy: University → Course → Semester → Subject → Documents/ChatSessions.</p>
     
-    <div class="diagram-box">
-┌──────────────┐         ┌──────────────┐
-│   User       │         │ University   │
-│ PK id        │         │ PK id        │
-│    email     │         │    name      │
-│    role      │         │    code      │
-└──────┬───────┘         └──────┬───────┘
-       │ 1:N                    │ 1:N
-       │                        ▼
-       │                 ┌──────────────┐       ┌──────────────┐
-       │                 │   Course     │──1:N─>│  Semester    │
-       │                 │ FK univ_id   │       │ FK course_id │
-       │                 └──────────────┘       └──────┬───────┘
-       │                                               │ 1:N
-       │                                               ▼
-       │                                        ┌──────────────┐
-       │                                        │   Subject    │
-       │                                        │ FK semester  │
-       │                                        │    kb_uuid   │
-       │                                        └───┬──────────┘
-       │ 1:N                                        │ 1:N
-       ▼                                            ▼
-┌──────────────┐                            ┌──────────────┐
-│ ChatSession  │                            │  Document    │──1:N─> Syllabus
-│ FK user_id   │                            │ FK subject   │         │
-│ FK subject   │                            │    status    │    SyllabusUnit
-└──────┬───────┘                            └──────────────┘         │
-       │ 1:N                                                   SyllabusTopic
-       ▼
-┌──────────────┐   Other: APIKey, UserActivity, AdminAuditLog,
-│ ChatMessage  │         AppSetting, PYQ, ChatMemory, IndexingJob
-│ FK session   │
-│    citations │
-└──────────────┘
+    <div class="diagram-container half-page">
+        <div class="mermaid">
+erDiagram
+    User ||--o{ ChatSession : has
+    User {
+        int id PK
+        string email
+        string role
+    }
+    University ||--o{ Course : has
+    University {
+        int id PK
+        string name
+        string code
+    }
+    Course ||--o{ Semester : has
+    Semester ||--o{ Subject : has
+    Subject ||--o{ Document : has
+    Subject ||--o{ ChatSession : has
+    Subject {
+        int id PK
+        string kb_uuid
+    }
+    Document ||--o{ Syllabus : has
+    Document {
+        int id PK
+        string status
+    }
+    ChatSession ||--o{ ChatMessage : has
+    ChatMessage {
+        int id PK
+        json citations
+    }
+        </div>
+        <p class="figure-caption">Figure 6.4: Entity Relationship Diagram</p>
     </div>
     
     <h2>6.5 Key Sequence Flows</h2>
     
     <h3>6.5.1 Authentication Flow</h3>
-    <div class="diagram-box">
-User ─> Frontend ─> POST /login ─> Validate ─> DB Lookup ─> bcrypt Check
-                                                    │
-                    <── JWT Token ── Generate JWT <─┘
-                           │
-                    Store Session in Redis (24h TTL)
+    
+    <div class="diagram-container">
+        <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+    participant R as Redis
+    
+    U->>F: Enter credentials
+    F->>B: POST /login
+    B->>DB: Lookup user
+    DB-->>B: User record
+    B->>B: bcrypt verify
+    B->>B: Generate JWT
+    B->>R: Store session (24h TTL)
+    B-->>F: JWT Token
+    F-->>U: Redirect to Dashboard
+        </div>
+        <p class="figure-caption">Figure 6.5: Authentication Sequence Diagram</p>
     </div>
     
+    <div class="page-break"></div>
+    
     <h3>6.5.2 Document Upload & AI Extraction</h3>
-    <div class="diagram-box">
-User ─> Upload PDF ─> Validate ─> Upload to DO Spaces ─> Save Metadata (pending)
-                                        │
-              [Background]              ▼
-         AI Extract Syllabus ─> Parse JSON ─> Store Units/Topics
-                    │
-         Index to Knowledge Base ─> Poll Status ─> Update (completed)
+    
+    <div class="diagram-container">
+        <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant S as Spaces
+    participant AI as AI Service
+    participant DB as Database
+    
+    U->>F: Upload PDF
+    F->>B: POST /documents
+    B->>S: Upload to S3
+    S-->>B: File URL
+    B->>DB: Save (pending)
+    B-->>F: Success
+    Note over B,AI: Background Job
+    B->>AI: Extract syllabus
+    AI-->>B: JSON
+    B->>DB: Store Topics
+    B->>AI: Index to KB
+    B->>DB: Update (completed)
+        </div>
+        <p class="figure-caption">Figure 6.6: Document Upload and AI Extraction Flow</p>
     </div>
     
     <h3>6.5.3 AI Chat with RAG</h3>
-    <div class="diagram-box">
-User Question ─> Get Session History ─> Query Knowledge Base ─> Get Citations
-                                               │
-              <── SSE Stream ── AI Response <──┘
-                     │
-              Save Messages + Citations to DB
+    
+    <div class="diagram-container">
+        <div class="mermaid">
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant KB as Knowledge Base
+    participant AI as AI Service
+    participant DB as Database
+    
+    U->>F: Ask question
+    F->>B: POST /chat
+    B->>DB: Get history
+    B->>KB: Query docs
+    KB-->>B: Citations
+    B->>AI: Generate
+    AI-->>B: SSE Stream
+    B-->>F: Stream
+    F-->>U: Display
+    B->>DB: Save message
+        </div>
+        <p class="figure-caption">Figure 6.7: AI Chat with RAG Flow</p>
     </div>
     
     <div class="page-break"></div>
@@ -178,37 +372,106 @@ User Question ─> Get Session History ─> Query Knowledge Base ─> Get Citati
     
     <h3>6.6.1 Backend Layers</h3>
     
-    <div class="diagram-box">
-┌─────────────────────────────────────────────────────────────────┐
-│ API Layer: Auth | Course | Document | Chat | Admin Handlers    │
-├─────────────────────────────────────────────────────────────────┤
-│ Middleware: JWT Verify | CORS | Rate Limit (Redis) | Logger    │
-├─────────────────────────────────────────────────────────────────┤
-│ Service Layer: AuthService | SyllabusExtractor | ChatService   │
-├─────────────────────────────────────────────────────────────────┤
-│ Repository Layer: User | Subject | Document | Chat (GORM)      │
-├─────────────────────────────────────────────────────────────────┤
-│ Data: PostgreSQL (30+ tables) | Redis (Cache/Sessions)         │
-├─────────────────────────────────────────────────────────────────┤
-│ External: DO Spaces (S3) | DO GradientAI (LLM/KB) | SMTP       │
-└─────────────────────────────────────────────────────────────────┘
+    <div class="diagram-container">
+        <div class="mermaid">
+flowchart TB
+    subgraph API["API Layer"]
+        H1["Auth"] --- H2["Course"] --- H3["Document"] --- H4["Chat"] --- H5["Admin"]
+    end
+    
+    subgraph MW["Middleware"]
+        M1["JWT"] --- M2["CORS"] --- M3["Rate Limit"] --- M4["Logger"]
+    end
+    
+    subgraph SVC["Service Layer"]
+        S1["AuthService"] --- S2["SyllabusExtractor"] --- S3["ChatService"]
+    end
+    
+    subgraph REPO["Repository Layer - GORM"]
+        R1["UserRepo"] --- R2["SubjectRepo"] --- R3["DocumentRepo"] --- R4["ChatRepo"]
+    end
+    
+    subgraph DATA["Data"]
+        D1[("PostgreSQL")] --- D2[("Redis")]
+    end
+    
+    subgraph EXT["External"]
+        E1["DO Spaces"] --- E2["GradientAI"] --- E3["SMTP"]
+    end
+    
+    API --> MW --> SVC --> REPO --> DATA
+    SVC --> EXT
+        </div>
+        <p class="figure-caption">Figure 6.8: Backend Layered Architecture</p>
     </div>
     
     <h3>6.6.2 Frontend Structure</h3>
     
-    <div class="diagram-box">
-App (Next.js Router)
-├── Layout: Header | Sidebar | Footer
-├── Pages
-│   ├── Auth: /login, /register
-│   ├── Dashboard: Stats, Activity, Actions
-│   ├── Academic: /universities, /courses, /subjects
-│   ├── Chat: /chat/[subjectId] - Sessions, Messages, Citations
-│   ├── Analytics: Charts, Stats, Activity Table
-│   └── Admin: Users, Settings, Audit Logs
-├── Providers: QueryProvider | ThemeProvider | AuthProvider
-└── Utils: API Client (Axios) | Hooks | Validators (Zod)
-    </div>
+    <p class="no-indent">The Next.js 15 frontend follows a modular architecture with clear separation of concerns:</p>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Layer</th>
+                <th>Components</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>App Router</strong></td>
+                <td>Next.js 15 App Directory</td>
+                <td>File-based routing with layouts</td>
+            </tr>
+            <tr>
+                <td><strong>Layout</strong></td>
+                <td>Header, Sidebar, Footer</td>
+                <td>Consistent UI shell across pages</td>
+            </tr>
+            <tr>
+                <td><strong>Auth Pages</strong></td>
+                <td>/login, /register</td>
+                <td>User authentication flows</td>
+            </tr>
+            <tr>
+                <td><strong>Dashboard</strong></td>
+                <td>Stats, Activity, Actions</td>
+                <td>Overview and quick actions</td>
+            </tr>
+            <tr>
+                <td><strong>Academic</strong></td>
+                <td>/universities, /courses, /subjects</td>
+                <td>Academic hierarchy management</td>
+            </tr>
+            <tr>
+                <td><strong>Chat</strong></td>
+                <td>/chat/[subjectId]</td>
+                <td>AI chat with sessions, messages, citations</td>
+            </tr>
+            <tr>
+                <td><strong>Analytics</strong></td>
+                <td>Charts, Stats, Activity Table</td>
+                <td>Usage insights and metrics</td>
+            </tr>
+            <tr>
+                <td><strong>Admin</strong></td>
+                <td>Users, Settings, Audit Logs</td>
+                <td>System administration</td>
+            </tr>
+            <tr>
+                <td><strong>Providers</strong></td>
+                <td>Query, Theme, Auth</td>
+                <td>Global state and context</td>
+            </tr>
+            <tr>
+                <td><strong>Utils</strong></td>
+                <td>API Client (Axios), Hooks, Zod</td>
+                <td>Shared utilities and validation</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <p class="figure-caption">Figure 6.9: Frontend Application Structure</p>
 
 </body>
 </html>

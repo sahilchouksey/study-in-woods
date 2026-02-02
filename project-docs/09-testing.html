@@ -2,26 +2,161 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Testing - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* ============================================
+           PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           ============================================ */
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        @page { size: A4; margin: 1in; }
-        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #000; }
-        h1 { text-align: center; font-size: 16pt; font-weight: bold; text-decoration: underline; margin: 20px 0 30px 0; text-transform: uppercase; }
-        h2 { font-size: 14pt; font-weight: bold; margin-top: 25px; margin-bottom: 15px; text-decoration: underline; }
-        h3 { font-size: 12pt; font-weight: bold; margin-top: 20px; margin-bottom: 10px; font-style: italic; }
-        p { text-align: justify; margin-bottom: 12px; text-indent: 0.5in; }
-        p.no-indent { text-indent: 0; }
-        ul, ol { margin-left: 0.75in; margin-bottom: 12px; }
-        li { margin-bottom: 8px; text-align: justify; }
-        .page-break { page-break-after: always; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; vertical-align: top; }
-        th { background-color: #f0f0f0; font-weight: bold; }
+        
+        @page { 
+            size: A4; 
+            margin: 1in 1in 1in 1.25in;
+        }
+        
+        body { 
+            font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
+        }
+        
+        h3 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 18pt 0 8pt 0;
+            font-style: italic;
+            page-break-after: avoid;
+        }
+        
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { 
+            text-indent: 0; 
+        }
+        
+        /* ============ LISTS ============ */
+        ul, ol { 
+            margin: 12pt 0 12pt 0.5in;
+            padding-left: 0.25in;
+        }
+        
+        li { 
+            margin-bottom: 6pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        li strong {
+            color: #1a365d;
+        }
+        
+        /* ============ TABLES ============ */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 16pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        thead {
+            border-top: 2px solid #1a365d;
+            border-bottom: 1px solid #1a365d;
+        }
+        
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            padding: 8pt 10pt;
+            text-align: left;
+            font-size: 10pt;
+        }
+        
+        tbody {
+            border-bottom: 2px solid #1a365d;
+        }
+        
+        td { 
+            padding: 6pt 10pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        /* Status indicators */
+        .status-pass {
+            color: #276749;
+            font-weight: 600;
+        }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { 
+            page-break-after: always;
+            break-after: page;
+        }
+        
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body { padding: 0; }
+            h2, h3 { page-break-after: avoid; }
+            table { page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
-    <h1>9. TESTING</h1>
+    <h1>9. Testing</h1>
     
     <h2>9.1 Testing Strategy</h2>
     
@@ -89,7 +224,7 @@
         </thead>
         <tbody>
             <tr><td>Baseline Load</td><td>100</td><td>5 min</td><td>95% requests < 2s</td></tr>
-            <tr><td>Spike Test</td><td>50→500</td><td>10 min</td><td>No crashes</td></tr>
+            <tr><td>Spike Test</td><td>50 -> 500</td><td>10 min</td><td>No crashes</td></tr>
             <tr><td>Soak Test</td><td>200</td><td>30 min</td><td>Stable memory</td></tr>
         </tbody>
     </table>
@@ -106,16 +241,14 @@
             </tr>
         </thead>
         <tbody>
-            <tr><td>Unit Test Coverage</td><td>70%</td><td>76%</td><td>✓ Pass</td></tr>
-            <tr><td>Integration Test Coverage</td><td>60%</td><td>68%</td><td>✓ Pass</td></tr>
-            <tr><td>E2E Coverage (Critical Paths)</td><td>100%</td><td>100%</td><td>✓ Pass</td></tr>
-            <tr><td>API Response Time (p95)</td><td>< 2s</td><td>1.2s</td><td>✓ Pass</td></tr>
-            <tr><td>Security Vulnerabilities (High/Critical)</td><td>0</td><td>0</td><td>✓ Pass</td></tr>
-            <tr><td>CI Pipeline Duration</td><td>< 15 min</td><td>10 min</td><td>✓ Pass</td></tr>
-            <tr><td>Overall Test Pass Rate</td><td>> 95%</td><td>97.8%</td><td>✓ Pass</td></tr>
+            <tr><td>Unit Test Coverage</td><td>70%</td><td>76%</td><td class="status-pass">Pass</td></tr>
+            <tr><td>Integration Test Coverage</td><td>60%</td><td>68%</td><td class="status-pass">Pass</td></tr>
+            <tr><td>E2E Coverage (Critical Paths)</td><td>100%</td><td>100%</td><td class="status-pass">Pass</td></tr>
+            <tr><td>API Response Time (p95)</td><td>< 2s</td><td>1.2s</td><td class="status-pass">Pass</td></tr>
+            <tr><td>Security Vulnerabilities (High/Critical)</td><td>0</td><td>0</td><td class="status-pass">Pass</td></tr>
+            <tr><td>CI Pipeline Duration</td><td>< 15 min</td><td>10 min</td><td class="status-pass">Pass</td></tr>
+            <tr><td>Overall Test Pass Rate</td><td>> 95%</td><td>97.8%</td><td class="status-pass">Pass</td></tr>
         </tbody>
     </table>
-    
-    <div class="page-number">9</div>
 </body>
 </html>

@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapter 2: Project Understanding Document</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 0.75in;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Merriweather', Georgia, serif;
+            font-size: 12pt;
+            line-height: 1.8;
+            color: #1a1a1a;
+            background: white;
+            padding: 0.5in;
+        }
+        
+        h1 {
+            font-family: 'Open Sans', Helvetica, sans-serif;
+            font-size: 18pt;
+            font-weight: 700;
+            color: #1a365d;
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2c5282;
+        }
+        
+        h2 {
+            font-family: 'Open Sans', Helvetica, sans-serif;
+            font-size: 14pt;
+            font-weight: 700;
+            color: #2c5282;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        h3 {
+            font-family: 'Open Sans', Helvetica, sans-serif;
+            font-size: 12pt;
+            font-weight: 600;
+            color: #4a6fa5;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        h4 {
+            font-family: 'Open Sans', Helvetica, sans-serif;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1a365d;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            text-align: justify;
+            margin-bottom: 12px;
+            text-indent: 40px;
+        }
+        
+        p.no-indent {
+            text-indent: 0;
+        }
+        
+        ul, ol {
+            margin-left: 60px;
+            margin-bottom: 15px;
+        }
+        
+        li {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+        
+        li strong {
+            color: #2c5282;
+        }
+        
+        .component-box {
+            background: #f7fafc;
+            border-left: 4px solid #2c5282;
+            padding: 15px 20px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+        
+        .component-box h4 {
+            margin-top: 0;
+            color: #2c5282;
+        }
+        
+        .component-box ul {
+            margin-left: 20px;
+            margin-bottom: 0;
+        }
+        
+        .component-box li {
+            margin-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        
+        th {
+            background-color: #2c5282;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-family: 'Open Sans', Helvetica, sans-serif;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>2. PROJECT UNDERSTANDING DOCUMENT</h1>
+
+    <h2>2.1 Problem Statement</h2>
+    
+    <p>In the contemporary educational landscape, students pursuing higher education, particularly in technical fields like Master of Computer Applications (MCA), encounter several critical challenges in managing their academic materials and optimizing their learning processes:</p>
+    
+    <ul>
+        <li><strong>Information Overload:</strong> Students receive voluminous course syllabi in PDF format containing complex hierarchical information about course units, topics, and learning outcomes, making manual extraction and organization time-consuming and error-prone.</li>
+        
+        <li><strong>Fragmented Resources:</strong> Academic materials are scattered across multiple platforms - university portals, email attachments, physical documents, and personal storage, leading to inefficient access and retrieval.</li>
+        
+        <li><strong>Limited Study Assistance:</strong> Traditional learning methods lack personalized, on-demand guidance for clarifying doubts and understanding complex topics outside of classroom hours.</li>
+        
+        <li><strong>Exam Preparation Challenges:</strong> Students struggle to systematically organize and categorize previous year questions, making targeted exam preparation difficult.</li>
+        
+        <li><strong>Lack of Progress Tracking:</strong> Absence of integrated tools to monitor study progress, set goals, and manage academic todos results in suboptimal time management.</li>
+    </ul>
+
+    <h2>2.2 Proposed Solution</h2>
+    
+    <p class="no-indent"><strong>Study in Woods</strong> addresses these challenges through an integrated, AI-powered platform that combines intelligent document processing, conversational AI, and comprehensive academic management capabilities.</p>
+
+    <h3>2.2.1 Solution Components</h3>
+    
+    <div class="component-box">
+        <h4>Component 1: Intelligent Syllabus Processing</h4>
+        <ul>
+            <li>Automated PDF parsing using advanced NLP techniques</li>
+            <li>Hierarchical extraction of units, topics, and subtopics</li>
+            <li>Structured storage for easy navigation and retrieval</li>
+            <li>Support for multiple syllabus formats across universities</li>
+        </ul>
+    </div>
+    
+    <div class="component-box">
+        <h4>Component 2: AI-Powered Study Assistant</h4>
+        <ul>
+            <li>Context-aware chatbot powered by RAG (Retrieval Augmented Generation)</li>
+            <li>Subject-specific knowledge bases for accurate responses</li>
+            <li>Natural language query processing for intuitive interaction</li>
+            <li>Citation of source materials for verifiable answers</li>
+        </ul>
+    </div>
+    
+    <div class="component-box">
+        <h4>Component 3: Academic Organization System</h4>
+        <ul>
+            <li>University → Course → Semester → Subject hierarchy management</li>
+            <li>Document upload and categorization capabilities</li>
+            <li>Previous year question paper organization</li>
+            <li>Personal notes and resource management</li>
+        </ul>
+    </div>
+    
+    <div class="component-box">
+        <h4>Component 4: Progress Tracking Dashboard</h4>
+        <ul>
+            <li>Visual analytics for study patterns and progress</li>
+            <li>Goal setting and achievement tracking</li>
+            <li>Todo management for academic tasks</li>
+            <li>Performance insights and recommendations</li>
+        </ul>
+    </div>
+
+    <h2>2.3 Project Scope</h2>
+
+    <h3>2.3.1 In Scope</h3>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Features Included</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>User Management</strong></td>
+                <td>Registration, authentication, profile management, role-based access (Student/Admin)</td>
+            </tr>
+            <tr>
+                <td><strong>Academic Structure</strong></td>
+                <td>University, course, semester, and subject management with full CRUD operations</td>
+            </tr>
+            <tr>
+                <td><strong>Document Processing</strong></td>
+                <td>PDF upload, syllabus extraction, document storage, and retrieval</td>
+            </tr>
+            <tr>
+                <td><strong>AI Chat System</strong></td>
+                <td>Subject-specific chatbot, conversation history, RAG-based responses</td>
+            </tr>
+            <tr>
+                <td><strong>Analytics</strong></td>
+                <td>Usage statistics, study patterns, progress visualization</td>
+            </tr>
+            <tr>
+                <td><strong>Administration</strong></td>
+                <td>User management, system configuration, audit logging</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>2.3.2 Out of Scope</h3>
+    
+    <ul>
+        <li>Mobile native applications (iOS/Android) - Web responsive design provided instead</li>
+        <li>Offline functionality - Requires internet connectivity</li>
+        <li>Video content processing - Focus on PDF and text documents</li>
+        <li>Real-time collaboration features - Individual study focus</li>
+        <li>Payment/subscription management - Free platform for students</li>
+    </ul>
+
+    <h2>2.4 Target Users</h2>
+    
+    <h3>2.4.1 Primary Users</h3>
+    
+    <p class="no-indent"><strong>Students:</strong> MCA and similar postgraduate program students who need:</p>
+    <ul>
+        <li>Organized access to course syllabi and materials</li>
+        <li>AI-assisted study guidance and doubt resolution</li>
+        <li>Efficient exam preparation tools</li>
+        <li>Progress tracking and goal management</li>
+    </ul>
+
+    <h3>2.4.2 Secondary Users</h3>
+    
+    <p class="no-indent"><strong>Administrators:</strong> College/university staff responsible for:</p>
+    <ul>
+        <li>Managing academic structure (universities, courses, subjects)</li>
+        <li>Uploading and maintaining syllabus documents</li>
+        <li>Monitoring platform usage and user activity</li>
+        <li>System configuration and maintenance</li>
+    </ul>
+
+    <h2>2.5 Expected Outcomes</h2>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Outcome</th>
+                <th>Measurement Criteria</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Improved Study Efficiency</strong></td>
+                <td>Reduced time spent searching for academic materials by 60%</td>
+            </tr>
+            <tr>
+                <td><strong>Enhanced Understanding</strong></td>
+                <td>AI chat resolves 80% of student queries without external help</td>
+            </tr>
+            <tr>
+                <td><strong>Better Organization</strong></td>
+                <td>All academic materials accessible from single platform</td>
+            </tr>
+            <tr>
+                <td><strong>Exam Readiness</strong></td>
+                <td>Systematic coverage of syllabus topics with progress tracking</td>
+            </tr>
+            <tr>
+                <td><strong>Time Savings</strong></td>
+                <td>Automated syllabus extraction saves 2+ hours per subject</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>2.6 Constraints and Assumptions</h2>
+    
+    <h3>2.6.1 Constraints</h3>
+    
+    <ul>
+        <li><strong>Technical:</strong> Dependent on DigitalOcean AI platform availability and API limits</li>
+        <li><strong>Data:</strong> Syllabus extraction accuracy depends on PDF formatting consistency</li>
+        <li><strong>Performance:</strong> AI response generation limited by LLM processing time</li>
+        <li><strong>Storage:</strong> Cloud storage costs scale with document uploads</li>
+    </ul>
+
+    <h3>2.6.2 Assumptions</h3>
+    
+    <ul>
+        <li>Users have reliable internet connectivity</li>
+        <li>Syllabus PDFs follow standard academic formatting conventions</li>
+        <li>Users possess basic computer literacy skills</li>
+        <li>University academic structures follow hierarchical organization</li>
+        <li>English is the primary language for academic content</li>
+    </ul>
+
+</body>
+</html>

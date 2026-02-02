@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design - Study in Woods</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Merriweather:wght@400;700&family=Fira+Code&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        /* ============================================
+           PROFESSIONAL ACADEMIC DOCUMENT STYLING
+           Based on APA/Academic Standards Research
+           ============================================ */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        @page { 
+            size: A4; 
+            margin: 1in 1in 1in 1.25in; /* Thesis style: extra left margin for binding */
+        }
+        
+        body { 
+            font-family: 'Merriweather', 'Georgia', 'Times New Roman', serif;
+            font-size: 12pt; 
+            line-height: 1.6;
+            color: #333333;
+            max-width: 7in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        /* ============ HEADINGS ============ */
+        h1 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            text-align: center; 
+            font-size: 18pt; 
+            font-weight: 700;
+            color: #1a365d;
+            margin: 0 0 24pt 0;
+            padding-bottom: 8pt;
+            border-bottom: 2px solid #1a365d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        h2 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 14pt; 
+            font-weight: 700;
+            color: #2c5282;
+            margin: 24pt 0 12pt 0;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #4a6fa5;
+            page-break-after: avoid;
+        }
+        
+        h3 { 
+            font-family: 'Open Sans', 'Helvetica', Arial, sans-serif;
+            font-size: 12pt; 
+            font-weight: 600;
+            color: #2c5282;
+            margin: 18pt 0 8pt 0;
+            font-style: italic;
+            page-break-after: avoid;
+        }
+        
+        /* ============ PARAGRAPHS ============ */
+        p { 
+            text-align: justify; 
+            margin-bottom: 10pt;
+            text-indent: 0.4in;
+            orphans: 3;
+            widows: 3;
+        }
+        
+        p.no-indent { 
+            text-indent: 0; 
+        }
+        
+        /* ============ LISTS ============ */
+        ul, ol { 
+            margin: 12pt 0 12pt 0.5in;
+            padding-left: 0.25in;
+        }
+        
+        li { 
+            margin-bottom: 6pt;
+            text-align: justify;
+            line-height: 1.5;
+        }
+        
+        li strong {
+            color: #1a365d;
+        }
+        
+        /* ============ TABLES ============ */
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 16pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        
+        caption {
+            caption-side: top;
+            text-align: left;
+            font-weight: 600;
+            font-size: 10pt;
+            padding: 6pt 0;
+            color: #333;
+        }
+        
+        thead {
+            border-top: 2px solid #1a365d;
+            border-bottom: 1px solid #1a365d;
+        }
+        
+        th { 
+            background-color: #2c5282;
+            color: #ffffff;
+            font-family: 'Open Sans', sans-serif;
+            font-weight: 600;
+            padding: 8pt 10pt;
+            text-align: left;
+            font-size: 10pt;
+        }
+        
+        tbody {
+            border-bottom: 2px solid #1a365d;
+        }
+        
+        td { 
+            padding: 6pt 10pt;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        tbody tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        
+        tbody tr:hover {
+            background-color: #edf2f7;
+        }
+        
+        /* ============ DIAGRAMS ============ */
+        .diagram-container { 
+            margin: 16pt 0;
+            padding: 12pt;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 4pt;
+            text-align: center;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        .diagram-caption { 
+            text-align: center;
+            font-style: italic;
+            font-size: 10pt;
+            margin-top: 8pt;
+            color: #4a5568;
+            font-family: 'Open Sans', sans-serif;
+        }
+        
+        .mermaid { 
+            background: white;
+            overflow: visible;
+        }
+        
+        /* ============ PAGE BREAKS ============ */
+        .page-break { 
+            page-break-after: always;
+            break-after: page;
+        }
+        
+        .keep-together {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+        
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .diagram-container {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            h2, h3 {
+                page-break-after: avoid;
+            }
+            
+            table, figure {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>6. Design</h1>
+    
+    <h2>6.1 System Architecture</h2>
+    
+    <p class="no-indent">The Study in Woods application follows a three-tier architecture pattern separating concerns into Presentation (Next.js), Application (Go Fiber API), and Data layers (PostgreSQL, Redis, DigitalOcean Spaces). Communication occurs via RESTful APIs, Server-Sent Events for streaming, and S3-compatible storage for documents.</p>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '12px', 'fontFamily': 'Open Sans' }}}%%
+flowchart TB
+    subgraph PL[PRESENTATION - Next.js 15 React 19]
+        direction LR
+        P1[Pages] ~~~ P2[Components] ~~~ P3[Hooks] ~~~ P4[State]
+    end
+    
+    subgraph AL[APPLICATION - Go 1.24 Fiber 2.52]
+        direction LR
+        A1[Handlers] ~~~ A2[Services] ~~~ A3[Middleware] ~~~ A4[Utils]
+    end
+    
+    subgraph DL[DATA LAYER]
+        direction LR
+        D1[(PostgreSQL)] ~~~ D2[(Redis)] ~~~ D3[(DO Spaces)] ~~~ D4[AI LLM]
+    end
+    
+    PL -->|REST API SSE| AL
+    AL --> DL
+        </div>
+        <p class="diagram-caption">Figure 6.1: Three-tier System Architecture</p>
+    </div>
+    
+    <h2>6.2 Design Patterns Used</h2>
+    
+    <table>
+        <caption>Table 6.1: Design Patterns Implemented</caption>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Pattern</th>
+                <th>Description</th>
+                <th style="width: 25%;">Implementation</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Repository</strong></td>
+                <td>Data access layer abstracts database operations from business logic</td>
+                <td>GORM-based repositories</td>
+            </tr>
+            <tr>
+                <td><strong>Service Layer</strong></td>
+                <td>Business logic separated from HTTP handlers and data access</td>
+                <td>Go service structs</td>
+            </tr>
+            <tr>
+                <td><strong>Middleware Chain</strong></td>
+                <td>Composable request processing for cross-cutting concerns</td>
+                <td>JWT, CORS, Rate Limit</td>
+            </tr>
+            <tr>
+                <td><strong>Provider</strong></td>
+                <td>React context providers for global state management</td>
+                <td>Auth, Theme, Query</td>
+            </tr>
+            <tr>
+                <td><strong>Observer</strong></td>
+                <td>Real-time streaming of AI responses and job status</td>
+                <td>SSE implementation</td>
+            </tr>
+            <tr>
+                <td><strong>Factory</strong></td>
+                <td>Service initialization with dependency injection</td>
+                <td>Service constructors</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <h2>6.3 Data Flow Diagrams</h2>
+    
+    <h3>6.3.1 Context Diagram (Level 0 DFD)</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+flowchart LR
+    U1([Student]) -->|Login Upload Questions| S((Study in Woods))
+    S -->|Tokens AI Responses| U1
+    U2([Admin]) -->|Manage Config| S
+    S -->|Reports Logs| U2
+    S --> E1[(Database)]
+    S --> E2[AI API]
+    S --> E3[Email]
+        </div>
+        <p class="diagram-caption">Figure 6.2: Context Diagram - System Boundaries and External Entities</p>
+    </div>
+    
+    <h3>6.3.2 System Decomposition (Level 1 DFD)</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '10px' }}}%%
+flowchart TD
+    U1([Student]) --> P1((1.0 Auth))
+    U2([Admin]) --> P6((6.0 Admin))
+    
+    P1 --> P2((2.0 Academic))
+    P1 --> P3((3.0 Docs))
+    P1 --> P4((4.0 Chat))
+    P1 --> P5((5.0 Analytics))
+    
+    P1 --> DB1[(Users)]
+    P2 --> DB2[(Courses)]
+    P3 --> DB3[(Storage)]
+    P4 --> DB4[(KB)]
+    P5 --> DB5[(Logs)]
+    P6 --> DB6[(Audit)]
+        </div>
+        <p class="diagram-caption">Figure 6.3: Level 1 DFD - System Process Decomposition</p>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h2>6.4 Entity Relationship Diagram</h2>
+    
+    <p class="no-indent">The database contains 30+ tables following a hierarchical structure: University contains Courses, which contain Semesters, which contain Subjects. Users create ChatSessions linked to Subjects, and Documents are associated with Subjects for knowledge base indexing.</p>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+erDiagram
+    USER ||--o{ CHAT_SESSION : creates
+    USER {
+        uuid id PK
+        string email
+        string role
+    }
+    
+    UNIVERSITY ||--o{ COURSE : has
+    UNIVERSITY {
+        uuid id PK
+        string name
+        string code
+    }
+    
+    COURSE ||--o{ SEMESTER : contains
+    COURSE {
+        uuid id PK
+        uuid univ_id FK
+    }
+    
+    SEMESTER ||--o{ SUBJECT : includes
+    SEMESTER {
+        uuid id PK
+        uuid course_id FK
+    }
+    
+    SUBJECT ||--o{ DOCUMENT : has
+    SUBJECT ||--o{ CHAT_SESSION : about
+    SUBJECT {
+        uuid id PK
+        uuid semester_id FK
+        uuid kb_uuid
+    }
+    
+    DOCUMENT {
+        uuid id PK
+        uuid subject_id FK
+        string status
+    }
+    
+    CHAT_SESSION ||--o{ CHAT_MESSAGE : contains
+    CHAT_SESSION {
+        uuid id PK
+        uuid user_id FK
+        uuid subject_id FK
+    }
+    
+    CHAT_MESSAGE {
+        uuid id PK
+        uuid session_id FK
+        json citations
+    }
+        </div>
+        <p class="diagram-caption">Figure 6.4: Entity Relationship Diagram - Core Database Schema</p>
+    </div>
+    
+    <h2>6.5 Sequence Diagrams</h2>
+    
+    <h3>6.5.1 Authentication Flow</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant F as Frontend
+    participant A as API
+    participant DB as Database
+    participant R as Redis
+    
+    U->>F: Enter credentials
+    F->>A: POST /auth/login
+    A->>DB: Find user by email
+    DB-->>A: User record
+    A->>A: Verify password (bcrypt)
+    A->>A: Generate JWT
+    A->>R: Store session (24h)
+    A-->>F: JWT token
+    F-->>U: Redirect to Dashboard
+        </div>
+        <p class="diagram-caption">Figure 6.5: JWT Authentication Sequence Flow</p>
+    </div>
+    
+    <h3>6.5.2 Document Upload & AI Extraction</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+flowchart TD
+    A[Upload PDF] --> B{Valid?}
+    B -->|No| C[Error]
+    B -->|Yes| D[Store in S3]
+    D --> E[Save metadata]
+    E --> F[Queue job]
+    
+    subgraph BG["Background Processing"]
+        G[AI Extract] --> H[Parse JSON]
+        H --> I[Store topics]
+        I --> J[Index to KB]
+        J --> K[Mark complete]
+    end
+    
+    F -.-> G
+        </div>
+        <p class="diagram-caption">Figure 6.6: Document Upload and AI Extraction Workflow</p>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <h3>6.5.3 AI Chat with RAG</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant F as Frontend
+    participant A as API
+    participant KB as Knowledge Base
+    participant AI as LLM
+    participant DB as Database
+    
+    U->>F: Ask question
+    F->>A: POST /chat
+    A->>DB: Get history
+    A->>KB: Query context
+    KB-->>A: Citations
+    A->>AI: Augmented prompt
+    
+    loop SSE Stream
+        AI-->>A: Token
+        A-->>F: SSE event
+        F-->>U: Display
+    end
+    
+    A->>DB: Save message
+        </div>
+        <p class="diagram-caption">Figure 6.7: RAG-based AI Chat with Citation Retrieval</p>
+    </div>
+    
+    <h2>6.6 Component Architecture</h2>
+    
+    <h3>6.6.1 Backend Layered Architecture</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+flowchart TB
+    subgraph API[API Layer]
+        H1[Auth] ~~~ H2[Course] ~~~ H3[Document] ~~~ H4[Chat] ~~~ H5[Admin]
+    end
+    
+    subgraph MW[Middleware]
+        M1[JWT] ~~~ M2[CORS] ~~~ M3[RateLimit] ~~~ M4[Logger]
+    end
+    
+    subgraph SVC[Service Layer]
+        S1[AuthSvc] ~~~ S2[ExtractSvc] ~~~ S3[ChatSvc] ~~~ S4[StorageSvc]
+    end
+    
+    subgraph REPO[Repository Layer]
+        R1[UserRepo] ~~~ R2[SubjectRepo] ~~~ R3[DocRepo] ~~~ R4[ChatRepo]
+    end
+    
+    subgraph DATA[Data Stores]
+        D1[(PostgreSQL)] ~~~ D2[(Redis)]
+    end
+    
+    subgraph EXT[External Services]
+        E1[S3] ~~~ E2[AI LLM] ~~~ E3[SMTP]
+    end
+    
+    API --> MW --> SVC --> REPO --> DATA
+    SVC --> EXT
+        </div>
+        <p class="diagram-caption">Figure 6.8: Backend Layered Architecture with Clean Separation</p>
+    </div>
+    
+    <h3>6.6.2 Frontend Application Structure</h3>
+    
+    <div class="diagram-container keep-together">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '11px' }}}%%
+flowchart TD
+    APP[App - Next.js 15]
+    
+    APP --> L[Layout]
+    L --> L1[Header]
+    L --> L2[Sidebar]
+    L --> L3[Footer]
+    
+    APP --> P[Pages]
+    P --> PA[Auth]
+    P --> PD[Dashboard]
+    P --> PC[Academic]
+    P --> PCH[Chat]
+    P --> PAN[Analytics]
+    P --> PAD[Admin]
+    
+    APP --> PR[Providers]
+    PR --> PR1[Query]
+    PR --> PR2[Theme]
+    PR --> PR3[Auth]
+    
+    APP --> UT[Utils]
+    UT --> UT1[API Client]
+    UT --> UT2[Hooks]
+    UT --> UT3[Validators]
+        </div>
+        <p class="diagram-caption">Figure 6.9: Frontend Application Structure and Routing</p>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#e8f4fc',
+                primaryBorderColor: '#2c5282',
+                primaryTextColor: '#1a365d',
+                lineColor: '#4a6fa5',
+                secondaryColor: '#f7fafc',
+                tertiaryColor: '#ffffff',
+                fontFamily: 'Open Sans, sans-serif',
+                fontSize: '12px'
+            },
+            flowchart: { 
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 10,
+                nodeSpacing: 30,
+                rankSpacing: 40
+            },
+            sequence: {
+                useMaxWidth: true,
+                wrap: true,
+                width: 150,
+                height: 40,
+                boxMargin: 5,
+                messageMargin: 25,
+                mirrorActors: false
+            },
+            er: {
+                useMaxWidth: true,
+                fontSize: 11
+            }
+        });
+    </script>
+</body>
+</html>
