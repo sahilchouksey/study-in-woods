@@ -85,6 +85,9 @@ export default function LoginPage() {
             <p className="text-neutral-600 dark:text-neutral-400">
               Sign in to your account to continue
             </p>
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Backup server not deployed (DigitalOcean credits exhausted)
+            </p>
           </div>
 
           {/* Form */}
@@ -152,6 +155,7 @@ export default function LoginPage() {
               type="submit"
               className="w-full"
               disabled={loginMutation.isPending}
+              title="Backup server not deployed (DigitalOcean credits exhausted)"
             >
               {loginMutation.isPending ? 'Signing in...' : 'Sign In'}
             </Button>

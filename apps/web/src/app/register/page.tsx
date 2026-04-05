@@ -79,7 +79,10 @@ export default function RegisterPage() {
           <div className="space-y-2 text-center">
             <h1 className="text-3xl font-bold tracking-tight">Create an account</h1>
             <p className="text-neutral-600 dark:text-neutral-400">
-              Start your learning journey today
+              Enter your details to get started
+            </p>
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Backup server not deployed (DigitalOcean credits exhausted)
             </p>
           </div>
 
@@ -170,6 +173,7 @@ export default function RegisterPage() {
               type="submit"
               className="w-full"
               disabled={registerMutation.isPending}
+              title="Backup server not deployed (DigitalOcean credits exhausted)"
             >
               {registerMutation.isPending ? 'Creating account...' : 'Create Account'}
             </Button>
