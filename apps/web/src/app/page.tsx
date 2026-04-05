@@ -423,13 +423,17 @@ export default function HomePage() {
                     </Link>
                   ) : (
                     <>
-                      <Button variant="outline" disabled>
-                        Login
-                      </Button>
-                      <Button disabled>Signup</Button>
-                      <p className="text-xs text-muted-foreground text-center mt-2">
+                      <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
                         Backup server not deployed (DigitalOcean credits exhausted)
                       </p>
+                      <div className="flex gap-3">
+                        <Button variant="outline" disabled title="Backup server not deployed (DigitalOcean credits exhausted)">
+                          Login
+                        </Button>
+                        <Button disabled title="Backup server not deployed (DigitalOcean credits exhausted)">
+                          Signup
+                        </Button>
+                      </div>
                     </>
                   )}
                 </>
