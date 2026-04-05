@@ -423,12 +423,13 @@ export default function HomePage() {
                     </Link>
                   ) : (
                     <>
-                      <Link href="/login">
-                        <Button variant="outline">Login</Button>
-                      </Link>
-                      <Link href="/register">
-                        <Button>Signup</Button>
-                      </Link>
+                      <Button variant="outline" disabled>
+                        Login
+                      </Button>
+                      <Button disabled>Signup</Button>
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        Backup server not deployed (DigitalOcean credits exhausted)
+                      </p>
                     </>
                   )}
                 </>
